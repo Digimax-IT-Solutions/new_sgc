@@ -87,7 +87,7 @@
             </div>
         </div>
         <!-- /.Invoice Chart -->
-        <div class="row">
+        <!-- <div class="row">
             <section class="col-lg-6">
                 <div class="card">
                     <div class="card-header">
@@ -106,9 +106,9 @@
                         </div>
                     </div>
                 </div>
-            </section>
+            </section> -->
             <!-- /.Purchase order Chart -->
-            <section class="col-lg-6">
+            <!-- <section class="col-lg-6">
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">
@@ -128,7 +128,7 @@
                 </div>
             </section>
             
-        </div>
+        </div> -->
     </section>
     <!-- /.content -->
 

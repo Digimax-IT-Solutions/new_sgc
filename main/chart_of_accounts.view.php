@@ -9,7 +9,7 @@
 
 #accountsTable th,
 #accountsTable td {
-    padding: 2px;
+    padding: 1px;
     /* Adjust the padding as needed */
 }
 #accountsTable tbody tr:hover {
