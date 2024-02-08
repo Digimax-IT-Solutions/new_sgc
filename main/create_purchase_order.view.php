@@ -71,8 +71,8 @@ while ($row = $resultUOM->fetch(PDO::FETCH_ASSOC)) {
                 </div><!-- /.col -->
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="dashboard">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="#">Vendor Center</a></li>
+                        <li class="breadcrumb-item"><a style="color: maroon;" href="dashboard">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a style="color:maroon;" href="#">Vendor Center</a></li>
                         <li class="breadcrumb-item active">Create Purchase Order</li>
 
                     </ol>

@@ -23,7 +23,7 @@
 }
 #paymentMethodsTable tbody tr:hover {
     color: white;
-    background-color: rgb(0, 149, 77); /* Set your desired background color here */
+    background-color: maroon; /* Set your desired background color here */
 }
 </style>
 

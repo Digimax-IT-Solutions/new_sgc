@@ -23,7 +23,7 @@
 }
 #uomTable tbody tr:hover {
     color: white;
-    background-color: rgb(0, 149, 77); /* Set your desired background color here */
+    background-color: maroon; /* Set your desired background color here */
 }
 </style>
 
@@ -50,7 +50,7 @@
                             <div class="row mb-2">
                                 <div class="col-sm-6">
                                     <ol class="breadcrumb float-sm-left">
-                                        <li class="breadcrumb-item"><a href="dashboard">Dashboard</a></li>
+                                        <li class="breadcrumb-item"><a style="color:maroon"href="dashboard">Dashboard</a></li>
                                         <li class="breadcrumb-item active">Master List</li>
                                         <li class="breadcrumb-item active">Unit of Measurement</li>
                                     </ol>

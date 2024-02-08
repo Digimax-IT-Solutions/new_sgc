@@ -67,7 +67,7 @@
     #poTable tbody tr:hover {
 
         color: white;
-        background-color: rgb(0, 149, 77);
+        background-color: maroon;
         /* Set your desired background color here */
     }
 </style>
