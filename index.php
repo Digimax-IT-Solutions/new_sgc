@@ -23,11 +23,11 @@
         background-color: #ffffff;
         padding: 80px;
         border-radius: 25px;
-        box-shadow: 0 0 10px rgb(0, 149, 77);
+        box-shadow: 0 0 10px rgb(228,46,45);
     }
 
     .custom-button {
-        background-color: rgb(0, 149, 77);
+        background-color: rgb(228,46,45);
         color: #fff;
         border: none;
     }
@@ -39,13 +39,13 @@
 
 
     .input-group-text:focus-within {
-        border-color: rgb(0, 149, 77);
-        box-shadow: 0 0 0 0.9rem rgb(0, 149, 77);
+        border-color: rgb(228,46,45);
+        box-shadow: 0 0 0 0.9rem rgb(228,46,45);
     }
 
     .custom-input:focus {
-        border-color: rgb(0, 149, 77);
-        box-shadow: 0 0 0 0.1rem rgb(0, 149, 77);
+        border-color: rgb(228,46,45);
+        box-shadow: 0 0 0 0.1rem rgb(228,46,45);
     }
     </style>
 </head>

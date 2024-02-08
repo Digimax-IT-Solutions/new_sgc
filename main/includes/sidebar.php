@@ -42,11 +42,11 @@ $userPosition = $_SESSION['SESS_POSITION'];
 
 </style>
 <!-- Main Sidebar Container -->
-<aside class="main-sidebar sidebar-dark-primary elevation-1 fixed" style="background-color: rgb(0,149,77);">
+<aside class="main-sidebar sidebar-dark-primary elevation-1 fixed" style="background-color: maroon;">
     <!-- Brand Logo -->
     <a href="dashboard" class="brand-link">
-        <img src="../images/conogas.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-2" style="opacity: .9">
-        <span class="brand-text font-weight-bold">ECONOGAS</span>
+        <img src="../images/sgc.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-2" style="opacity: .9">
+        <span class="brand-text font-weight-bold">NEW SGC</span>
     </a>
 
     <!-- Sidebar -->
@@ -78,7 +78,7 @@ $userPosition = $_SESSION['SESS_POSITION'];
                                 <p>Sales Invoice</p>
                             </a>
                         </li>
-                        <li class="nav-item">
+                        <!-- <li class="nav-item">
                             <a href="sales_return" class="nav-link <?php echo ($page == 'main/sales_return') ? 'active' : ''; ?>">
                                 <i class="nav-icon fas fa-undo"></i>
                                 <p>Sales Returns</p>
@@ -95,7 +95,7 @@ $userPosition = $_SESSION['SESS_POSITION'];
                                 <i class="nav-icon fas fa-file-alt"></i>
                                 <p>Statement of Account</p>
                             </a>
-                        </li>
+                        </li> -->
                     </ul>
 
                 </li>
@@ -121,7 +121,7 @@ $userPosition = $_SESSION['SESS_POSITION'];
                                 <p>Received Items</p>
                             </a>
                         </li>
-                        <li class="nav-item">
+                        <!-- <li class="nav-item">
                             <a href="enter_bills" class="nav-link <?php echo ($page == 'main/enter_bills') ? 'active' : ''; ?>">
                                 <i class="nav-icon fas fa-file-invoice"></i>
                                 <p>Enter Bills</p>
@@ -138,11 +138,11 @@ $userPosition = $_SESSION['SESS_POSITION'];
                                 <i class="nav-icon fas fa-money-check-alt"></i>
                                 <p>Pay Bills</p>
                             </a>
-                        </li>
+                        </li> -->
                     </ul>
                 </li>
                 <!-- BANKING -->
-                <li class="nav-item has-treeview <?php echo ($page == 'main/write_check' || $page == 'main/expenses') ? 'menu-open' : ''; ?>">
+                <!-- <li class="nav-item has-treeview <?php echo ($page == 'main/write_check' || $page == 'main/expenses') ? 'menu-open' : ''; ?>">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-university"></i>
                         <p>
@@ -177,10 +177,10 @@ $userPosition = $_SESSION['SESS_POSITION'];
                             </a>
                         </li>
                     </ul>
-                </li>
+                </li> -->
                 <!--  -->
                 <!-- INVENTORY CENTER -->
-                <li class="nav-item has-treevie">
+                <!-- <li class="nav-item has-treevie">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-cubes"></i>
                         <p>
@@ -215,9 +215,9 @@ $userPosition = $_SESSION['SESS_POSITION'];
                             </a>
                         </li>
                     </ul>
-                </li>
+                </li> -->
                 <!-- Accounting CENTER -->
-                <li class="nav-item has-treeview">
+                <!-- <li class="nav-item has-treeview">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-calculator"></i>
                         <p>
@@ -255,7 +255,7 @@ $userPosition = $_SESSION['SESS_POSITION'];
                 </li>
 
 
-                <!--  -->
+                
                 <li class="nav-item has-treeview">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-store"></i>
@@ -278,12 +278,12 @@ $userPosition = $_SESSION['SESS_POSITION'];
                         <li><a href="#">
                             <i class="nav-icon fas fa-file"></i>Submenu Item 2</a>
                         </li>
-                        <!-- Add more submenu items as needed -->
+                        
                     </ul>
                     </ul>
-                </li>
+                </li> 
 
-                <!--  -->
+                 -->
                 <?php if ($userPosition == 'admin') : ?>
                     <!-- MASTERLIST -->
                     <li class="nav-item has-treeview <?php echo ($page == 'main/chart_of_accounts' || $page == 'main/item_list' || $page == 'main/customer_list' || $page == 'main/vendor_list' || $page == 'main/other_names_list' || $page == 'main/location_list' || $page == 'main/category_list' || $page == 'main/terms_list' || $page == 'main/payment_method_list' || $page == 'main/vat_rate_list' || $page == 'main/sales_tax_list' || $page == 'main/wtax_list' || $page == 'main/uom_list') ? 'menu-open' : ''; ?>">

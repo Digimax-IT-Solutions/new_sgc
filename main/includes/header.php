@@ -23,8 +23,8 @@ if (!isset($_SESSION['SESS_MEMBER_ID']) || (trim($_SESSION['SESS_MEMBER_ID']) ==
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ECONOGAS</title>
-    <link rel="icon" type="image/x-icon" href="../images/conogas.png">
+    <title>NEW SGC</title>
+    <link rel="icon" type="image/x-icon" href="../images/sgc.png">
     <!-- Google Font: Source Sans Pro -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
 
@@ -62,8 +62,8 @@ if (!isset($_SESSION['SESS_MEMBER_ID']) || (trim($_SESSION['SESS_MEMBER_ID']) ==
         }
 
         .form-control:focus {
-            border-color: rgb(0, 149, 77);
-            box-shadow: inset 0 1px 1px rgba(0, 149, 77, 0.5), 0 0 8px rgba(0, 149, 77, 0.5);
+            border-color: rgb(228,46,45);
+            box-shadow: inset 0 1px 1px rgba(228, 46, 45, 0.5), 0 0 8px rgba(228, 46, 45, 0.5), ;
         }
 
         th {

@@ -28,7 +28,7 @@
         <div class="container-fluid">
             <br><br>
             <center>
-                <img src="../images/conogas.png" style="height: 250px;" alt="">
+                <img src="../images/sgc.png" style="height: 250px;" alt="">
             </center>
             <br><br>
 
@@ -36,7 +36,7 @@
             <div class="row">
                 <div class="col-12 col-sm-6 col-md-3">
                     <div class="info-box mb-3">
-                        <span class="info-box-icon bg-success elevation-1"><i class="fas fa-users"></i></span>
+                        <span class="info-box-icon bg-danger elevation-1"><i class="fas fa-users"></i></span>
 
                         <div class="info-box-content">
                             <span class="info-box-text"><a href="customer_list">Total Customers</a></span>
@@ -48,7 +48,7 @@
                 </div>
                 <div class="col-12 col-sm-6 col-md-3">
                     <div class="info-box mb-3">
-                        <span class="info-box-icon bg-success elevation-1"><i class="fas fa-truck"></i></span>
+                        <span class="info-box-icon bg-danger elevation-1"><i class="fas fa-truck"></i></span>
 
                         <div class="info-box-content">
                             <span class="info-box-text"><a href="vendor_list">Total Suppliers</a></span>
@@ -60,7 +60,7 @@
                 </div>
                 <div class="col-12 col-sm-6 col-md-3">
                     <div class="info-box mb-3">
-                        <span class="info-box-icon bg-success elevation-1"><i class="fas fa-cubes"></i></span>
+                        <span class="info-box-icon bg-danger elevation-1"><i class="fas fa-cubes"></i></span>
                         <div class="info-box-content">
                             <span class="info-box-text"><a href="item_list">Total Items</a></span>
                             <span class="info-box-number" id="totalItems">Loading...</span>
@@ -71,7 +71,7 @@
                 </div>
                 <div class="col-12 col-sm-6 col-md-3">
                     <div class="info-box mb-3">
-                        <span class="info-box-icon bg-success elevation-1"><i
+                        <span class="info-box-icon bg-danger elevation-1"><i
                                 class="fas fa-file-invoice-dollar"></i></span>
 
                         <div class="info-box-content">
