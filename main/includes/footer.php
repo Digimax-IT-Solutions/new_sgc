@@ -5,7 +5,7 @@
 <footer class="main-footer">
 
     <!-- Default to the left -->
-    <strong>Copyright &copy; 2023-2024 <a href="">DIGIMAX IT SOLUTIONS</a>.</strong> All rights reserved.
+    <strong>Copyright &copy; 2023-2024 <a href="" style="color: rgb(228,46,45);">DIGIMAX IT SOLUTIONS</a>.</strong> All rights reserved.
 </footer>
 </div>
 <!-- ./wrapper -->

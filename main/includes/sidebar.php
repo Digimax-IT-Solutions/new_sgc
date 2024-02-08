@@ -45,7 +45,9 @@ $userPosition = $_SESSION['SESS_POSITION'];
 <aside class="main-sidebar sidebar-dark-primary elevation-1 fixed" style="background-color: maroon;">
     <!-- Brand Logo -->
     <a href="dashboard" class="brand-link">
-        <img src="../images/sgc.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-2" style="opacity: .9">
+        <img src="../images/sgc.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-2" style="
+        opacity: .9;
+        background:white;">
         <span class="brand-text font-weight-bold">NEW SGC</span>
     </a>
 
