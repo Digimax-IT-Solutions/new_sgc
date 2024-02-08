@@ -41,7 +41,7 @@ include('connect.php');
                             <div class="row mb-2">
                                 <div class="col-sm-6">
                                     <ol class="breadcrumb float-sm-left">
-                                        <li class="breadcrumb-item"><a href="dashboard">Dashboard</a></li>
+                                        <li class="breadcrumb-item"><a style="color:maroon;" href="dashboard">Dashboard</a></li>
                                         <li class="breadcrumb-item active">Master List</li>
                                         <li class="breadcrumb-item active">Customer List</li>
                                     </ol>

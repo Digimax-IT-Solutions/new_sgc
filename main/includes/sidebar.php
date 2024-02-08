@@ -46,7 +46,7 @@ $userPosition = $_SESSION['SESS_POSITION'];
     <!-- Brand Logo -->
     <a href="dashboard" class="brand-link">
         <img src="../images/sgc.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-2" style="
-        opacity: .9;
+        opacity: .9;    
         background:white;">
         <span class="brand-text font-weight-bold">NEW SGC</span>
     </a>
@@ -389,7 +389,7 @@ $userPosition = $_SESSION['SESS_POSITION'];
                     </li>
                     <!-- MAINTENANCE -->
 
-                    <li class="nav-item has-treeview <?php echo ($page == 'main/user_list' || $page == 'main/settings') ? 'menu-open' : ''; ?>">
+                    <!-- <li class="nav-item has-treeview <?php echo ($page == 'main/user_list' || $page == 'main/settings') ? 'menu-open' : ''; ?>">
                         <a href="#" class="nav-link">
                             <i class="nav-icon fas fa-cog"></i>
                             <p>
@@ -411,7 +411,7 @@ $userPosition = $_SESSION['SESS_POSITION'];
                                 </a>
                             </li>
                         </ul>
-                    </li>
+                    </li> -->
                 <?php endif; ?>
             </ul>
         </nav>
