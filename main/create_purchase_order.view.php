@@ -3,14 +3,16 @@
 include('connect.php');
 
 // Fetch product items
-$query = "SELECT itemName, itemPurchaseInfo, itemCost, uom, itemQty FROM items";
+$query = "SELECT itemName, itemSalesInfo, itemSrp, uom FROM items";
+
+// Execute the query
 $result = $db->query($query);
 
-$productItems = array();
+// Fetch all rows at once
+$productItems = $result->fetchAll(PDO::FETCH_ASSOC);
 
-while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
-    $productItems[] = $row;
-}
+// Convert the result to JSON for faster fetching in JavaScript
+$productItemsJSON = json_encode($productItems);
 
 // Fetch UOM options
 $queryUOM = "SELECT uomName FROM uom";
@@ -57,6 +59,10 @@ while ($row = $resultUOM->fetch(PDO::FETCH_ASSOC)) {
         text-align: center;
         padding: 2px;
         /* Adjust the padding as needed */
+    }
+    .select2 {
+        text-align: left;
+        padding-top: 3.1px;
     }
 </style>
 </style>
@@ -405,6 +411,10 @@ while ($row = $resultUOM->fetch(PDO::FETCH_ASSOC)) {
 
 <!-- DATE -->
 <script>
+// Use the fetched data in JavaScript
+var productItems = <?php echo $productItemsJSON; ?>;
+</script>
+<script>
     $(document).ready(function() {
         // Function to set the formatted date value for a given input field
         function setFormattedDate(inputField, date) {
@@ -739,7 +749,7 @@ while ($row = $resultUOM->fetch(PDO::FETCH_ASSOC)) {
 
             var newRow = `<tr>
         <td>
-            <select class="form-control item-dropdown" name="item[]" required>
+            <select class="item-dropdown select2" name="item[]" required>
                 <option value="" selected disabled>Select an Item</option>
                 ${itemOptions}
             </select>
@@ -753,6 +763,7 @@ while ($row = $resultUOM->fetch(PDO::FETCH_ASSOC)) {
     </tr>`;
 
             $("#itemTableBody").append(newRow);
+            $('.item-dropdown').last().select2();
         }
 
         // Event listener for adding a new item
@@ -859,4 +870,9 @@ while ($row = $resultUOM->fetch(PDO::FETCH_ASSOC)) {
         });
 
     });
+</script>
+<script>
+$(document).ready(function() {
+    $('.select2').select2();
+});
 </script>
