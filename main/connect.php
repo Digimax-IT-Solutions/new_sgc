@@ -5,7 +5,7 @@
 $db_host        = 'localhost';
 $db_user        = 'root';
 $db_pass        = 'digimax2023';
-$db_database    = 'sales';
+$db_database    = 'sgc_db';
 
 /* End config */
 

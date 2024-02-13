@@ -152,9 +152,13 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
                                         <input type="date" class="form-control" id="invoiceDate" name="invoiceDate" required>
                                         <label for="invoiceDueDate">INVOICE DUE DATE</label>
                                         <input type="date" class="form-control" id="invoiceDueDate" name="invoiceDueDate" required>
+                                        <label for="invoiceBusinessStyle">BUSINESS STYLE</label>
+                                        <input type="text" class="form-control" id="invoiceBusinessStyle" name="invoiceBusinessStyle" required>
                                     </div>
 
                                     <div class="form-group col-md-2">
+                                        <label for="invoicePo">PURCHASE ORDER</label>
+                                        <input type="text" class="form-control" id="invoicePo" name="invoicePo" required>
                                         <label for="selectAccount">SELECT ACCOUNT | <span><a href="chart_of_accounts">Add New Account</a></span></label>
                                         <select class="form-control" id="selectAccount" name="selectAccount" required>
                                             <option value="">Select an Account</option>

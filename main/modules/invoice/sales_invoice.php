@@ -47,6 +47,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $invoiceNo = $_POST["invoiceNo"];
         $invoiceDate = $_POST["invoiceDate"];
         $invoiceDueDate = $_POST["invoiceDueDate"];
+        $invoiceBusinessStyle = $_POST["invoiceBusinessStyle"];
+        $invoicePo = $_POST["invoicePo"];
         $customer = $_POST["customer"];
         $customerID = $_POST["existingCustomer"];
         $address = $_POST["address"];
@@ -72,7 +74,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $query = "INSERT INTO sales_invoice (
             invoiceNo, 
             invoiceDate, 
-            invoiceDueDate, 
+            invoiceDueDate,
+            invoiceBusinessStyle,
+            invoicePo, 
             customer, 
             address, 
             shippingAddress,
@@ -94,7 +98,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         ) VALUES (
             :invoiceNo, 
             :invoiceDate, 
-            :invoiceDueDate, 
+            :invoiceDueDate,
+            :invoiceBusinessStyle,
+            :invoicePo, 
             :customer, 
             :shippingAddress,
             :address, 
@@ -122,6 +128,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->bindParam(":invoiceNo", $invoiceNo);
         $stmt->bindParam(":invoiceDate", $invoiceDate);
         $stmt->bindParam(":invoiceDueDate", $invoiceDueDate);
+        $stmt->bindParam(":invoiceBusinessStyle", $invoiceBusinessStyle);
+        $stmt->bindParam(":invoicePo", $invoicePo);
         $stmt->bindParam(":customer", $customer);  // <-- Replace :customerID with :customer
         $stmt->bindParam(":address", $address);
         $stmt->bindParam(":shippingAddress", $shippingAddress);

@@ -48,6 +48,14 @@
                                             New Item
                                         </button>
                                     </ol>
+                                    <div class="col-sm-15">
+                                <ol class="breadcrumb float-sm-right">
+                                    <form action="modules/masterlist/items/import.php" method="post" enctype="multipart/form-data">
+                                        <input type="file" name="file" id="file" accept=".xls,.xlsx">
+                                        <button type="submit" name="import">Import </button>
+                                    </form>
+                                </ol>
+                            </div>
                                 </div>
                             </div>
                             <br><br>
@@ -612,7 +620,7 @@ $(document).ready(function() {
                         "searching": true,
                         "info": true,
                         "autoWidth": true,
-                        "lengthMenu": [10, 25, 50, 100],
+                        "lengthMenu": [10, 25, 50, 100, 1000, 13000],
                         "ordering": false, // Disable sorting for all columns
                         "dom": 'lBfrtip',
                         "buttons": [{

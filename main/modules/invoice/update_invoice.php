@@ -33,6 +33,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $invoiceDate = $_POST["invoiceDate"];
         $invoiceDueDate = $_POST["invoiceDueDate"];
+        $invoiceBusinessStyle = $_POST["invoiceBusinessStyle"];
+        $invoicePo = $_POST["invoicePo"];
         $customer = $_POST["customer"];
         $address = $_POST["address"];
         $shippingAddress = $_POST["shippingAddress"];
@@ -57,6 +59,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             invoiceNo = :invoiceNo,
             invoiceDate = :invoiceDate,
             invoiceDueDate = :invoiceDueDate,
+            invoiceBusinessStyle = :invoiceBusinessStyle,
+            invoicePo = :invoicePo,
             customer = :customer,
             address = :address,
             shippingAddress = :shippingAddress,
@@ -79,6 +83,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->bindParam(":invoiceNo", $invoiceNo);
         $stmt->bindParam(":invoiceDate", $invoiceDate);
         $stmt->bindParam(":invoiceDueDate", $invoiceDueDate);
+        $stmt->bindParam(":invoiceBusinessStyle", $invoiceBusinessStyle);
+        $stmt->bindParam(":invoicePo", $invoicePo);
         $stmt->bindParam(":customer", $customer);
         $stmt->bindParam(":address", $address);
         $stmt->bindParam(":shippingAddress", $shippingAddress);
