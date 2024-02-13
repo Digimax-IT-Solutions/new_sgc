@@ -3,15 +3,16 @@
 include('connect.php');
 
 // Fetch product items
-$query = "SELECT itemName, itemSalesInfo, itemSrp, itemQty, uom FROM items";
+$query = "SELECT itemName, itemSalesInfo, itemSrp, uom FROM items";
+
+// Execute the query
 $result = $db->query($query);
 
-$productItems = array();
+// Fetch all rows at once
+$productItems = $result->fetchAll(PDO::FETCH_ASSOC);
 
-while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
-    $productItems[] = $row;
-}
-
+// Convert the result to JSON for faster fetching in JavaScript
+$productItemsJSON = json_encode($productItems);
 ?>
 
 <style>
@@ -443,6 +444,10 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
 
 
 <!-- DATE -->
+<script>
+// Use the fetched data in JavaScript
+var productItems = <?php echo $productItemsJSON; ?>;
+</script>
 <script>
     $(document).ready(function() {
         // Function to set the formatted date value for a given input field
