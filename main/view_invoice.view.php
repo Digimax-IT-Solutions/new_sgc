@@ -779,6 +779,22 @@ $(document).ready(function() {
         }
 
         // Add validation logic for each required field
+        if ($("#invoiceBusinessStyle").val() === '') {
+                isValid = false;
+                highlightInvalidField($("#invoiceBusinessStyle"));
+        } else {
+                resetInvalidField($("#invoiceBusinessStyle"));
+        }
+
+        // Add validation logic for each required field
+        if ($("#invoicePo").val() === '') {
+                isValid = false;
+                highlightInvalidField($("#invoicePo"));
+        } else {
+                resetInvalidField($("#invoicePo"));
+        }
+
+        // Add validation logic for each required field
         if ($("#vendor").val() === '') {
             isValid = false;
             highlightInvalidField($("#vendor"));
@@ -838,7 +854,7 @@ $(document).ready(function() {
             resetInvalidField($("#paymentMethod"));
         }
 
-        var isValid = true;
+        
 
         if ($("#itemTableBody tr").length === 0) {
             isValid = false;

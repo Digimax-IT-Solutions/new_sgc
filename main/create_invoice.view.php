@@ -58,6 +58,11 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
     .custom-control-input-green:focus~.custom-control-label-green::before {
         box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
     }
+
+    .select2 {
+        text-align: left;
+        padding-top: 3.1px;
+    }
 </style>
 </style>
 
@@ -661,6 +666,22 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
                 resetInvalidField($("#invoiceDueDate"));
             }
 
+             // Add validation logic for each required field
+             if ($("#invoiceBusinessStyle").val() === '') {
+                isValid = false;
+                highlightInvalidField($("#invoiceBusinessStyle"));
+            } else {
+                resetInvalidField($("#invoiceBusinessStyle"));
+            }
+
+             // Add validation logic for each required field
+             if ($("#invoicePo").val() === '') {
+                isValid = false;
+                highlightInvalidField($("#invoicePo"));
+            } else {
+                resetInvalidField($("#invoicePo"));
+            }
+
             // Add validation logic for each required field
             if ($("#customer").val() === '') {
                 isValid = false;
@@ -721,7 +742,7 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
                 resetInvalidField($("#paymentMethod"));
             }
 
-            var isValid = true;
+            
 
             if ($("#itemTableBody tr").length === 0) {
                 isValid = false;
@@ -773,7 +794,7 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
 
             var newRow = `<tr>
         <td>
-            <select class="form-control item-dropdown" name="item[]" required>
+            <select class="item-dropdown select2" name="item[]" required>
                 <option value="" selected disabled>Select an Item</option>
                 ${itemOptions}
             </select>
@@ -787,6 +808,8 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
     </tr>`;
 
             $("#itemTableBody").append(newRow);
+
+            $('.item-dropdown').last().select2();
         }
 
         // Event listener for adding a new item
@@ -895,4 +918,9 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
         });
 
     });
+</script>
+<script>
+$(document).ready(function() {
+    $('.select2').select2();
+});
 </script>
