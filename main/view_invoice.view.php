@@ -247,7 +247,7 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
 
                                             if ($result) {
                                                 while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
-                                                    echo "<option value='{$row['payment_id']}'>{$row['payment_name']}</option>";
+                                                    echo "<option value='{$row['payment_name']}'>{$row['payment_name']}</option>";
                                                 }
                                             }
                                             ?>
