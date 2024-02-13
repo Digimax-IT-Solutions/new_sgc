@@ -43,16 +43,16 @@ if (isset($_GET['invoiceID'])) {
 
 
 // Fetch product items
-$query = "SELECT itemName, itemSalesInfo, itemSrp FROM items";
+$query = "SELECT itemName, itemSalesInfo, itemSrp, uom FROM items";
+
+// Execute the query
 $result = $db->query($query);
 
-$productItems = array();
+// Fetch all rows at once
+$productItems = $result->fetchAll(PDO::FETCH_ASSOC);
 
-while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
-    $productItems[] = $row;
-}
-
-
+// Convert the result to JSON for faster fetching in JavaScript
+$productItemsJSON = json_encode($productItems);
 ?>
 
 <style>
@@ -99,6 +99,11 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
 .custom-control-input-green:focus~.custom-control-label-green::before {
     box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
 }
+
+.select2 {
+        text-align: left;
+        padding-top: 3.1px;
+    }
 </style>
 </style>
 
@@ -532,7 +537,10 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
 </div>
 
 <!-- DATE -->
-<!-- DATE -->
+<script>
+// Use the fetched data in JavaScript
+var productItems = <?php echo $productItemsJSON; ?>;
+</script>
 <script>
 $(document).ready(function() {
     // Function to set the formatted date value for a given input field
@@ -978,7 +986,7 @@ function selectExistingCustomer() {
             ).join('');
             var newRow = `<tr>
             <td>
-                <select class="form-control item-dropdown" name="item[]" required>
+                <select class="item-dropdown select2" name="item[]" required>
                     <option value="" selected disabled>Select an Item</option>
                     ${itemOptions}
                 </select>
@@ -992,6 +1000,7 @@ function selectExistingCustomer() {
         </tr>`;
 
             $("#itemTableBody").append(newRow);
+            $('.item-dropdown').last().select2();
             // Set values for the added row
             var newRowInputs = $("#itemTableBody tr:last").find('select');
             newRowInputs.eq(0).val(item); // Set the value for the <select> element
@@ -1130,4 +1139,9 @@ function selectExistingCustomer() {
         // Redirect to the URL
         window.location.href = url;
     });
+</script>
+<script>
+$(document).ready(function() {
+    $('.select2').select2();
+});
 </script>
