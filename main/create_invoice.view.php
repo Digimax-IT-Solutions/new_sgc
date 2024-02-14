@@ -424,8 +424,8 @@ $productItemsJSON = json_encode($productItems);
                                         <button type="button" class="btn btn-info" id="saveAndCloseButton">Save and
                                             Close</button>
                                         <button type="button" class="btn btn-warning" id="clearButton">Clear</button>
-                                        <button type="button" class="btn btn-danger" id="deleteButton">Delete</button>
-                                        <button type="button" class="btn btn-secondary" id="printButton">Print</button>
+                                        
+                                        
                                     </div>
                                 </div>
 
@@ -556,6 +556,64 @@ var productItems = <?php echo $productItemsJSON; ?>;
 
 <script>
     $(document).ready(function() {
+        // Function to save form data to localStorage
+        function saveFormData() {
+            const formData = {};
+            // Collect form data
+            const inputs = $("#salesInvoiceForm").find('input, select, textarea');
+            inputs.each(function() {
+                formData[$(this).attr('name')] = $(this).val();
+            });
+            // Store form data in localStorage
+            localStorage.setItem('salesInvoiceFormData', JSON.stringify(formData));
+        }
+
+        // Function to clear saved form data from localStorage
+        function clearFormData() {
+            localStorage.removeItem('salesInvoiceFormData');
+        }
+
+        // Function to load saved form data from localStorage
+        function loadFormData() {
+            const savedData = localStorage.getItem('salesInvoiceFormData');
+            if (savedData) {
+                const formData = JSON.parse(savedData);
+                // Set form input values
+                $.each(formData, function(name, value) {
+                    const input = $("#salesInvoiceForm").find('[name="' + name + '"]');
+                    if (input.length) {
+                        input.val(value);
+                    }
+                });
+            }
+        }
+
+        // Load saved form data when the page loads
+        loadFormData();
+
+        // Save form data when the save button is clicked
+        $("#saveInvoiceButton").on("click", function() {
+            saveFormData();
+        });
+
+        // Clear saved form data when the form is submitted or cleared
+        $("#saveAndCloseButton, #saveAndNewButton, #clearButton").on('click', function() {
+            clearFormData();
+        });
+    });
+</script>
+
+<script>
+    $(document).ready(function() {
+        $("#clearButton").on("click", function() {
+            // Reset all form fields to their default values
+            $("#salesInvoiceForm")[0].reset();
+
+            // Additional steps may be required depending on your specific form elements
+            // Clearing the item table body
+            $("#itemTableBody").empty();
+        });
+
         $("#saveAndCloseButton").on("click", function() {
             // Validate the form
             if (!isFormValid()) {
