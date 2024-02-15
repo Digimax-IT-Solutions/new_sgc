@@ -1,5 +1,7 @@
 <?php
 $userPosition = $_SESSION['SESS_POSITION'];
+
+
 ?>
 
 <style>
@@ -144,7 +146,7 @@ $userPosition = $_SESSION['SESS_POSITION'];
                     </ul>
                 </li>
                 <!-- BANKING -->
-                <!-- <li class="nav-item has-treeview <?php echo ($page == 'main/write_check' || $page == 'main/expenses') ? 'menu-open' : ''; ?>">
+                <li class="nav-item has-treeview <?php echo ($page == 'main/write_check' || $page == 'main/expenses') ? 'menu-open' : ''; ?>">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-university"></i>
                         <p>
@@ -160,7 +162,7 @@ $userPosition = $_SESSION['SESS_POSITION'];
                                 <p>Write Check</p>
                             </a>
                         </li>
-                        <li class="nav-item">
+                        <!-- <li class="nav-item">
                             <a href="make_deposit" class="nav-link <?php echo ($page == 'main/make_deposit') ? 'active' : ''; ?>">
                                 <i class="nav-icon fas fa-coins"></i>
                                 <p>Make Deposit</p>
@@ -177,9 +179,9 @@ $userPosition = $_SESSION['SESS_POSITION'];
                                 <i class="nav-icon fas fa-balance-scale"></i>
                                 <p>Reconcile</p>
                             </a>
-                        </li>
+                        </li> -->
                     </ul>
-                </li> -->
+                </li>
                 <!--  -->
                 <!-- INVENTORY CENTER -->
                 <!-- <li class="nav-item has-treevie">
@@ -388,7 +390,9 @@ $userPosition = $_SESSION['SESS_POSITION'];
 
                     </li>
                     <!-- MAINTENANCE -->
-
+                    <?php
+                    if ($userPosition !== 'employee') {
+                        ?>
                     <li class="nav-item has-treeview <?php echo ($page == 'main/user_list' || $page == 'main/settings') ? 'menu-open' : ''; ?>">
                         <a href="#" class="nav-link">
                             <i class="nav-icon fas fa-cog"></i>
@@ -412,6 +416,9 @@ $userPosition = $_SESSION['SESS_POSITION'];
                             </li>
                         </ul>
                     </li>
+                    <?php
+                    }
+                    ?>
                 <?php endif; ?>
             </ul>
         </nav>

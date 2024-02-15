@@ -73,7 +73,7 @@ try {
                                         <th>ID</th>
                                         <th>NAME</th>
                                         <th>USERNAME</th>
-                                        <th>POSITION</th>
+                                        <th>USER TYPE</th>
                                         <th>ACTION</th>
                                     </tr>
                                 </thead>
@@ -104,7 +104,7 @@ try {
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header" style="background-color: rgb(0,149,77); color: white;">
-                    <h5 class="modal-title" id="addUserModalLabel"><b>ADD NEW TERM</b></h5>
+                    <h5 class="modal-title" id="addUserModalLabel"><b>ADD NEW USER</b></h5>
                     <button type="buttonsaveTermButton" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -114,21 +114,20 @@ try {
                         style="background-color: rgb(0,149,77); padding: 20px; color: white; border-radius: 10px;">
                         <div class="form-group">
                             <label for="userName">NAME</label>
-                            <input type="text" class="form-control" id="userName" name="userName" required>
+                            <input type="text" class="form-control" id="username" name="username" required>
                         </div>
 
                         <div class="form-group">
                             <label for="userType">USER TYPE</label>
-                            <input type="text" class="form-control" id="userType" name="userType" required>
+                            <select class="form-control" id="position" name="position">
+                                <option value="" selected disabled>-Select User Type-</option>
+                                <option value="admin">Admin</option>
+                                <option value="employee">Employee</option>
+                            </select>
                         </div>
                         <div class="form-group">
-                            <label for="termDaysDue">NO. OF DAYS DUE</label>
-                            <input type="number" class="form-control" id="termDaysDue" name="termDaysDue" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="termDescription">DESCRPTION</label>
-                            <input type="text" class="form-control" id="termDescription" name="termDescription"
-                                required>
+                            <label for="termDescription">DESCRIPTION</label>
+                            <input type="text" class="form-control" id="position" name="position" required>
                         </div>
                         <div class="form-group form-check">
                             <input type="checkbox" class="form-check-input" id="activeStatus" name="activeStatus"
@@ -138,7 +137,7 @@ try {
                     </form>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-success" id="saveItemButton">Save Category</button>
+                        <button type="button" class="btn btn-success" id="saveItemButton">Save User</button>
                     </div>
                 </div>
 
