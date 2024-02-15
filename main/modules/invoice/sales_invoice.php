@@ -274,6 +274,41 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
         }
 
+        // Retrieve the customer's balance from the database
+$getCustomerBalanceQuery = "SELECT customerBalance FROM customers WHERE customerID = :customerID";
+
+// Prepare the SQL statement for retrieving the customer's balance
+$getCustomerBalanceStmt = $db->prepare($getCustomerBalanceQuery);
+
+// Bind parameters for retrieving the customer's balance
+$getCustomerBalanceStmt->bindParam(":customerID", $customerID);
+
+// Execute the retrieval of the customer's balance
+if (!$getCustomerBalanceStmt->execute()) {
+    throw new Exception("Error retrieving customer balance from the customers table.");
+}
+
+// Fetch the customer's balance
+$customerBalance = $getCustomerBalanceStmt->fetchColumn();
+
+// Calculate the new balance
+$newBalance = $totalAmountDue + $customerBalance;
+
+// Update the customer's balance in the customers table
+$updateCustomerBalanceQuery = "UPDATE customers SET customerBalance = :newBalance WHERE customerID = :customerID";
+
+// Prepare the SQL statement for updating the customer's balance
+$updateCustomerBalanceStmt = $db->prepare($updateCustomerBalanceQuery);
+
+// Bind parameters for updating the customer's balance
+$updateCustomerBalanceStmt->bindParam(":newBalance", $newBalance);
+$updateCustomerBalanceStmt->bindParam(":customerID", $customerID);
+
+// Execute the update of the customer's balance
+if (!$updateCustomerBalanceStmt->execute()) {
+    throw new Exception("Error updating customer balance in the customers table.");
+}
+
     } catch (Exception $e) {
         // Rollback the database transaction on exception
         $db->rollBack();

@@ -77,7 +77,7 @@ include('connect.php');
                                         <th>CONTACT NO.</th>
                                         <th>TIN NO.</th>
                                         <th>EMAIL</th>
-                                        <th>TERMS</th>
+                                        <th><center>BALANCE</center></th>
                                         <th>ACTION</th>
                                     </tr>
                                 </thead>
@@ -369,6 +369,32 @@ $(document).ready(function() {
             }
         });
     });
+
+    function formatCurrency(amount) {
+            // Convert amount to number if it's not already
+            amount = parseFloat(amount);
+
+            // Check if the amount is a valid number
+            if (!isNaN(amount)) {
+                // Check if amount is negative
+                if (amount < 0) {
+                    // If negative, format with parentheses
+                    return '(' + Math.abs(amount).toLocaleString('en-PH', {
+                        style: 'currency',
+                        currency: 'PHP'
+                    }) + ')';
+                } else {
+                    // If positive or zero, format normally
+                    return amount.toLocaleString('en-PH', {
+                        style: 'currency',
+                        currency: 'PHP'
+                    });
+                }
+            } else {
+                // If amount is not a valid number, return empty string
+                return '';
+            }
+        }
     // Variable to check if DataTables is already initialized
     var dataTableInitialized = false;
 
@@ -394,7 +420,7 @@ $(document).ready(function() {
                             <td>${customer.contactNumber || ''}</td>
                             <td>${customer.customerTin || ''}</td>
                             <td>${customer.customerEmail || ''}</td>
-                            <td>${customer.customerTerms || ''}</td>
+                            <td><center><b>${customer.customerBalance ? formatCurrency(customer.customerBalance) : ''}</b></center></td>
                             <td>
                             <button type="button" class="btn btn-primary btn-sm editCustomerButton" style="background-color: rgb(0, 149, 77); color: white; border: 1px rgb(0, 149, 77);" data-id="${customer.customerID}">Edit</button>
                             <button type="button" class="btn btn-danger btn-sm deleteCustomerButton" data-id="${customer.customerID}">Delete</button></td>
