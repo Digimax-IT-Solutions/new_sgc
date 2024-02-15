@@ -9,7 +9,9 @@
 
 #itemsTable th,
 #itemsTable td {
-    padding: 2px;
+    padding: 1px;
+        width: 100px;
+        border: 1px solid maroon;
     /* Adjust the padding as needed */
 }
 #itemsTable tbody tr:hover {
@@ -580,23 +582,35 @@ $(document).ready(function() {
             }
         });
     });
-    // Variable to check if DataTables is already initialized
-    var dataTableInitialized = false;
-    // Function to fetch and populate data
-    function populateItemsTable() {
-        $.ajax({
-            type: "GET",
-            url: "modules/masterlist/items/get_items.php", // Adjust the URL to the server-side script
-            success: function(response) {
-                // Parse the JSON response
-                var items = JSON.parse(response);
+   // Variable to store DataTable instance
+var dataTableInstance;
 
-                // Clear existing table rows
-                $("#itemsTable tbody").empty();
+// Function to fetch and populate data
+function populateItemsTable() {
+    $.ajax({
+        type: "GET",
+        url: "modules/masterlist/items/get_items.php",
+        data: {
+            page: 1, // Initial page number
+            limit: -1, // Retrieve all items at once
+            search: '' // Empty search string initially
+        },
+        success: function(response) {
+            // Initialize or reinitialize DataTable instance
+            if (dataTableInstance) {
+                // Destroy existing DataTable instance
+                dataTableInstance.destroy();
+            }
 
-                // Inside the items.forEach() loop where you populate the table
-                items.forEach(function(item) {
-                    var row = `<tr>
+            // Parse the JSON response
+            var items = JSON.parse(response);
+
+            // Clear existing table rows
+            $("#itemsTable tbody").empty();
+
+            // Inside the items.forEach() loop where you populate the table
+            items.forEach(function(item) {
+                var row = `<tr>
                     <td>${item.itemCode}</td>
                     <td>${item.itemName}</td>
                     <td>${item.itemType}</td>
@@ -604,89 +618,72 @@ $(document).ready(function() {
                     <td>${item.uom || ''}</td>
                     <td>${new Date(item.createdAt).toLocaleDateString()}</td>
                     <td>
-                    <button type="button" class="btn btn-primary btn-sm editItemButton" style="background-color: rgb(0, 149, 77); color: white; border: 1px rgb(0, 149, 77);" data-id="${item.itemID}">Edit</button>
-                    <button type="button" class="btn btn-danger btn-sm deleteItemButton" data-id="${item.itemID}">Delete</button></td>
+                        <button type="button" class="btn btn-primary btn-sm editItemButton" style="background-color: rgb(0, 149, 77); color: white; border: 1px rgb(0, 149, 77);" data-id="${item.itemID}">Edit</button>
+                        <button type="button" class="btn btn-danger btn-sm deleteItemButton" data-id="${item.itemID}">Delete</button>
+                    </td>
                 </tr>`;
-                    $("#itemsTable tbody").append(row);
+                $("#itemsTable tbody").append(row);
+            });
 
-
-                });
-
-                // Initialize DataTables only if it's not already initialized
-                if (!dataTableInitialized) {
-                    $('#itemsTable').DataTable({
-                        "paging": true,
-                        "lengthChange": true,
-                        "searching": true,
-                        "info": true,
-                        "autoWidth": true,
-                        "lengthMenu": [10, 25, 50, 100, 1000, 13000],
-                        "ordering": false, // Disable sorting for all columns
-                        "dom": 'lBfrtip',
-                        "buttons": [{
-                                extend: 'copy',
-                                exportOptions: {
-                                    columns: ':not(:last-child)' // Exclude the last column (ACTION)
-                                }
-                            },
-                            {
-                                extend: 'csv',
-                                exportOptions: {
-                                    columns: ':not(:last-child)' // Exclude the last column (ACTION)
-                                }
-                            },
-                            {
-                                extend: 'excel',
-                                exportOptions: {
-                                    columns: ':not(:last-child)' // Exclude the last column (ACTION)
-                                }
-                            },
-                            {
-                                extend: 'pdf',
-                                exportOptions: {
-                                    columns: ':not(:last-child)' // Exclude the last column (ACTION)
-                                }
-                            },
-                            {
-                                extend: 'print',
-                                exportOptions: {
-                                    columns: ':not(:last-child)' // Exclude the last column (ACTION)
-                                }
-                            },
-                        ],
-                        "oLanguage": {
-                            "sSearch": "Search:",
-                            "sLengthMenu": "Show _MENU_ entries",
-                            "sInfo": "Showing _START_ to _END_ of _TOTAL_ entries",
-                            "sInfoEmpty": "Showing 0 to 0 of 0 entries",
-                            "sInfoFiltered": "(filtered from _MAX_ total entries)",
-                            "oPaginate": {
-                                "sFirst": "First",
-                                "sLast": "Last",
-                                "sNext": "Next",
-                                "sPrevious": "Previous"
-                            }
-                        }
-                    });
-
-                    // Set the flag to indicate DataTables is now initialized
-                    dataTableInitialized = true;
-
-                } else {
-                    // If DataTables is already initialized, destroy and recreate it
-                    $('#itemsTable').DataTable().destroy();
-                    $('#itemsTable').DataTable({
-                        // Your DataTables options here
-                    });
+            // Initialize DataTable
+            dataTableInstance = $('#itemsTable').DataTable({
+                "paging": true,
+                "lengthChange": true,
+                "searching": true,
+                "info": true,
+                "autoWidth": true,
+                "lengthMenu": [10, 25, 50, 100, 1000],
+                "ordering": false,
+                "dom": 'lBfrtip',
+                "buttons": [{
+                    extend: 'copy',
+                    exportOptions: {
+                        columns: ':not(:last-child)'
+                    }
+                }, {
+                    extend: 'csv',
+                    exportOptions: {
+                        columns: ':not(:last-child)'
+                    }
+                }, {
+                    extend: 'excel',
+                    exportOptions: {
+                        columns: ':not(:last-child)'
+                    }
+                }, {
+                    extend: 'pdf',
+                    exportOptions: {
+                        columns: ':not(:last-child)'
+                    }
+                }, {
+                    extend: 'print',
+                    exportOptions: {
+                        columns: ':not(:last-child)'
+                    }
+                }],
+                "oLanguage": {
+                    "sSearch": "Search Item:",
+                    "sLengthMenu": "Show _MENU_ entries",
+                    "sInfo": "Showing _START_ to _END_ of _TOTAL_ entries",
+                    "sInfoEmpty": "Showing 0 to 0 of 0 entries",
+                    "sInfoFiltered": "(filtered from _MAX_ total entries)",
+                    "oPaginate": {
+                        "sFirst": "First",
+                        "sLast": "Last",
+                        "sNext": "Next",
+                        "sPrevious": "Previous"
+                    }
                 }
-            },
-            error: function() {
-                console.log("Error fetching data.");
-            }
-        });
-    }
-    // Initial population when the page loads
-    populateItemsTable();
+            });
+        },
+        error: function() {
+            console.log("Error fetching data.");
+        }
+    });
+}
+
+// Initial population when the page loads
+populateItemsTable();
 
     // Function to display an error using SweetAlert2
     function displayError(errorMessage) {
