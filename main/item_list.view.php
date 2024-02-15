@@ -1,23 +1,24 @@
 <?php include __DIR__ . ('/includes/header.php'); ?>
 <?php require 'connect.php'; ?>
 <style>
+    #itemsTable {
+        border-collapse: collapse;
+        width: 100%;
+    }
 
-#itemsTable {
-    border-collapse: collapse;
-    width: 100%;
-}
-
-#itemsTable th,
-#itemsTable td {
-    padding: 1px;
+    #itemsTable th,
+    #itemsTable td {
+        padding: 1px;
         width: 100px;
         border: 1px solid maroon;
-    /* Adjust the padding as needed */
-}
-#itemsTable tbody tr:hover {
-    color: white;
-    background-color: maroon; /* Set your desired background color here */
-}
+        /* Adjust the padding as needed */
+    }
+
+    #itemsTable tbody tr:hover {
+        color: white;
+        background-color: maroon;
+        /* Set your desired background color here */
+    }
 </style>
 <div class="content-wrapper">
     <div class="content-header">
@@ -45,19 +46,18 @@
                                 </div>
                                 <div class="col-sm-6">
                                     <ol class="breadcrumb float-sm-right">
-                                        <button class="btn btn-success" data-toggle="modal" data-target="#addItemModal"
-                                            style="background-color: rgb(0, 149, 77); color: white;">
+                                        <button class="btn btn-success" data-toggle="modal" data-target="#addItemModal" style="background-color: rgb(0, 149, 77); color: white;">
                                             New Item
                                         </button>
                                     </ol>
                                     <div class="col-sm-15">
-                                <ol class="breadcrumb float-sm-right">
-                                    <form action="modules/masterlist/items/import.php" method="post" enctype="multipart/form-data">
-                                        <input type="file" name="file" id="file" accept=".xls,.xlsx">
-                                        <button type="submit" name="import">Import </button>
-                                    </form>
-                                </ol>
-                            </div>
+                                        <ol class="breadcrumb float-sm-right">
+                                            <form action="modules/masterlist/items/import.php" method="post" enctype="multipart/form-data">
+                                                <input type="file" name="file" id="file" accept=".xls,.xlsx">
+                                                <button type="submit" name="import">Import </button>
+                                            </form>
+                                        </ol>
+                                    </div>
                                 </div>
                             </div>
                             <br><br>
@@ -144,8 +144,8 @@
                                 <select class="form-control" id="preferredVendor" name="preferredVendor" required>
                                     <option value=""></option>
                                     <?php foreach ($vendorNames as $vendorName) : ?>
-                                    <option value="<?= $vendorName['vendorName']; ?>">
-                                        <?= $vendorName['vendorName']; ?></option>
+                                        <option value="<?= $vendorName['vendorName']; ?>">
+                                            <?= $vendorName['vendorName']; ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
@@ -159,8 +159,7 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label for="itemSalesInfo">SALES DESCRIPTION</label>
-                                <input type="text" class="form-control" id="itemSalesInfo" name="itemSalesInfo"
-                                    required>
+                                <input type="text" class="form-control" id="itemSalesInfo" name="itemSalesInfo" required>
                             </div>
                             <div class="form-group">
                                 <label for="itemSrp">SELLING PRICE</label>
@@ -170,8 +169,7 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label for="itemPurchaseInfo">PURCHASE DESCRIPTION</label>
-                                <input type="text" class="form-control" id="itemPurchaseInfo" name="itemPurchaseInfo"
-                                    required>
+                                <input type="text" class="form-control" id="itemPurchaseInfo" name="itemPurchaseInfo" required>
                             </div>
                             <div class="form-group">
                                 <label for="itemCost">COST</label>
@@ -195,8 +193,8 @@
                                 <select class="form-control" id="itemCategory" name="itemCategory" required>
                                     <option value=""></option>
                                     <?php foreach ($categories as $category) : ?>
-                                    <option value="<?= $category['category_name']; ?>">
-                                        <?= $category['category_name']; ?></option>
+                                        <option value="<?= $category['category_name']; ?>">
+                                            <?= $category['category_name']; ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
@@ -215,8 +213,8 @@
                                 <select class="form-control" id="uom" name="uom" required>
                                     <option value=""></option>
                                     <?php foreach ($categories as $category) : ?>
-                                    <option value="<?= $category['uomName']; ?>">
-                                        <?= $category['uomName']; ?></option>
+                                        <option value="<?= $category['uomName']; ?>">
+                                            <?= $category['uomName']; ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
@@ -240,8 +238,8 @@
                                 <select class="form-control" id="itemCogsAccount" name="itemCogsAccount" required>
                                     <option value=""></option>
                                     <?php foreach ($cogsAccounts as $cogsAccount) : ?>
-                                    <option value="<?= $cogsAccount['account_name']; ?>">
-                                        <?= $cogsAccount['account_name']; ?></option>
+                                        <option value="<?= $cogsAccount['account_name']; ?>">
+                                            <?= $cogsAccount['account_name']; ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
@@ -265,8 +263,8 @@
                                 <select class="form-control" id="itemIncomeAccount" name="itemIncomeAccount" required>
                                     <option value=""></option>
                                     <?php foreach ($incomeAccounts as $incomeAccount) : ?>
-                                    <option value="<?= $incomeAccount['account_name']; ?>">
-                                        <?= $incomeAccount['account_name']; ?></option>
+                                        <option value="<?= $incomeAccount['account_name']; ?>">
+                                            <?= $incomeAccount['account_name']; ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
@@ -290,8 +288,8 @@
                                 <select class="form-control" id="itemAssetsAccount" name="itemAssetsAccount" required>
                                     <option value=""></option>
                                     <?php foreach ($assetAccounts as $assetAccount) : ?>
-                                    <option value="<?= $assetAccount['account_name']; ?>">
-                                        <?= $assetAccount['account_name']; ?></option>
+                                        <option value="<?= $assetAccount['account_name']; ?>">
+                                            <?= $assetAccount['account_name']; ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
@@ -307,8 +305,7 @@
     </div>
 </div>
 <!-- Edit Location Modal -->
-<div class="modal" id="editItemModal" tabindex="-1" role="dialog" aria-labelledby="editItemModalLabel"
-    aria-hidden="true">
+<div class="modal" id="editItemModal" tabindex="-1" role="dialog" aria-labelledby="editItemModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header" style="background-color: rgb(0,149,77); color: white;">
@@ -363,19 +360,17 @@
                             ?>
                             <div class="form-group">
                                 <label for="editPreferredVendor">PREFERRED VENDOR</label>
-                                <select class="form-control" id="editPreferredVendor" name="editPreferredVendor"
-                                    required>
+                                <select class="form-control" id="editPreferredVendor" name="editPreferredVendor" required>
                                     <option value=""></option>
                                     <?php foreach ($vendorNames as $vendorName) : ?>
-                                    <option value="<?= $vendorName['vendorName']; ?>">
-                                        <?= $vendorName['vendorName']; ?></option>
+                                        <option value="<?= $vendorName['vendorName']; ?>">
+                                            <?= $vendorName['vendorName']; ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
                             <div class="form-group">
                                 <label for="editReOrderPoint">RE-ORDER POINT</label>
-                                <input type="text" class="form-control" id="editReOrderPoint" name="editReOrderPoint"
-                                    required>
+                                <input type="text" class="form-control" id="editReOrderPoint" name="editReOrderPoint" required>
                             </div>
                         </div>
                     </div>
@@ -383,8 +378,7 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label for="editItemSalesInfo">SALES DESCRIPTION</label>
-                                <input type="text" class="form-control" id="editItemSalesInfo" name="editItemSalesInfo"
-                                    required>
+                                <input type="text" class="form-control" id="editItemSalesInfo" name="editItemSalesInfo" required>
                             </div>
                             <div class="form-group">
                                 <label for="editItemSrp">SELLING PRICE</label>
@@ -394,8 +388,7 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label for="editItemPurchaseInfo">PURCHASE DESCRIPTION</label>
-                                <input type="text" class="form-control" id="editItemPurchaseInfo"
-                                    name="editItemPurchaseInfo" required>
+                                <input type="text" class="form-control" id="editItemPurchaseInfo" name="editItemPurchaseInfo" required>
                             </div>
                             <div class="form-group">
                                 <label for="editItemCost">COST</label>
@@ -419,8 +412,8 @@
                                 <select class="form-control" id="editItemCategory" name="editItemCategory" required>
                                     <option value=""></option>
                                     <?php foreach ($categories as $category) : ?>
-                                    <option value="<?= $category['category_name']; ?>">
-                                        <?= $category['category_name']; ?></option>
+                                        <option value="<?= $category['category_name']; ?>">
+                                            <?= $category['category_name']; ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
@@ -439,8 +432,8 @@
                                 <select class="form-control" id="editUom" name="editUom" required>
                                     <option value=""></option>
                                     <?php foreach ($categories as $category) : ?>
-                                    <option value="<?= $category['uomName']; ?>">
-                                        <?= $category['uomName']; ?></option>
+                                        <option value="<?= $category['uomName']; ?>">
+                                            <?= $category['uomName']; ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
@@ -461,12 +454,11 @@
                             <!-- Set the retrieved COGS account types in your dropdown -->
                             <div class="form-group">
                                 <label for="editItemCogsAccount">COGS ACCOUNT</label>
-                                <select class="form-control" id="editItemCogsAccount" name="editItemCogsAccount"
-                                    required>
+                                <select class="form-control" id="editItemCogsAccount" name="editItemCogsAccount" required>
                                     <option value=""></option>
                                     <?php foreach ($cogsAccounts as $cogsAccount) : ?>
-                                    <option value="<?= $cogsAccount['account_name']; ?>">
-                                        <?= $cogsAccount['account_name']; ?></option>
+                                        <option value="<?= $cogsAccount['account_name']; ?>">
+                                            <?= $cogsAccount['account_name']; ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
@@ -487,12 +479,11 @@
                             <!-- Set the retrieved COGS account types in your dropdown -->
                             <div class="form-group">
                                 <label for="editItemIncomeAccount">INCOME ACCOUNT</label>
-                                <select class="form-control" id="editItemIncomeAccount" name="editItemIncomeAccount"
-                                    required>
+                                <select class="form-control" id="editItemIncomeAccount" name="editItemIncomeAccount" required>
                                     <option value=""></option>
                                     <?php foreach ($incomeAccounts as $incomeAccount) : ?>
-                                    <option value="<?= $incomeAccount['account_name']; ?>">
-                                        <?= $incomeAccount['account_name']; ?></option>
+                                        <option value="<?= $incomeAccount['account_name']; ?>">
+                                            <?= $incomeAccount['account_name']; ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
@@ -513,12 +504,11 @@
                             <!-- Set the retrieved COGS account types in your dropdown -->
                             <div class="form-group">
                                 <label for="editItemAssetsAccount">ASSETS ACCOUNT</label>
-                                <select class="form-control" id="editItemAssetsAccount" name="editItemAssetsAccount"
-                                    required>
+                                <select class="form-control" id="editItemAssetsAccount" name="editItemAssetsAccount" required>
                                     <option value=""></option>
                                     <?php foreach ($assetAccounts as $assetAccount) : ?>
-                                    <option value="<?= $assetAccount['account_name']; ?>">
-                                        <?= $assetAccount['account_name']; ?></option>
+                                        <option value="<?= $assetAccount['account_name']; ?>">
+                                            <?= $assetAccount['account_name']; ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
@@ -535,33 +525,43 @@
     </div>
 </div>
 <script>
-$(document).ready(function() {
-    $("#saveItemButton").click(function() {
-        // Get form data
-        var formData = $("#addItemForm").serialize();
+    $(document).ready(function() {
+        $("#saveItemButton").click(function() {
+            // Get form data
+            var formData = $("#addItemForm").serialize();
 
-        // AJAX request to store data
-        $.ajax({
-            type: "POST",
-            url: "modules/masterlist/items/save_item.php",
-            data: formData,
-            success: function(response) {
-                // Use SweetAlert2 for displaying success or error message
-                if (response === "success") {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Item saved successfully!',
-                        showConfirmButton: false,
-                        timer: 1500
-                    }).then(function() {
-                        // Reload the browser after SweetAlert2 is closed
-                        location.reload();
-                    });
-                    $("#addItemModal").modal("hide");
+            // AJAX request to store data
+            $.ajax({
+                type: "POST",
+                url: "modules/masterlist/items/save_item.php",
+                data: formData,
+                success: function(response) {
+                    // Use SweetAlert2 for displaying success or error message
+                    if (response === "success") {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Item saved successfully!',
+                            showConfirmButton: false,
+                            timer: 1500
+                        }).then(function() {
+                            // Reload the browser after SweetAlert2 is closed
+                            location.reload();
+                        });
+                        $("#addItemModal").modal("hide");
 
-                    // Update the table after successfully saving the item
-                    populateItemsTable();
-                } else {
+                        // Update the table after successfully saving the item
+                        populateItemsTable();
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'ERROR',
+                            text: response, // Display the MySQL error message
+                            showConfirmButton: false,
+                            timer: 5000 // Adjust the timer as needed
+                        });
+                    }
+                },
+                error: function() {
                     Swal.fire({
                         icon: 'error',
                         title: 'ERROR',
@@ -570,47 +570,37 @@ $(document).ready(function() {
                         timer: 5000 // Adjust the timer as needed
                     });
                 }
-            },
-            error: function() {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'ERROR',
-                    text: response, // Display the MySQL error message
-                    showConfirmButton: false,
-                    timer: 5000 // Adjust the timer as needed
-                });
-            }
+            });
         });
-    });
-   // Variable to store DataTable instance
-var dataTableInstance;
+        // Variable to store DataTable instance
+        var dataTableInstance;
 
-// Function to fetch and populate data
-function populateItemsTable() {
-    $.ajax({
-        type: "GET",
-        url: "modules/masterlist/items/get_items.php",
-        data: {
-            page: 1, // Initial page number
-            limit: -1, // Retrieve all items at once
-            search: '' // Empty search string initially
-        },
-        success: function(response) {
-            // Initialize or reinitialize DataTable instance
-            if (dataTableInstance) {
-                // Destroy existing DataTable instance
-                dataTableInstance.destroy();
-            }
+        // Function to fetch and populate data
+        function populateItemsTable() {
+            $.ajax({
+                type: "GET",
+                url: "modules/masterlist/items/get_items.php",
+                data: {
+                    page: 1, // Initial page number
+                    limit: -1, // Retrieve all items at once
+                    search: '' // Empty search string initially
+                },
+                success: function(response) {
+                    // Initialize or reinitialize DataTable instance
+                    if (dataTableInstance) {
+                        // Destroy existing DataTable instance
+                        dataTableInstance.destroy();
+                    }
 
-            // Parse the JSON response
-            var items = JSON.parse(response);
+                    // Parse the JSON response
+                    var items = JSON.parse(response);
 
-            // Clear existing table rows
-            $("#itemsTable tbody").empty();
+                    // Clear existing table rows
+                    $("#itemsTable tbody").empty();
 
-            // Inside the items.forEach() loop where you populate the table
-            items.forEach(function(item) {
-                var row = `<tr>
+                    // Inside the items.forEach() loop where you populate the table
+                    items.forEach(function(item) {
+                        var row = `<tr>
                     <td>${item.itemCode}</td>
                     <td>${item.itemName}</td>
                     <td>${item.itemType}</td>
@@ -622,69 +612,194 @@ function populateItemsTable() {
                         <button type="button" class="btn btn-danger btn-sm deleteItemButton" data-id="${item.itemID}">Delete</button>
                     </td>
                 </tr>`;
-                $("#itemsTable tbody").append(row);
-            });
+                        $("#itemsTable tbody").append(row);
+                    });
 
-            // Initialize DataTable
-            dataTableInstance = $('#itemsTable').DataTable({
-                "paging": true,
-                "lengthChange": true,
-                "searching": true,
-                "info": true,
-                "autoWidth": true,
-                "lengthMenu": [10, 25, 50, 100, 1000],
-                "ordering": false,
-                "dom": 'lBfrtip',
-                "buttons": [{
-                    extend: 'copy',
-                    exportOptions: {
-                        columns: ':not(:last-child)'
-                    }
-                }, {
-                    extend: 'csv',
-                    exportOptions: {
-                        columns: ':not(:last-child)'
-                    }
-                }, {
-                    extend: 'excel',
-                    exportOptions: {
-                        columns: ':not(:last-child)'
-                    }
-                }, {
-                    extend: 'pdf',
-                    exportOptions: {
-                        columns: ':not(:last-child)'
-                    }
-                }, {
-                    extend: 'print',
-                    exportOptions: {
-                        columns: ':not(:last-child)'
-                    }
-                }],
-                "oLanguage": {
-                    "sSearch": "Search Item:",
-                    "sLengthMenu": "Show _MENU_ entries",
-                    "sInfo": "Showing _START_ to _END_ of _TOTAL_ entries",
-                    "sInfoEmpty": "Showing 0 to 0 of 0 entries",
-                    "sInfoFiltered": "(filtered from _MAX_ total entries)",
-                    "oPaginate": {
-                        "sFirst": "First",
-                        "sLast": "Last",
-                        "sNext": "Next",
-                        "sPrevious": "Previous"
-                    }
+                    // Initialize DataTable
+                    dataTableInstance = $('#itemsTable').DataTable({
+                        "paging": true,
+                        "lengthChange": true,
+                        "searching": true,
+                        "info": true,
+                        "autoWidth": true,
+                        "lengthMenu": [10, 25, 50, 100, 1000],
+                        "ordering": false,
+                        "dom": 'lBfrtip',
+                        "buttons": [{
+                            extend: 'copy',
+                            exportOptions: {
+                                columns: ':not(:last-child)'
+                            }
+                        }, {
+                            extend: 'csv',
+                            exportOptions: {
+                                columns: ':not(:last-child)'
+                            }
+                        }, {
+                            extend: 'excel',
+                            exportOptions: {
+                                columns: ':not(:last-child)'
+                            }
+                        }, {
+                            extend: 'pdf',
+                            exportOptions: {
+                                columns: ':not(:last-child)'
+                            }
+                        }, {
+                            extend: 'print',
+                            exportOptions: {
+                                columns: ':not(:last-child)'
+                            }
+                        }],
+                        "oLanguage": {
+                            "sSearch": "Search Item:",
+                            "sLengthMenu": "Show _MENU_ entries",
+                            "sInfo": "Showing _START_ to _END_ of _TOTAL_ entries",
+                            "sInfoEmpty": "Showing 0 to 0 of 0 entries",
+                            "sInfoFiltered": "(filtered from _MAX_ total entries)",
+                            "oPaginate": {
+                                "sFirst": "First",
+                                "sLast": "Last",
+                                "sNext": "Next",
+                                "sPrevious": "Previous"
+                            }
+                        }
+                    });
+                },
+                error: function() {
+                    console.log("Error fetching data.");
                 }
             });
-        },
-        error: function() {
-            console.log("Error fetching data.");
+        }
+
+        // Initial population when the page loads
+        populateItemsTable();
+
+        // Function to display an error using SweetAlert2
+        function displayError(errorMessage) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: errorMessage,
+                showConfirmButton: false,
+                timer: 5000
+            });
         }
     });
-}
+    // Edit Location functionality
+    $("#itemsTable").on("click", ".editItemButton", function() {
+        var itemID = $(this).data("id");
 
-// Initial population when the page loads
-populateItemsTable();
+        // Populate the edit modal with location data
+        $.ajax({
+            type: "GET",
+            url: "modules/masterlist/items/get_item_details.php", // Replace with your server-side script
+            data: {
+                itemID: itemID
+            },
+            success: function(response) {
+                var itemDetails = JSON.parse(response);
+                // Populate the edit modal with item details
+                $("#editItemID").val(itemDetails.itemID);
+                $("#editItemName").val(itemDetails.itemName);
+                $("#editItemCode").val(itemDetails.itemCode);
+                $("#editItemType").val(itemDetails.itemType);
+                $("#editPreferredVendor").val(itemDetails.preferredVendor);
+                $("#editReOrderPoint").val(itemDetails.reOrderPoint);
+                $("#editItemSalesInfo").val(itemDetails.itemSalesInfo);
+                $("#editItemSrp").val(itemDetails.itemSrp);
+                $("#editItemPurchaseInfo").val(itemDetails.itemPurchaseInfo);
+                $("#editItemCost").val(itemDetails.itemCost);
+                $("#editItemCategory").val(itemDetails.itemCategory);
+                $("#editUom").val(itemDetails.uom);
+                $("#editItemCogsAccount").val(itemDetails.itemCogsAccount);
+                $("#editItemIncomeAccount").val(itemDetails.itemIncomeAccount);
+                $("#editItemAssetsAccount").val(itemDetails.itemAssetsAccount);
+                // Show the edit modal
+                $("#editItemModal").modal("show");
+            },
+            error: function() {
+                console.log("Error fetching location details for edit.");
+            }
+        });
+    });
+    // Save Edit Account Changes functionality
+    $("#saveEditItemButton").click(function() {
+        var formData = $("#editItemForm").serialize();
 
+        $.ajax({
+            type: "POST",
+            url: "modules/masterlist/items/update_item.php", // Replace with your server-side script
+            data: formData,
+            success: function(response) {
+                if (response === "success") {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Item updated successfully!',
+                        showConfirmButton: false,
+                        timer: 1500
+                    }).then(function() {
+                        // Reload the browser after SweetAlert2 is closed
+                        location.reload();
+                    });
+                } else {
+                    // Display the error message in SweetAlert2
+                    displayError(response);
+                }
+            },
+            error: function() {
+                displayError("An unexpected error occurred. Please try again.");
+            }
+        });
+    });
+
+    // Delete Location functionality
+    $("#itemsTable").on("click", ".deleteItemButton", function() {
+        var itemID = $(this).data("id");
+
+        // Display a confirmation dialog before deleting
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'You won\'t be able to revert this!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Delete the location via AJAX
+                $.ajax({
+                    type: "POST",
+                    url: "modules/masterlist/items/delete_item.php",
+                    data: {
+                        deleteItemID: itemID
+                    },
+                    success: function(response) {
+                        if (response === "success") {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Item deleted successfully!',
+                                showConfirmButton: false,
+                                timer: 1500
+                            }).then(function() {
+                                // Reload the browser after SweetAlert2 is closed
+                                location.reload();
+                            });
+                            // // Update the table after successfully deleting the location
+                            // populateItemsTable();
+                        } else {
+                            // Display the error message in SweetAlert2
+                            displayError(response);
+                        }
+                    },
+                    error: function() {
+                        displayError("An unexpected error occurred. Please try again.");
+                    }
+                });
+            }
+        });
+    });
     // Function to display an error using SweetAlert2
     function displayError(errorMessage) {
         Swal.fire({
@@ -692,132 +807,7 @@ populateItemsTable();
             title: 'Error',
             text: errorMessage,
             showConfirmButton: false,
-            timer: 5000
+            timer: 5000 // Adjust the timer as needed
         });
     }
-});
-// Edit Location functionality
-$("#itemsTable").on("click", ".editItemButton", function() {
-    var itemID = $(this).data("id");
-
-    // Populate the edit modal with location data
-    $.ajax({
-        type: "GET",
-        url: "modules/masterlist/items/get_item_details.php", // Replace with your server-side script
-        data: {
-            itemID: itemID
-        },
-        success: function(response) {
-            var itemDetails = JSON.parse(response);
-            // Populate the edit modal with item details
-            $("#editItemID").val(itemDetails.itemID);
-            $("#editItemName").val(itemDetails.itemName);
-            $("#editItemCode").val(itemDetails.itemCode);
-            $("#editItemType").val(itemDetails.itemType);
-            $("#editPreferredVendor").val(itemDetails.preferredVendor);
-            $("#editReOrderPoint").val(itemDetails.reOrderPoint);
-            $("#editItemSalesInfo").val(itemDetails.itemSalesInfo);
-            $("#editItemSrp").val(itemDetails.itemSrp);
-            $("#editItemPurchaseInfo").val(itemDetails.itemPurchaseInfo);
-            $("#editItemCost").val(itemDetails.itemCost);
-            $("#editItemCategory").val(itemDetails.itemCategory);
-            $("#editUom").val(itemDetails.uom);
-            $("#editItemCogsAccount").val(itemDetails.itemCogsAccount);
-            $("#editItemIncomeAccount").val(itemDetails.itemIncomeAccount);
-            $("#editItemAssetsAccount").val(itemDetails.itemAssetsAccount);
-            // Show the edit modal
-            $("#editItemModal").modal("show");
-        },
-        error: function() {
-            console.log("Error fetching location details for edit.");
-        }
-    });
-});
-// Save Edit Account Changes functionality
-$("#saveEditItemButton").click(function() {
-    var formData = $("#editItemForm").serialize();
-
-    $.ajax({
-        type: "POST",
-        url: "modules/masterlist/items/update_item.php", // Replace with your server-side script
-        data: formData,
-        success: function(response) {
-            if (response === "success") {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Item updated successfully!',
-                    showConfirmButton: false,
-                    timer: 1500
-                }).then(function() {
-                    // Reload the browser after SweetAlert2 is closed
-                    location.reload();
-                });
-            } else {
-                // Display the error message in SweetAlert2
-                displayError(response);
-            }
-        },
-        error: function() {
-            displayError("An unexpected error occurred. Please try again.");
-        }
-    });
-});
-
-// Delete Location functionality
-$("#itemsTable").on("click", ".deleteItemButton", function() {
-    var itemID = $(this).data("id");
-
-    // Display a confirmation dialog before deleting
-    Swal.fire({
-        title: 'Are you sure?',
-        text: 'You won\'t be able to revert this!',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, delete it!'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Delete the location via AJAX
-            $.ajax({
-                type: "POST",
-                url: "modules/masterlist/items/delete_item.php",
-                data: {
-                    deleteItemID: itemID
-                },
-                success: function(response) {
-                    if (response === "success") {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Item deleted successfully!',
-                            showConfirmButton: false,
-                            timer: 1500
-                        }).then(function() {
-                            // Reload the browser after SweetAlert2 is closed
-                            location.reload();
-                        });
-                        // // Update the table after successfully deleting the location
-                        // populateItemsTable();
-                    } else {
-                        // Display the error message in SweetAlert2
-                        displayError(response);
-                    }
-                },
-                error: function() {
-                    displayError("An unexpected error occurred. Please try again.");
-                }
-            });
-        }
-    });
-});
-// Function to display an error using SweetAlert2
-function displayError(errorMessage) {
-    Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: errorMessage,
-        showConfirmButton: false,
-        timer: 5000 // Adjust the timer as needed
-    });
-}
 </script>

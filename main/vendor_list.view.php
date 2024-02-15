@@ -7,7 +7,9 @@
 
 #vendorTable th,
 #vendorTable td {
-    padding: 2px;
+    padding: 1px;
+        width: 100px;
+        border: 1px solid maroon;
     /* Adjust the padding as needed */
 }
 #vendorTable tbody tr:hover {
@@ -52,6 +54,14 @@
                                         </button>
                                     </ol>
                                 </div><!-- /.col -->
+                                <div class="col-sm-15">
+                                        <ol class="breadcrumb float-sm-right">
+                                            <form action="modules/vendors/import.php" method="post" enctype="multipart/form-data">
+                                                <input type="file" name="file" id="file" accept=".xls,.xlsx">
+                                                <button type="submit" name="import">Import </button>
+                                            </form>
+                                        </ol>
+                                    </div>
                             </div><!-- /.row -->
 
 
@@ -61,7 +71,7 @@
                                     <tr>
                                         <th>CODE</th>
                                         <th>VENDOR NAME</th>
-                                        <th>VENDOR EMAIL</th>
+                                        <th>VENDOR ADDRESS</th>
                                         <th>VENDOR CONTACT NO #</th>
                                         <th>ACTION</th>
                                     </tr>
@@ -301,7 +311,7 @@ $(document).ready(function() {
                     var row = `<tr>
                             <td>${vendor.vendorCode || ''}</td>
                             <td>${vendor.vendorName || ''}</td>
-                            <td>${vendor.vendorEmail || ''}</td>
+                            <td>${vendor.vendorAddress || ''}</td>
                             <td>${vendor.vendorContactNumber || ''}</td>                         
                             <td>
                             <button type="button" class="btn btn-primary btn-sm editVendorButton" style="background-color: rgb(0, 149, 77); color: white; border: 1px rgb(0, 149, 77);" data-id="${vendor.vendorID}">Edit</button>
