@@ -164,6 +164,10 @@ $productItemsJSON = json_encode($productItems);
                                         <label for="email">EMAIL</label>
                                         <input type="text" class="form-control" id="email" name="email"
                                             value="<?php echo $salesInvoice['email']; ?>">
+                                        <label for="invoiceTin">TIN:</label>
+                                        <input type="text" class="form-control" id="invoiceTin" name="invoiceTin"
+                                            value="<?php echo $salesInvoice['invoiceTin']; ?>">
+
                                     </div>
                                     <!-- Modal for selecting existing customers -->
                                     <div class="modal" id="customerModal" tabindex="-1" role="dialog"

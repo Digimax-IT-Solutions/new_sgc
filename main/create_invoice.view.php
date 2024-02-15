@@ -113,6 +113,8 @@ $productItemsJSON = json_encode($productItems);
                                         <input type="text" class="form-control" id="shippingAddress" name="shippingAddress">
                                         <label for="email">EMAIL</label>
                                         <input type="text" class="form-control" id="email" name="email">
+                                        <label for="invoiceTin">TIN:</label>
+                                        <input type="text" class="form-control" id="invoiceTin" name="invoiceTin" required>
                                     </div>
                                     <!-- Modal for selecting existing customers -->
                                     <div class="modal" id="customerModal" tabindex="-1" role="dialog" aria-labelledby="customerModalLabel" aria-hidden="true">

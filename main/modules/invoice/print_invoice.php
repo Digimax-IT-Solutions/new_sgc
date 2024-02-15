@@ -85,6 +85,18 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
         top: 9.9em;
         font-size: 15px;
     }
+    .bstyle {
+        position: absolute;
+        left: 310px;
+        top: 180px;
+        font-size: 15px;
+    }
+    .tin {
+        position: absolute;
+        left: 50px;
+        top: 180px;
+        font-size: 15px;
+    }
     table {
         position: absolute;
         top: 239px;
@@ -120,7 +132,9 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
 <body>
     <div class="invoiceno"><?php echo $salesInvoice['customer']; ?></div>
     <div class="address"><?php echo $salesInvoice['address']; ?></div>  
-    <div class="terms"><?php echo $salesInvoice['terms']; ?></div>  
+    <div class="terms"><?php echo $salesInvoice['terms']; ?></div>
+    <div class="tin"><?php echo $salesInvoice['invoiceTin']; ?></div> 
+    <div class="bstyle"><?php echo $salesInvoice['invoiceBusinessStyle']; ?></div>  
     <table>
         <tbody>
             <?php
