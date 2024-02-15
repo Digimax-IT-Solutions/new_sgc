@@ -101,7 +101,7 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
         position: absolute;
         top: 239px;
         left: 18px;
-        width: 80%;
+        width: 96%;
         font-size: 15px;
     }
     .totalamount {
@@ -135,87 +135,49 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
     <div class="terms"><?php echo $salesInvoice['terms']; ?></div>
     <div class="tin"><?php echo $salesInvoice['invoiceTin']; ?></div> 
     <div class="bstyle"><?php echo $salesInvoice['invoiceBusinessStyle']; ?></div>  
-    <table>
-        <tbody>
-            <?php
-            // Connect to your database
-            $servername = "localhost";
-            $username = "root";
-            $password = "digimax2023";
-            $dbname = "sgc_db";
-                
-            $conn = new mysqli($servername, $username, $password, $dbname);
+    <table class="table">
+    <tbody>
+        <?php
+        // Connect to your database
+        $servername = "localhost";
+        $username = "root";
+        $password = "digimax2023";
+        $dbname = "sgc_db";
 
-            if ($conn->connect_error) {
-                die("Connection failed: " . $conn->connect_error);
-                }
+        $conn = new mysqli($servername, $username, $password, $dbname);
 
-            $invoiceID = $_GET['invoiceID'];
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
 
-            // Query to fetch rows from the database
-            $sql = "SELECT `itemID`, `item`, `description`, `quantity`, `uom`, `rate`, `amount`, `status`, `created_at` FROM `sales_invoice_items`
+        $invoiceID = $_GET['invoiceID'];
+
+        // Query to fetch rows from the database
+        $sql = "SELECT `itemID`, `item`, `description`, `quantity`, `uom`, `rate`, `amount`, `status`, `created_at` FROM `sales_invoice_items`
             WHERE `salesInvoiceId` = '$invoiceID'";
 
-            $result = $conn->query($sql);
+        $result = $conn->query($sql);
 
-            // If rows are found, display them in HTML table rows
-            if ($result->num_rows > 0) {
-                while ($row = $result->fetch_assoc()) {
-                    echo "<tr>
-                    <td style='text-align: left; padding-bottom: 1.5px'>" . $row["description"] . "</td></tr>";
-                }
-            } else {
-                echo "<tr><td colspan='3'>No items found</td></tr>";
+        // If rows are found, display them in HTML table rows
+        if ($result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                echo "<tr>
+                    <td style='text-align: left; padding-bottom: 1.5px; white-space: nowrap;'>" . $row["description"] . "</td>
+                    <td style='padding-left: 300px; padding-bottom: 1.5px;'>" . $row["quantity"] . "</td>
+                    <td style='padding-bottom: 1.5px; padding-right: 30px; white-space: nowrap;'>" . $row["uom"] . "</td>
+                    <td style='text-align: right; padding-right: 10px; padding-bottom: 1.5px'>" . $row["rate"] . "</td>
+                    <td style='text-align: right; padding-bottom: 1.5px'>" . $row["amount"] . "</td>
+                </tr>";
             }
+        } else {
+            echo "<tr><td colspan='5'>No items found</td></tr>";
+        }
 
-            // Close the database connection
-            $conn->close();
-            ?>
-        </tbody>
-    </table>
-    <table class="table1">
-        <tbody>
-        <tbody>
-            <?php
-            // Connect to your database
-            $servername = "localhost";
-            $username = "root";
-            $password = "digimax2023";
-            $dbname = "sgc_db";
-                
-            $conn = new mysqli($servername, $username, $password, $dbname);
-
-            if ($conn->connect_error) {
-                die("Connection failed: " . $conn->connect_error);
-                }
-
-            $invoiceID = $_GET['invoiceID'];
-
-            // Query to fetch rows from the database
-            $sql = "SELECT `itemID`, `item`, `description`, `quantity`, `uom`, `rate`, `amount`, `status`, `created_at` FROM `sales_invoice_items`
-            WHERE `salesInvoiceId` = '$invoiceID'";
-
-            $result = $conn->query($sql);
-
-            // If rows are found, display them in HTML table rows
-            if ($result->num_rows > 0) {
-                while ($row = $result->fetch_assoc()) {
-                    echo "<tr>
-                    <td style='padding-right: 60px; padding-bottom: 1.5px'>" . $row["quantity"] . "</td>
-                    <td style='padding-right: 60px; padding-bottom: 1.5px'>" . $row["uom"] . "</td>
-                    <td style='text-align: right; padding-bottom: 1.5px'>" . $row["rate"] . "</td>
-                    <td style='text-align: right;
-                    padding-left: 60px; padding-bottom: 1.5px'>" . $row["amount"] . "</td></tr>";
-                }
-            } else {
-                echo "<tr><td colspan='3'>No items found</td></tr>";
-            }
-
-            // Close the database connection
-            $conn->close();
-            ?>
-        </tbody>
-    </table>
+        // Close the database connection
+        $conn->close();
+        ?>
+    </tbody>
+</table>
 <div class="totalamount"><?php echo $salesInvoice['netAmountDue']; ?></div>
 <div class="netofvat"><?php echo $salesInvoice['netOfVat']; ?></div>
 <div class="netamount"><?php echo $salesInvoice['totalAmountDue']; ?></div>    
