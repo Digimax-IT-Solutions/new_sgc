@@ -85,13 +85,13 @@ $userPosition = $_SESSION['SESS_POSITION'];
                                 <i class="nav-icon fas fa-undo"></i>
                                 <p>Sales Returns</p>
                             </a>
-                        </li>
+                        </li> -->
                         <li class="nav-item">
                             <a href="receive_payment" class="nav-link <?php echo ($page == 'main/receive_payment') ? 'active' : ''; ?>">
                                 <i class="nav-icon fas fa-money-check-alt"></i>
                                 <p>Receive Payment</p>
                             </a>
-                        </li>
+                        <!-- </li>
                         <li class="nav-item">
                             <a href="statement_of_account" class="nav-link <?php echo ($page == 'main/statement_of_account') ? 'active' : ''; ?>">
                                 <i class="nav-icon fas fa-file-alt"></i>
@@ -123,24 +123,24 @@ $userPosition = $_SESSION['SESS_POSITION'];
                                 <p>Received Items</p>
                             </a>
                         </li>
-                        <!-- <li class="nav-item">
+                        <li class="nav-item">
                             <a href="enter_bills" class="nav-link <?php echo ($page == 'main/enter_bills') ? 'active' : ''; ?>">
                                 <i class="nav-icon fas fa-file-invoice"></i>
                                 <p>Enter Bills</p>
                             </a>
                         </li>
-                        <li class="nav-item">
+                        <!-- <li class="nav-item">
                             <a href="" class="nav-link">
                                 <i class="nav-icon fas fa-undo"></i>
                                 <p>Purchase Returns</p>
                             </a>
-                        </li>
+                        </li> -->
                         <li class="nav-item">
                             <a href="" class="nav-link">
                                 <i class="nav-icon fas fa-money-check-alt"></i>
                                 <p>Pay Bills</p>
                             </a>
-                        </li> -->
+                        </li>
                     </ul>
                 </li>
                 <!-- BANKING -->
@@ -389,7 +389,7 @@ $userPosition = $_SESSION['SESS_POSITION'];
                     </li>
                     <!-- MAINTENANCE -->
 
-                    <!-- <li class="nav-item has-treeview <?php echo ($page == 'main/user_list' || $page == 'main/settings') ? 'menu-open' : ''; ?>">
+                    <li class="nav-item has-treeview <?php echo ($page == 'main/user_list' || $page == 'main/settings') ? 'menu-open' : ''; ?>">
                         <a href="#" class="nav-link">
                             <i class="nav-icon fas fa-cog"></i>
                             <p>
@@ -411,7 +411,7 @@ $userPosition = $_SESSION['SESS_POSITION'];
                                 </a>
                             </li>
                         </ul>
-                    </li> -->
+                    </li>
                 <?php endif; ?>
             </ul>
         </nav>
