@@ -152,7 +152,7 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
     .nad {
         position: absolute;
         right: 14px;
-        bottom: 168px;
+        bottom: 200px;
         font-size: 15px;   
     }
     .ves {
@@ -216,7 +216,7 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
 <div class="netofvat"><?php echo $salesInvoice['netOfVat']; ?></div>
 <div class="netamount"><?php echo $salesInvoice['totalAmountDue']; ?></div>
 <div class="vat"><?php echo $vatAmount; ?></div>
-<div class="ves"><?php echo $vatAmount; ?></div>  
+<div class="ves"><?php echo $salesInvoice['netOfVat']; ?></div>  
 <div class="wvat"><?php echo $wvatAmount; ?></div>
 <div class="vat1"><?php echo $vatAmount; ?></div>
 <div class="nad"><?php echo $salesInvoice['netAmountDue']; ?></div>           
