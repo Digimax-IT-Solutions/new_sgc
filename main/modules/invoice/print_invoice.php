@@ -58,205 +58,166 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
 <meta charset="utf-8" />
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="icon" type="image/x-icon" href="../images/sgc.png">
+<link rel="icon" type="image/x-icon" href="../images/conogas.png">
 <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Poppins:100,200,300,400,500,600,700,800,900' type='text/css'>
 <title>Invoice Print</title>
 <meta name="author" content="harnishdesign.net">
 </head>
 <style>
-    a:link, a:visited {
-    background-color: white;
-    color: black;
-    border: 2px solid green;
-    padding: 10px 20px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
+    body {
+        font-family: calibri;
     }
-
-    a:hover, a:active {
-    background-color: green;
-    color: white;
-    }
-
-    @media print {
-      a:link, a:visited {
-        display: none; /* Hide the button group when printing */
-      }
-    }
-    .grid-container {
-      display: grid;
-      grid-template-columns: 1fr 1fr; /* Two equal-width columns */
-      gap: 20px; /* Adjust the gap between columns */
-    }
-
-    img {
-        width: 250px;
-        height: 100px;
+    .invoiceno {
         position: absolute;
-        top: 30px;
-    }
-    .m-1 {
-        text-align: right;
-        padding-bottom: 1em;
-        padding-top: 1em;
-    }
-    label{
-        font-size: 20px;
-        font-weight: bold;
-        font-family: 'Poppins';
-    }
-    #salesInvoiceForm {
-        background-color: white;
-    }
-    span{
-        font-weight: normal;
+        left: 1.4em;
+        top: 7em;
         font-size: 15px;
+    }
+    .address {
+        position: absolute;
+        left: 1.4em;
+        top: 8em;
+        font-size: 15px;  
+    }
+    .terms {
+        position: absolute;
+        left: 34em;
+        top: 9.9em;
+        font-size: 15px;
+    }
+    table {
+        position: absolute;
+        top: 239px;
+        left: 18px;
+        width: 80%;
+        font-size: 15px;
+    }
+    .totalamount {
+        position: absolute;
+        right: 14px;
+        bottom: 350px;
+        font-size: 15px;
+    }
+    .netofvat {
+        position: absolute;
+        right: 14px;
+        bottom: 310px;
+        font-size:15px;
+    }
+    .netamount {
+        position: absolute;
+        right: 14px;
+        bottom: 200px;
+        font-size: 15px;   
+    }
+    .table1 {
+        position: absolute;
+        top: 239px;
+        left: 435px;
+        width: 20%;  
     }
 </style>
 <body>
-<!-- Container -->
-<div class="content-wrapper">
-    <img src="../images/sgc.png">
-    <!-- Content Header (Page header) -->
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    
-                    <h1 class="m-1">Sales Invoice</h1>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- /.content-header -->
-<hr>
-   
-    <div style="padding-bottom: 1.5em;
-        padding-top: 1em;" class="grid-container">
-        <div class="right-content">
-        <label for="">Date printed:</label> 
-        </div>
-
-        <div class="left-content" style="position: absolute; right: 0px;">
-        <label for="">Invoice #: <span><?php echo $salesInvoice['invoiceNo']; ?></span> </label> 
-        </div>
-    </div>   
-<hr>
-
-    <!-- Main content -->
-    <section class="content">
-        <div class="grid-container">
-            <div class="right-content">
-                <label for="customer">Customer Name: <span><?php echo $salesInvoice['customer']; ?></span></label>
-                <br>
-                <label for="address">Billing Address: <span><?php echo $salesInvoice['address']; ?></span></label>
-                <br>
-                <label for="shippingAddress">Shipping Address: <span><?php echo $salesInvoice['shippingAddress']; ?></span></label>
-                <br>
-                <label for="email">Email: <span><?php echo $salesInvoice['email']; ?></span></label>
-                <br>
-                <label for="account">Account: <span><?php echo $salesInvoice['account']; ?></span></label>
-                <br>
-                <label for="paymentMethod">Payment Method: <span><?php echo $salesInvoice['paymentMethod']; ?></span></label>
-            </div>
-                                
-            <div class="left-content">
-                <label for="invoiceDate">Invoice Date: <span><?php echo $salesInvoice['invoiceDate']; ?></span></label>
-                <br>
-                <label for="invoiceDueDate">Invoice Due Date: <span><?php echo $salesInvoice['invoiceDueDate']; ?></span></label>
-                <br>
-                <label for="terms">Terms: <span><?php echo $salesInvoice['terms']; ?></span></label>
-                <br>
-                <label for="location">Location: <span><?php echo $salesInvoice['location']; ?></span></label>
-            </div>
-        </div>
-    </section>
-        <br>
-                <?php
-                $servername = "localhost";
-                $username = "root";
-                $password = "digimax2023";
-                $dbname = "sales";
+    <div class="invoiceno"><?php echo $salesInvoice['customer']; ?></div>
+    <div class="address"><?php echo $salesInvoice['address']; ?></div>  
+    <div class="terms"><?php echo $salesInvoice['terms']; ?></div>  
+    <table>
+        <tbody>
+            <?php
+            // Connect to your database
+            $servername = "localhost";
+            $username = "root";
+            $password = "digimax2023";
+            $dbname = "sales";
                 
-                $conn = new mysqli($servername, $username, $password, $dbname);
+            $conn = new mysqli($servername, $username, $password, $dbname);
 
-                                        
-                if ($conn->connect_error) {
+            if ($conn->connect_error) {
                 die("Connection failed: " . $conn->connect_error);
                 }
 
-                $invoiceID = $_GET['invoiceID'];
+            $invoiceID = $_GET['invoiceID'];
 
-                $sql = "SELECT `itemID`, `item`, `description`, `quantity`, `uom`, `rate`, `amount`, `created_at` FROM `sales_invoice_items`
-                        WHERE `salesInvoiceId` = '$invoiceID'";
+            // Query to fetch rows from the database
+            $sql = "SELECT `itemID`, `item`, `description`, `quantity`, `uom`, `rate`, `amount`, `status`, `created_at` FROM `sales_invoice_items`
+            WHERE `salesInvoiceId` = '$invoiceID'";
 
-                $result = $conn->query($sql);
+            $result = $conn->query($sql);
 
-                echo "<html><head><style>
-                    table{
-                        font-family: 'Poppins';
-                        border-collapse: collapse;
-                        width: 100%;
-                        }
-                    th, td {
-                        border: 1px solid #dddddd;
-                        text-align: left;
-                        padding: 8px;
-                        }
-                    tr:nth-child(even) {
-                        background-color: #f2f2f2;
-                        }
-                    </style></head><body>";
+            // If rows are found, display them in HTML table rows
+            if ($result->num_rows > 0) {
+                while ($row = $result->fetch_assoc()) {
+                    echo "<tr>
+                    <td style='text-align: left; padding-bottom: 1.5px'>" . $row["description"] . "</td></tr>";
+                }
+            } else {
+                echo "<tr><td colspan='3'>No items found</td></tr>";
+            }
 
-                    if ($result->num_rows > 0) {
-                        echo "<table><tr><th>Item ID</th><th>Item</th><th>Description</th><th>Quantity</th><th>UOM</th><th>Rate</th><th>Amount</th><th>Created At</th></tr>";
+            // Close the database connection
+            $conn->close();
+            ?>
+        </tbody>
+    </table>
+    <table class="table1">
+        <tbody>
+        <tbody>
+            <?php
+            // Connect to your database
+            $servername = "localhost";
+            $username = "root";
+            $password = "digimax2023";
+            $dbname = "sales";
+                
+            $conn = new mysqli($servername, $username, $password, $dbname);
 
-                        while ($row = $result->fetch_assoc()) {
-                        echo "<tr><td>" . $row["itemID"] . "</td><td>" . $row["item"] . "</td><td>" . $row["description"] . "</td><td>" . $row["quantity"] . "</td><td>" . $row["uom"] . "</td><td>" . $row["rate"] . "</td><td>" . $row["amount"] . "</td><td>" . $row["created_at"] . "</td></tr>";
-                        }
-                                            
-                        echo "</table>";
-                        } else {
-                         echo "0 results";
-                        }
+            if ($conn->connect_error) {
+                die("Connection failed: " . $conn->connect_error);
+                }
 
-                        echo "</body></html>";
+            $invoiceID = $_GET['invoiceID'];
 
-                        $conn->close();
+            // Query to fetch rows from the database
+            $sql = "SELECT `itemID`, `item`, `description`, `quantity`, `uom`, `rate`, `amount`, `status`, `created_at` FROM `sales_invoice_items`
+            WHERE `salesInvoiceId` = '$invoiceID'";
 
-                        ?>
-                        <br>
-                    
-                                        <div class="grid-container">
-                                            <div class="left-content">
-                                                <label>Gross Amount:</label>
-                                                <span><?php echo $salesInvoice['grossAmount']; ?></span>
-                                                <label for="discountPercentage">Discount %:</label>
-                                                <span><?php echo $salesInvoice['discountPercentage']; ?>%</span>
-                                                <label>Net Amount Due:</label>
-                                                <span><?php echo $salesInvoice['netAmountDue']; ?></span>
-                                                <label for="vatPercentage">VAT (%):</label>
-                                                <span><?php echo $salesInvoice['vatPercentage']; ?>%</span>
-                                                <label>Net of VAT:</label>
-                                                <span><?php echo $salesInvoice['netOfVat']; ?></span>
-                                                <label>Tax Withheld (%):</label>
-                                                <span><?php echo $salesInvoice['taxWithheldPercentage']; ?>%</span>
-                                                <label>Total Amount Due:</label>
-                                                <span><?php echo $salesInvoice['totalAmountDue']; ?></span>
-                                            </div>
-                                            <div> <a href="javascript:window.print()" class="btn-group">
-                                                <i class="fa fa-print"></i>Print</a> 
-                                            </div>
-                                        </div>
-                            <!-- End Sales Invoice Form -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-</div>
+            $result = $conn->query($sql);
+
+            // If rows are found, display them in HTML table rows
+            if ($result->num_rows > 0) {
+                while ($row = $result->fetch_assoc()) {
+                    echo "<tr>
+                    <td style='padding-right: 60px; padding-bottom: 1.5px'>" . $row["quantity"] . "</td>
+                    <td style='padding-right: 60px; padding-bottom: 1.5px'>" . $row["uom"] . "</td>
+                    <td style='text-align: right; padding-bottom: 1.5px'>" . $row["rate"] . "</td>
+                    <td style='text-align: right;
+                    padding-left: 60px; padding-bottom: 1.5px'>" . $row["amount"] . "</td></tr>";
+                }
+            } else {
+                echo "<tr><td colspan='3'>No items found</td></tr>";
+            }
+
+            // Close the database connection
+            $conn->close();
+            ?>
+        </tbody>
+    </table>
+<div class="totalamount"><?php echo $salesInvoice['netAmountDue']; ?></div>
+<div class="netofvat"><?php echo $salesInvoice['netOfVat']; ?></div>
+<div class="netamount"><?php echo $salesInvoice['totalAmountDue']; ?></div>    
 </body>
+<script>
+    window.onload = function() {
+            window.print(); // Automatically print the page when it loads
+        };
 
+        // Event listener for the afterprint event
+        window.addEventListener('afterprint', function(event) {
+            // If the afterprint event is triggered due to user cancelling print
+            if (!event.returnValue) {
+                // Redirect to the previous page
+                window.history.back();
+            }
+        });
+</script>
 </html>
