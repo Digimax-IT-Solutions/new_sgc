@@ -107,19 +107,19 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
     .totalamount {
         position: absolute;
         right: 14px;
-        bottom: 350px;
+        bottom: 310px;
         font-size: 15px;
     }
     .netofvat {
         position: absolute;
         right: 14px;
-        bottom: 310px;
+        bottom: 260px;
         font-size:15px;
     }
     .netamount {
         position: absolute;
         right: 14px;
-        bottom: 200px;
+        bottom: 150px;
         font-size: 15px;   
     }
     .table1 {
@@ -162,11 +162,11 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
         if ($result->num_rows > 0) {
             while ($row = $result->fetch_assoc()) {
                 echo "<tr>
-                    <td style='text-align: left; padding-bottom: 1.5px; white-space: nowrap;'>" . $row["description"] . "</td>
-                    <td style='padding-left: 300px; padding-bottom: 1.5px;'>" . $row["quantity"] . "</td>
-                    <td style='padding-bottom: 1.5px; padding-right: 30px; white-space: nowrap;'>" . $row["uom"] . "</td>
-                    <td style='text-align: right; padding-right: 10px; padding-bottom: 1.5px'>" . $row["rate"] . "</td>
-                    <td style='text-align: right; padding-bottom: 1.5px'>" . $row["amount"] . "</td>
+                    <td style='text-align: left; padding-bottom: 2px; white-space: nowrap;'>" . $row["description"] . "</td>
+                    <td style='padding-left: 260px; padding-bottom: 2px;'>" . $row["quantity"] . "</td>
+                    <td style='padding-bottom: 2px; white-space: nowrap;'>" . $row["uom"] . "</td>
+                    <td style='text-align: right; padding-right: 58px; padding-bottom: 2px'>" . $row["rate"] . "</td>
+                    <td style='text-align: right; padding-bottom: 2px'>" . $row["amount"] . "</td>
                 </tr>";
             }
         } else {
