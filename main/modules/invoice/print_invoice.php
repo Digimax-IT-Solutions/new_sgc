@@ -128,7 +128,7 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
             $servername = "localhost";
             $username = "root";
             $password = "digimax2023";
-            $dbname = "sales";
+            $dbname = "sgc_db";
                 
             $conn = new mysqli($servername, $username, $password, $dbname);
 
@@ -167,7 +167,7 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
             $servername = "localhost";
             $username = "root";
             $password = "digimax2023";
-            $dbname = "sales";
+            $dbname = "sgc_db";
                 
             $conn = new mysqli($servername, $username, $password, $dbname);
 
