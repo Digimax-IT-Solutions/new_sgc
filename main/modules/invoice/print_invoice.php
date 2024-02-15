@@ -163,9 +163,9 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
             while ($row = $result->fetch_assoc()) {
                 echo "<tr>
                     <td style='text-align: left; padding-bottom: 2.4px; white-space: nowrap;'>" . $row["description"] . "</td>
-                    <td style='padding-left: 230px; padding-bottom: 2.4px;'>" . $row["quantity"] . "</td>
+                    <td style='padding-left: 170px; padding-bottom: 2.4px;'>" . $row["quantity"] . "</td>
                     <td style='padding-bottom: 2.4px; white-space: nowrap;'>" . $row["uom"] . "</td>
-                    <td style='text-align: right; padding-right: 58px; padding-bottom: 2.4px;'>" . $row["rate"] . "</td>
+                    <td style='text-align: right; padding-right: 50px; padding-bottom: 2.4px;'>" . $row["rate"] . "</td>
                     <td style='text-align: right; padding-bottom: 2.4px;'>" . $row["amount"] . "</td>
                 </tr>";
             }
