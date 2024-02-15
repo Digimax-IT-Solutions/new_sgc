@@ -566,6 +566,24 @@ var productItems = <?php echo $productItemsJSON; ?>;
             });
             // Store form data in localStorage
             localStorage.setItem('salesInvoiceFormData', JSON.stringify(formData));
+
+            // Display a SweetAlert notification
+            if (!isFormValid()) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Fill-Up First',
+                showConfirmButton: false,
+                timer: 1500
+            });
+            }
+            else{
+                Swal.fire({
+                icon: 'success',
+                title: 'Data saved successfully',
+                showConfirmButton: false,
+                timer: 1500
+            });
+            }
         }
 
         // Function to clear saved form data from localStorage
@@ -591,7 +609,7 @@ var productItems = <?php echo $productItemsJSON; ?>;
         // Load saved form data when the page loads
         loadFormData();
 
-        // Save form data when the save button is clicked
+        // Save form data and show SweetAlert when the save button is clicked
         $("#saveInvoiceButton").on("click", function() {
             saveFormData();
         });
@@ -600,11 +618,7 @@ var productItems = <?php echo $productItemsJSON; ?>;
         $("#saveAndCloseButton, #saveAndNewButton, #clearButton").on('click', function() {
             clearFormData();
         });
-    });
-</script>
 
-<script>
-    $(document).ready(function() {
         $("#clearButton").on("click", function() {
             // Reset all form fields to their default values
             $("#salesInvoiceForm")[0].reset();

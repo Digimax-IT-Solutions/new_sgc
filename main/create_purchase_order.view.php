@@ -524,27 +524,35 @@ var productItems = <?php echo $productItemsJSON; ?>;
         function saveFormData() {
             const formData = {};
             // Collect form data
-            const inputs = $("#vendorForm").find('input, select, textarea');
+            const inputs = $("#salesInvoiceForm").find('input, select, textarea');
             inputs.each(function() {
                 formData[$(this).attr('name')] = $(this).val();
             });
             // Store form data in localStorage
-            localStorage.setItem('vendorFormData', JSON.stringify(formData));
+            localStorage.setItem('salesInvoiceFormData', JSON.stringify(formData));
+
+            // Display a SweetAlert notification
+            Swal.fire({
+                icon: 'success',
+                title: 'Data Saved',
+                showConfirmButton: false,
+                timer: 1500
+            });
         }
 
         // Function to clear saved form data from localStorage
         function clearFormData() {
-            localStorage.removeItem('vendorFormData');
+            localStorage.removeItem('salesInvoiceFormData');
         }
 
         // Function to load saved form data from localStorage
         function loadFormData() {
-            const savedData = localStorage.getItem('vendorFormData');
+            const savedData = localStorage.getItem('salesInvoiceFormData');
             if (savedData) {
                 const formData = JSON.parse(savedData);
                 // Set form input values
                 $.each(formData, function(name, value) {
-                    const input = $("#vendorForm").find('[name="' + name + '"]');
+                    const input = $("#salesInvoiceForm").find('[name="' + name + '"]');
                     if (input.length) {
                         input.val(value);
                     }
@@ -555,7 +563,7 @@ var productItems = <?php echo $productItemsJSON; ?>;
         // Load saved form data when the page loads
         loadFormData();
 
-        // Save form data when the save button is clicked
+        // Save form data and show SweetAlert when the save button is clicked
         $("#saveInvoiceButton").on("click", function() {
             saveFormData();
         });
@@ -566,6 +574,7 @@ var productItems = <?php echo $productItemsJSON; ?>;
         });
     });
 </script>
+
 
 
 <script>
