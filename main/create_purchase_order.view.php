@@ -390,7 +390,6 @@ while ($row = $resultUOM->fetch(PDO::FETCH_ASSOC)) {
                                         <button type="button" class="btn btn-info" id="saveAndCloseButton">Save and
                                             Close</button>
                                         <button type="button" class="btn btn-warning" id="clearButton">Clear</button>
-                                        <button type="button" class="btn btn-secondary" id="printButton">Print</button>
                                     </div>
                                 </div>
 
