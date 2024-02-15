@@ -10,7 +10,9 @@ include('connect.php');
 
 #customerTable th,
 #customerTable td {
-    padding: 2px;
+    padding: 1px;
+        width: 100px;
+        border: 1px solid maroon;
     /* Adjust the padding as needed */
 }
 #customerTable tbody tr:hover {
@@ -55,6 +57,14 @@ include('connect.php');
                                         </button>
                                     </ol>
                                 </div><!-- /.col -->
+                                <div class="col-sm-15">
+                                        <ol class="breadcrumb float-sm-right">
+                                            <form action="modules/customers/import.php" method="post" enctype="multipart/form-data">
+                                                <input type="file" name="file" id="file" accept=".xls,.xlsx">
+                                                <button type="submit" name="import">Import </button>
+                                            </form>
+                                        </ol>
+                                    </div>
                             </div><!-- /.row -->
 
 
