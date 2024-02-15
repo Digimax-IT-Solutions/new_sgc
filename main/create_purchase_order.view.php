@@ -524,35 +524,45 @@ var productItems = <?php echo $productItemsJSON; ?>;
         function saveFormData() {
             const formData = {};
             // Collect form data
-            const inputs = $("#salesInvoiceForm").find('input, select, textarea');
+            const inputs = $("#vendorForm").find('input, select, textarea');
             inputs.each(function() {
                 formData[$(this).attr('name')] = $(this).val();
             });
             // Store form data in localStorage
-            localStorage.setItem('salesInvoiceFormData', JSON.stringify(formData));
+            localStorage.setItem('vendorFormData', JSON.stringify(formData));
 
             // Display a SweetAlert notification
+            if (!isFormValid()) {
             Swal.fire({
-                icon: 'success',
-                title: 'Data Saved',
+                icon: 'error',
+                title: 'Fill-Up First',
                 showConfirmButton: false,
                 timer: 1500
             });
+            }
+            else{
+                Swal.fire({
+                icon: 'success',
+                title: 'Data saved successfully',
+                showConfirmButton: false,
+                timer: 1500
+            });
+            }
         }
 
         // Function to clear saved form data from localStorage
         function clearFormData() {
-            localStorage.removeItem('salesInvoiceFormData');
+            localStorage.removeItem('vendorFormData');
         }
 
         // Function to load saved form data from localStorage
         function loadFormData() {
-            const savedData = localStorage.getItem('salesInvoiceFormData');
+            const savedData = localStorage.getItem('vendorFormData');
             if (savedData) {
                 const formData = JSON.parse(savedData);
                 // Set form input values
                 $.each(formData, function(name, value) {
-                    const input = $("#salesInvoiceForm").find('[name="' + name + '"]');
+                    const input = $("#vendorForm").find('[name="' + name + '"]');
                     if (input.length) {
                         input.val(value);
                     }
@@ -572,13 +582,8 @@ var productItems = <?php echo $productItemsJSON; ?>;
         $("#saveAndCloseButton, #saveAndNewButton, #clearButton").on('click', function() {
             clearFormData();
         });
-    });
-</script>
 
 
-
-<script>
-    $(document).ready(function() {
         $("#clearButton").on("click", function() {
             // Reset all form fields to their default values
             $("#vendorForm")[0].reset();
