@@ -27,13 +27,16 @@ if (isset($_GET['invoiceID'])) {
 
         $salesInvoiceItems = $stmtInvoiceItems->fetchAll(PDO::FETCH_ASSOC);
 
-        $grossAmount = number_format($salesInvoice['grossAmount'], 2);
+        $grossAmount = $salesInvoice['grossAmount'];
+        $grossAmountFormatted = number_format($salesInvoice['grossAmount'], 2, '.', ',');
         $vatPercentage = $salesInvoice['vatPercentage'];
         $vatAmount = number_format($grossAmount / (1 + $vatPercentage / 100) * ($vatPercentage / 100), 2);
         $wvatPercentage = $salesInvoice['taxWithheldPercentage'];
-        $netOfVat = $salesInvoice['netOfVat']; // Total amount without VAT
+        $netOfVat = $salesInvoice['netOfVat'];
+        $netOfVatFormatted = number_format($salesInvoice['netOfVat'], 2, '.', ','); // Total amount without VAT
         $netAmountDue = $salesInvoice['netAmountDue']; // Total amount with VAT
         $wvatAmount = number_format(($netOfVat * $wvatPercentage) / 100, 2);
+        $totalAmountDue = number_format($salesInvoice['totalAmountDue'], 2, '.', ',');
 
     } else {
         // Redirect or display an error if purchase order details are not found
@@ -195,12 +198,13 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
         // If rows are found, display them in HTML table rows
         if ($result->num_rows > 0) {
             while ($row = $result->fetch_assoc()) {
+                $amountFormatted = number_format($row['amount'], 2, '.', ',');
                 echo "<tr>
                     <td style='text-align: left; padding-bottom: 2.8px; white-space: nowrap;'>" . $row["description"] . "</td>
                     <td style='padding-left: 170px; padding-bottom: 2.8px; white-space: nowrap;'>" . $row["quantity"] . "</td>
                     <td style='padding-bottom: 2.8px; white-space: nowrap;'>" . $row["uom"] . "</td>
                     <td style='text-align: right; padding-right: 50px; padding-bottom: 2.8px; white-space: nowrap;'>" . $row["rate"] . "</td>
-                    <td style='text-align: right; padding-bottom: 2.8px;'>" . $row["amount"] . "</td>
+                    <td style='text-align: right; padding-bottom: 2.8px;'>" . $amountFormatted . "</td>
                 </tr>";
             }
         } else {
@@ -212,14 +216,14 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
         ?>
     </tbody>
 </table>
-<div class="totalamount"><?php echo $salesInvoice['netAmountDue']; ?></div>
-<div class="netofvat"><?php echo $salesInvoice['netOfVat']; ?></div>
-<div class="netamount"><?php echo $salesInvoice['totalAmountDue']; ?></div>
+<div class="totalamount"><?php echo $grossAmountFormatted; ?></div>
+<div class="netofvat"><?php echo $netOfVatFormatted ?></div>
+<div class="netamount"><?php echo $totalAmountDue; ?></div>
 <div class="vat"><?php echo $vatAmount; ?></div>
-<div class="ves"><?php echo $salesInvoice['netOfVat']; ?></div>  
+<div class="ves"><?php echo $netOfVatFormatted ?></div>  
 <div class="wvat"><?php echo $wvatAmount; ?></div>
 <div class="vat1"><?php echo $vatAmount; ?></div>
-<div class="nad"><?php echo $salesInvoice['netAmountDue']; ?></div>           
+<div class="nad"><?php echo $grossAmountFormatted; ?></div>           
 </body>
 <script>
     window.onload = function() {
