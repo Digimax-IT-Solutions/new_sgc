@@ -27,7 +27,7 @@ if (isset($_GET['invoiceID'])) {
 
         $salesInvoiceItems = $stmtInvoiceItems->fetchAll(PDO::FETCH_ASSOC);
 
-        $grossAmount = $salesInvoice['grossAmount'];
+        $grossAmount = number_format($salesInvoice['grossAmount'], 2);
         $vatPercentage = $salesInvoice['vatPercentage'];
         $vatAmount = number_format($grossAmount / (1 + $vatPercentage / 100) * ($vatPercentage / 100), 2);
         $wvatPercentage = $salesInvoice['taxWithheldPercentage'];
@@ -196,11 +196,11 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
         if ($result->num_rows > 0) {
             while ($row = $result->fetch_assoc()) {
                 echo "<tr>
-                    <td style='text-align: left; padding-bottom: 2.4px; white-space: nowrap;'>" . $row["description"] . "</td>
-                    <td style='padding-left: 170px; padding-bottom: 2.4px;'>" . $row["quantity"] . "</td>
-                    <td style='padding-bottom: 2.4px; white-space: nowrap;'>" . $row["uom"] . "</td>
-                    <td style='text-align: right; padding-right: 50px; padding-bottom: 2.4px;'>" . $row["rate"] . "</td>
-                    <td style='text-align: right; padding-bottom: 2.4px;'>" . $row["amount"] . "</td>
+                    <td style='text-align: left; padding-bottom: 2.8px; white-space: nowrap;'>" . $row["description"] . "</td>
+                    <td style='padding-left: 170px; padding-bottom: 2.8px; white-space: nowrap;'>" . $row["quantity"] . "</td>
+                    <td style='padding-bottom: 2.8px; white-space: nowrap;'>" . $row["uom"] . "</td>
+                    <td style='text-align: right; padding-right: 50px; padding-bottom: 2.8px; white-space: nowrap;'>" . $row["rate"] . "</td>
+                    <td style='text-align: right; padding-bottom: 2.8px;'>" . $row["amount"] . "</td>
                 </tr>";
             }
         } else {
