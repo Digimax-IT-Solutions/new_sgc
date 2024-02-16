@@ -69,6 +69,19 @@
                 unset($_SESSION['ERRMSG_ARR']);
             }
             ?>
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">
+                        <!-- Use Bootstrap Icons for the lock icon -->
+                        <i class="ion-locked"></i>
+                    </span>
+                </div>
+                <select class="form-control" name="position" placeholder="position">
+                    <option value="" selected disabled>Select User</option>
+                    <option value="admin">Admin</option>
+                    <option value="staff">Staff</option>
+                </select>
+            </div>
 
             <div class="input-group mb-3">
                 <div class="input-group-prepend">
@@ -90,6 +103,7 @@
                 <input type="password" class="form-control custom-input" name="password" placeholder="Password"
                     required>
             </div>
+            
 
             <div class="text-center">
                 <button class="btn btn-lg custom-button" type="submit">

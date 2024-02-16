@@ -288,7 +288,7 @@ $userPosition = $_SESSION['SESS_POSITION'];
                 </li> 
 
                  -->
-                <?php if ($userPosition == 'admin') : ?>
+                <?php if ($userPosition == 'admin' || $userPosition == 'staff') : ?>
                     <!-- MASTERLIST -->
                     <li class="nav-item has-treeview <?php echo ($page == 'main/chart_of_accounts' || $page == 'main/item_list' || $page == 'main/customer_list' || $page == 'main/vendor_list' || $page == 'main/other_names_list' || $page == 'main/location_list' || $page == 'main/category_list' || $page == 'main/terms_list' || $page == 'main/payment_method_list' || $page == 'main/vat_rate_list' || $page == 'main/sales_tax_list' || $page == 'main/wtax_list' || $page == 'main/uom_list') ? 'menu-open' : ''; ?>">
                         <a href="#" class="nav-link">
@@ -391,7 +391,7 @@ $userPosition = $_SESSION['SESS_POSITION'];
                     </li>
                     <!-- MAINTENANCE -->
                     <?php
-                    if ($userPosition !== 'employee') {
+                    if ($userPosition !== 'staff') {
                         ?>
                     <li class="nav-item has-treeview <?php echo ($page == 'main/user_list' || $page == 'main/settings') ? 'menu-open' : ''; ?>">
                         <a href="#" class="nav-link">

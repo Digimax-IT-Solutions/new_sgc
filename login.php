@@ -43,7 +43,7 @@ if ($errflag) {
 }
 
 // Create and execute query
-$qry = "SELECT * FROM user WHERE username='$login' AND password='$password'";
+$qry = "SELECT * FROM user WHERE username='$login' AND password='$password' AND position='$_POST[position]'";
 $result = $db->query($qry);
 
 // Check whether the query was successful or not
@@ -60,7 +60,7 @@ if ($result) {
         exit();
     } else {
         // Login failed
-        $_SESSION['ERRMSG_ARR'] = ['Invalid username or password'];
+        $_SESSION['ERRMSG_ARR'] = ['Invalid username or password or user type'];
         header("location: index.php");
         exit();
     }
