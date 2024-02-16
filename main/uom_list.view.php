@@ -375,7 +375,7 @@ $("#saveEdituomButton").click(function() {
             if (response === "success") {
                 Swal.fire({
                     icon: 'success',
-                    title: 'Payment Method has been updated!',
+                    title: 'Uom has been updated!',
                     showConfirmButton: false,
                     timer: 1500
                 }).then(function() {
@@ -421,7 +421,7 @@ $("#uomTable").on("click", ".deleteuomButton", function() {
                     if (response === "success") {
                         Swal.fire({
                             icon: 'success',
-                            title: 'Payment Method has been deleted!',
+                            title: 'UOM has been deleted!',
                             showConfirmButton: false,
                             timer: 1500
                         }).then(function() {
