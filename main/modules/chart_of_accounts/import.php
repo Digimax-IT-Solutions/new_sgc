@@ -16,8 +16,8 @@ if (isset($_POST['import'])) {
         $worksheet = $spreadsheet->getActiveSheet();
 
         // Define the SQL statement for inserting data into the items table
-        $sql = "INSERT INTO chart_of_accounts (account_type, account_name, account_balance, description) 
-        VALUES (?, ?, ?, ?)";
+        $sql = "INSERT INTO chart_of_accounts (account_type, account_name, description) 
+        VALUES (?, ?, ?)";
 
 
         // Prepare the SQL statement

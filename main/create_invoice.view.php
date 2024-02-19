@@ -873,12 +873,12 @@ var productItems = <?php echo $productItemsJSON; ?>;
 
             var newRow = `<tr>
         <td>
-            <select class="item-dropdown select2" name="item[]" required>
+            <select class="item-dropdown select2" style="width: 400px;" name="item[]" required>
                 <option value="" selected disabled>Select an Item</option>
                 ${itemOptions}
             </select>
         </td>
-        <td><input type="text" class="form-control description-field" name="description[]" required readonly></td>
+        <td><input type="text" class="form-control description-field" name="description[]" required></td>
         <td><input type="number" class="form-control" name="quantity[]" required></td>
         <td><input type="text" class="form-control uom-field" name="uom[]" readonly></td>
         <td><input type="number" class="form-control rate-field" name="rate[]" required></td>
