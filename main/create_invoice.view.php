@@ -374,9 +374,9 @@ $productItemsJSON = json_encode($productItems);
                                                 </div>
                                                 <div class="col-md-3 d-inline-block">
                                                     <select class="form-control" id="taxWithheldPercentage" name="taxWithheldPercentage" required>
-                                                        <option value="0">Zero</option>
+                                                       
                                                         <?php
-                                                        $query = "SELECT wTaxRate, wTaxName FROM wtax";
+                                                        $query = "SELECT wTaxRate, wTaxName FROM wtax ORDER BY wTaxCode";
                                                         $result = $db->query($query);
 
                                                         if ($result) {
@@ -386,7 +386,7 @@ $productItemsJSON = json_encode($productItems);
                                                         }
                                                         ?>
                                                     </select>
-                                                </div>
+                                                </div>  
                                                 <div class="col-md-5 d-inline-block">
                                                     <div class="input-group">
                                                         <div class="input-group">
