@@ -106,69 +106,72 @@
     var dataTableInitialized = false;
 
     function populateSalesTable() {
-        $.ajax({
-            type: "GET",
-            url: "modules/invoice/get_sales_transactions.php", // Adjust the URL to the server-side script
-            success: function(response) {
-                var salesTransactions = JSON.parse(response);
-                $("#salesTable tbody").empty();
+    $.ajax({
+        type: "GET",
+        url: "modules/invoice/get_sales_transactions.php", // Adjust the URL to the server-side script
+        success: function(response) {
+            var salesTransactions = JSON.parse(response);
+            $("#salesTable tbody").empty();
 
-                salesTransactions.forEach(function(transaction) {
-                    var statusColorClass = getStatusColorClass(transaction.invoiceStatus); // New function to get color class based on status
-                    
-                    // Format the totalAmountDue as Philippine currency
-                    var formattedAmount = new Intl.NumberFormat('en-PH', {
-                        style: 'currency',
-                        currency: 'PHP'
-                    }).format(transaction.totalAmountDue);
+            // Sort the salesTransactions array based on invoiceNo
+            salesTransactions.sort((a, b) => a.invoiceNo.localeCompare(b.invoiceNo));
 
-                    var row = `<tr class="salesRow" data-invoice-id="${transaction.invoiceID}">
-                        <td>${transaction.invoiceNo}</td>
-                        <td>${transaction.customer}</td>
-                        <td>${transaction.invoiceDate}</td>
-                        <td>${transaction.location}</td>
-                        <td>${transaction.account}</td>
-                        <td><span class="badge ${statusColorClass}">${transaction.invoiceStatus}</span></td>
-                        <td><strong>${formattedAmount}</strong></td>
-                    </tr>`;
-                    $("#salesTable tbody").append(row);
+            salesTransactions.forEach(function(transaction) {
+                var statusColorClass = getStatusColorClass(transaction.invoiceStatus); // New function to get color class based on status
+                
+                // Format the totalAmountDue as Philippine currency
+                var formattedAmount = new Intl.NumberFormat('en-PH', {
+                    style: 'currency',
+                    currency: 'PHP'
+                }).format(transaction.totalAmountDue);
+
+                var row = `<tr class="salesRow" data-invoice-id="${transaction.invoiceID}">
+                    <td>${transaction.invoiceNo}</td>
+                    <td>${transaction.customer}</td>
+                    <td>${transaction.invoiceDate}</td>
+                    <td>${transaction.location}</td>
+                    <td>${transaction.account}</td>
+                    <td><span class="badge ${statusColorClass}">${transaction.invoiceStatus}</span></td>
+                    <td><strong>${formattedAmount}</strong></td>
+                </tr>`;
+                $("#salesTable tbody").append(row);
+            });
+
+            if (!dataTableInitialized) {
+                $('#salesTable').DataTable({
+                    "paging": true,
+                    "lengthChange": true,
+                    "searching": true,
+                    "info": true,
+                    "autoWidth": true,
+                    "lengthMenu": [10, 25, 50, 100],
+                    "ordering": false,
+                    "dom": 'lBfrtip',
+                    "buttons": [],
+                    "oLanguage": {
+                        // ... (your language settings)
+                    }
                 });
 
-                if (!dataTableInitialized) {
-                    $('#salesTable').DataTable({
-                        "paging": true,
-                        "lengthChange": true,
-                        "searching": true,
-                        "info": true,
-                        "autoWidth": true,
-                        "lengthMenu": [10, 25, 50, 100],
-                        "ordering": false,
-                        "dom": 'lBfrtip',
-                        "buttons": [],
-                        "oLanguage": {
-                            // ... (your language settings)
-                        }
-                    });
-
-                    dataTableInitialized = true;
-                } else {
-                    $('#salesTable').DataTable().destroy();
-                    $('#salesTable').DataTable({
-                        // Your DataTables options here
-                    });
-                }
-
-                // Handle row click event
-                $('.salesRow').click(function() {
-                    var invoiceID = $(this).data('invoice-id');
-                    window.location.href = 'view_invoice?invoiceID=' + invoiceID;
+                dataTableInitialized = true;
+            } else {
+                $('#salesTable').DataTable().destroy();
+                $('#salesTable').DataTable({
+                    // Your DataTables options here
                 });
-            },
-            error: function() {
-                console.log("Error fetching data.");
             }
-        });
-    }
+
+            // Handle row click event
+            $('.salesRow').click(function() {
+                var invoiceID = $(this).data('invoice-id');
+                window.location.href = 'view_invoice?invoiceID=' + invoiceID;
+            });
+        },
+        error: function() {
+            console.log("Error fetching data.");
+        }
+    });
+}
 
     // Function to get status color class
     function getStatusColorClass(status) {
