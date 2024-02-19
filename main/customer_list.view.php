@@ -235,6 +235,11 @@ include('connect.php');
                                 <input type="text" class="form-control" id="editCustomerCode" name="editCustomerCode"
                                     placeholder="Enter Customer Code" required>
                             </div>
+                            <div class="form-group">
+                                <label for="editCustomerBalance">BALANCE</label>
+                                <input type="text" class="form-control" id="editCustomerBalance" name="editCustomerBalance"
+                                    placeholder="Enter Balance" required>
+                            </div>
 
                             <div class="form-group">
                                 <label for="editCustomerPaymentMethod">PAYMENT METHOD</label>
@@ -313,10 +318,11 @@ include('connect.php');
                     </div>
                 </form>
 
-            </div>
+          
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-success" id="saveEditCustomerButton">Save Changes</button>
+            </div>
             </div>
         </div>
     </div>
@@ -534,6 +540,7 @@ $("#customerTable").on("click", ".editCustomerButton", function() {
             $("#editCustomerID").val(customerDetails.customerID);
             $("#editCustomerName").val(customerDetails.customerName);
             $("#editCustomerCode").val(customerDetails.customerCode);
+            $("#editCustomerBalance").val(customerDetails.customerBalance);
             $("#editCustomerPaymentMethod").val(customerDetails.customerPaymentMethod);
             $("#editCustomerBillingAddress").val(customerDetails.customerBillingAddress);
             $("#editCustomerShippingAddress").val(customerDetails.customerShippingAddress);

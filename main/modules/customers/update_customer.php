@@ -6,6 +6,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     // Validate and sanitize input data
     $customerCode = $_POST['editCustomerCode'];
     $editCustomerName = $_POST['editCustomerName'];
+
+    $editCustomerBalance = $_POST['editCustomerBalance'];
     $editCustomerPaymentMethod = $_POST['editCustomerPaymentMethod'];
     $editCustomerBillingAddress = $_POST['editCustomerBillingAddress'];
     $editCustomerShippingAddress = $_POST['editCustomerShippingAddress'];
@@ -30,7 +32,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                       contactNumber = :contactNumber,
                       customerDeliveryType = :customerDeliveryType,
                       customerTerms = :customerTerms,
-                      customerEmail = :customerEmail 
+                      customerEmail = :customerEmail,
+                      customerBalance = :customerBalance 
                   WHERE customerID = :customerID";
 
         $stmt = $db->prepare($query);
@@ -45,7 +48,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $stmt->bindParam(':customerDeliveryType', $editCustomerDeliveryType);
         $stmt->bindParam(':customerTerms', $editCustomerTerms);
         $stmt->bindParam(':customerEmail', $editCustomerEmail);
-
+        $stmt->bindParam(':customerBalance', $editCustomerBalance);
         if ($stmt->execute()) {
             echo "success";        
         } else {
