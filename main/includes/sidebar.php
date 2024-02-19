@@ -66,7 +66,7 @@ $userPosition = $_SESSION['SESS_POSITION'];
                         </p>
                     </a>
                 </li>
-                <li class="nav-item has-treeview  <?php echo ($page == 'main/sales_invoice' || $page == 'main/sales_return' || $page == 'main/received_payments' || $page == 'main/create_invoice') ? 'menu-open' : ''; ?>"">
+                <li class="nav-item has-treeview  <?php echo ($page == 'main/sales_invoice' || $page == 'main/sales_return' || $page == 'main/receive_payments' || $page == 'main/create_invoice') ? 'menu-open' : ''; ?>"">
                     <a href=" #" class="nav-link">
                     <i class="nav-icon fas fa-user-circle"></i>
                     <p>
@@ -89,7 +89,7 @@ $userPosition = $_SESSION['SESS_POSITION'];
                             </a>
                         </li> -->
                         <li class="nav-item">
-                            <a href="receive_payment" class="nav-link <?php echo ($page == 'main/receive_payment') ? 'active' : ''; ?>">
+                            <a href="receive_payments" class="nav-link <?php echo ($page == 'main/receive_payments') ? 'active' : ''; ?>">
                                 <i class="nav-icon fas fa-money-check-alt"></i>
                                 <p>Receive Payment</p>
                             </a>

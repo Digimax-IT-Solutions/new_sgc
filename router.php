@@ -4,11 +4,13 @@
 $pages = [
     'index' => 'index.php',
     'main/dashboard' => 'main/dashboard.php',
+    // CUSTOMER CENTER
     'main/sales_invoice' => 'main/sales_invoice.view.php',
     'main/create_invoice' => 'main/create_invoice.view.php',
     'main/view_invoice' => 'main/view_invoice.view.php',
     'main/sales_return' => 'main/sales_return.php',
-    'main/received_payments' => 'main/received_payments.php',
+    'main/receive_payments' => 'main/Customer_center/receive_payments.view.php',
+    'main/create_receive_payments' => 'main/Customer_center/create_receive_payments.view.php',
     // VENDOR CENTER
     'main/purchase_order' => 'main/purchase_order.view.php',
     'main/create_purchase_order' => 'main/create_purchase_order.view.php',
