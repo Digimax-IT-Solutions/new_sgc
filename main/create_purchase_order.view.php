@@ -812,7 +812,7 @@ var productItems = <?php echo $productItemsJSON; ?>;
         function addNewItemRow(itemName, description, amount, uom, items) {
             // Create a dropdown for selecting items
             var itemOptions = items.map(item =>
-                `<option value="${item.itemName}" data-uom="${item.uom}" data-description="${item.itemSalesInfo}" data-amount="${item.itemCost}">${item.itemName} | stock (${item.itemQty})</option>`
+                `<option value="${item.itemName}" data-uom="${item.uom}" data-description="${item.itemSalesInfo}" data-amount="${item.itemCost}">${item.itemName}</option>`
             ).join('');
 
 

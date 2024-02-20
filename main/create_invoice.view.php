@@ -865,7 +865,7 @@ var productItems = <?php echo $productItemsJSON; ?>;
         }
         
         var itemCount = 0; // Variable to keep track of the count of added items
-var maxItems = 17; // Maximum number of items allowed
+        var maxItems = 17; // Maximum number of items allowed
 
 function addNewItemRow(itemName, description, uom, amount, items, maxItems) {
     if (itemCount >= maxItems) {
@@ -879,7 +879,7 @@ function addNewItemRow(itemName, description, uom, amount, items, maxItems) {
 
     // Create a dropdown for selecting items
     var itemOptions = items.map(item =>
-        `<option value="${item.itemName}" data-uom="${item.uom}" data-description="${item.itemSalesInfo}" data-amount="${item.itemCost}">${item.itemName} | stock (${item.itemQty})</option>`
+        `<option value="${item.itemName}" data-uom="${item.uom}" data-description="${item.itemSalesInfo}" data-amount="${item.itemCost}">${item.itemName}</option>`
     ).join('');
 
     var newRow = `<tr>
@@ -933,7 +933,7 @@ $("#itemTableBody").on("click", ".removeItemBtn", function () {
     // Recalculate other percentages
     calculatePercentages();
 });
-    
+
         // Event listener for updating description and amount based on the selected item
         $("#itemTableBody").on("change", ".item-dropdown", function() {
             var row = $(this).closest("tr");
