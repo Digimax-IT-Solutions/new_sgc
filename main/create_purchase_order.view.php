@@ -818,7 +818,7 @@ var productItems = <?php echo $productItemsJSON; ?>;
 
             var newRow = `<tr>
         <td>
-            <select class="item-dropdown select2" name="item[]" required>
+            <select class="item-dropdown select2" style="width: 400px;" name="item[]" required>
                 <option value="" selected disabled>Select an Item</option>
                 ${itemOptions}
             </select>
@@ -832,7 +832,10 @@ var productItems = <?php echo $productItemsJSON; ?>;
     </tr>`;
 
             $("#itemTableBody").append(newRow);
-            $('.item-dropdown').last().select2();
+            $('.item-dropdown').last().select2({
+            placeholder: "Search for an item",
+            minimumInputLength: 1 // Minimum characters to start searching
+            });
         }
 
         // Event listener for adding a new item

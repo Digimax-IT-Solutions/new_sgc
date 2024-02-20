@@ -1004,7 +1004,10 @@ function selectExistingCustomer() {
         </tr>`;
 
             $("#itemTableBody").append(newRow);
-            $('.item-dropdown').last().select2();
+            $('.item-dropdown').last().select2({
+            placeholder: "Search for an item",
+            minimumInputLength: 1 // Minimum characters to start searching
+            });
             // Set values for the added row
             var newRowInputs = $("#itemTableBody tr:last").find('select');
             newRowInputs.eq(0).val(item); // Set the value for the <select> element

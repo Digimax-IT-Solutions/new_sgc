@@ -867,16 +867,10 @@ var productItems = <?php echo $productItemsJSON; ?>;
 
         // Function to add a new row for an item
         function addNewItemRow(itemName, description, amount, uom, items) {
-            // Create a dropdown for selecting items
-            var itemOptions = items.map(item =>
-                `<option value="${item.itemName}" data-description="${item.itemSalesInfo}" data-uom="${item.uom}" data-amount="${item.itemSrp}" >${item.itemName}</option>`
-            ).join('');
-
-            var newRow = `<tr>
+    var newRow = `<tr>
         <td>
             <select class="item-dropdown select2" style="width: 400px;" name="item[]" required>
                 <option value="" selected disabled>Select an Item</option>
-                ${itemOptions}
             </select>
         </td>
         <td><input type="text" class="form-control description-field" name="description[]" required></td>
@@ -887,10 +881,16 @@ var productItems = <?php echo $productItemsJSON; ?>;
         <td><button type="button" class="btn btn-danger btn-sm removeItemBtn">Remove</button></td>
     </tr>`;
 
-            $("#itemTableBody").append(newRow);
+    $("#itemTableBody").append(newRow);
 
-            $('.item-dropdown').last().select2();
-        }
+    // Initialize Select2 for the newly added dropdown
+    var selectElement = $('.item-dropdown').last();
+    selectElement.select2({
+        placeholder: "Search for an item",
+        data: items.map(item => ({ id: item.itemName, text: item.itemName })),
+        minimumInputLength: 1 // Minimum characters to start searching
+    });
+}
 
         // Event listener for adding a new item
         $("#addItemBtn").on("click", function() {

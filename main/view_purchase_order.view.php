@@ -94,6 +94,10 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
         padding: 2px;
         /* Adjust the padding as needed */
     }
+    .select2 {
+        text-align: left;
+        padding-top: 3.1px;
+    }
 </style>
 </style>
 
@@ -876,7 +880,7 @@ $("#deleteButton").on("click", function() {
 
             var newRow = `<tr>
             <td>
-                <select class="form-control item-dropdown" name="item[]" required>
+                <select class="item-dropdown select2" style="width: 400px;" name="item[]" required>
                     <option value="" selected disabled>Select an Item</option>
                     ${itemOptions}
                 </select>
@@ -890,6 +894,10 @@ $("#deleteButton").on("click", function() {
         </tr>`;
 
             $("#itemTableBody").append(newRow);
+            $('.item-dropdown').last().select2({
+            placeholder: "Search for an item",
+            minimumInputLength: 1 // Minimum characters to start searching
+            });
 
             // Set values for the added row
             var newRowInputs = $("#itemTableBody tr:last").find('select');
@@ -1012,5 +1020,7 @@ $("#deleteButton").on("click", function() {
         $("#discountPercentage, #vatPercentage, #taxWithheldPercentage").on("input", function() {
             calculatePercentages();
         });
+
+        $('.select2').select2();
     });
 </script>

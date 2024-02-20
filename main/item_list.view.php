@@ -575,105 +575,92 @@
         // Variable to store DataTable instance
         var dataTableInstance;
 
-        // Function to fetch and populate data
-        function populateItemsTable() {
-            $.ajax({
-                type: "GET",
-                url: "modules/masterlist/items/get_items.php",
-                data: {
-                    page: 1, // Initial page number
-                    limit: -1, // Retrieve all items at once
-                    search: '' // Empty search string initially
-                },
-                success: function(response) {
-                    // Initialize or reinitialize DataTable instance
-                    if (dataTableInstance) {
-                        // Destroy existing DataTable instance
-                        dataTableInstance.destroy();
-                    }
-
-                    // Parse the JSON response
-                    var items = JSON.parse(response);
-
-                    // Clear existing table rows
-                    $("#itemsTable tbody").empty();
-
-                    // Inside the items.forEach() loop where you populate the table
-                    items.forEach(function(item) {
-                        var row = `<tr>
-                    <td>${item.itemCode}</td>
-                    <td>${item.itemName}</td>
-                    <td>${item.itemType}</td>
-                    <td>${item.itemQty}</td>
-                    <td>${item.uom || ''}</td>
-                    <td>${new Date(item.createdAt).toLocaleDateString()}</td>
-                    <td>
-                        <button type="button" class="btn btn-primary btn-sm editItemButton" style="background-color: rgb(0, 149, 77); color: white; border: 1px rgb(0, 149, 77);" data-id="${item.itemID}">Edit</button>
-                        <button type="button" class="btn btn-danger btn-sm deleteItemButton" data-id="${item.itemID}">Delete</button>
-                    </td>
-                </tr>`;
-                        $("#itemsTable tbody").append(row);
-                    });
-
-                    // Initialize DataTable
-                    dataTableInstance = $('#itemsTable').DataTable({
-                        "paging": true,
-                        "lengthChange": true,
-                        "searching": true,
-                        "info": true,
-                        "autoWidth": true,
-                        "lengthMenu": [10, 25, 50, 100, 1000],
-                        "ordering": false,
-                        "dom": 'lBfrtip',
-                        "buttons": [{
-                            extend: 'copy',
-                            exportOptions: {
-                                columns: ':not(:last-child)'
-                            }
-                        }, {
-                            extend: 'csv',
-                            exportOptions: {
-                                columns: ':not(:last-child)'
-                            }
-                        }, {
-                            extend: 'excel',
-                            exportOptions: {
-                                columns: ':not(:last-child)'
-                            }
-                        }, {
-                            extend: 'pdf',
-                            exportOptions: {
-                                columns: ':not(:last-child)'
-                            }
-                        }, {
-                            extend: 'print',
-                            exportOptions: {
-                                columns: ':not(:last-child)'
-                            }
-                        }],
-                        "oLanguage": {
-                            "sSearch": "Search Item:",
-                            "sLengthMenu": "Show _MENU_ entries",
-                            "sInfo": "Showing _START_ to _END_ of _TOTAL_ entries",
-                            "sInfoEmpty": "Showing 0 to 0 of 0 entries",
-                            "sInfoFiltered": "(filtered from _MAX_ total entries)",
-                            "oPaginate": {
-                                "sFirst": "First",
-                                "sLast": "Last",
-                                "sNext": "Next",
-                                "sPrevious": "Previous"
-                            }
-                        }
-                    });
-                },
-                error: function() {
-                    console.log("Error fetching data.");
+// Initialize DataTable
+function initializeDataTable() {
+    dataTableInstance = $('#itemsTable').DataTable({
+        "paging": true,
+        "lengthChange": true,
+        "searching": true,
+        "info": true,
+        "autoWidth": true,
+        "lengthMenu": [10, 25, 50, 100, 1000],
+        "ordering": false,
+        "dom": 'lBfrtip',
+        "buttons": [{
+            extend: 'copy',
+            exportOptions: {
+                columns: ':not(:last-child)'
+            }
+        }, {
+            extend: 'csv',
+            exportOptions: {
+                columns: ':not(:last-child)'
+            }
+        }, {
+            extend: 'excel',
+            exportOptions: {
+                columns: ':not(:last-child)'
+            }
+        }, {
+            extend: 'pdf',
+            exportOptions: {
+                columns: ':not(:last-child)'
+            }
+        }, {
+            extend: 'print',
+            exportOptions: {
+                columns: ':not(:last-child)'
+            }
+        }],
+        "oLanguage": {
+            "sSearch": "Search Item:",
+            "sLengthMenu": "Show _MENU_ entries",
+            "sInfo": "Showing _START_ to _END_ of _TOTAL_ entries",
+            "sInfoEmpty": "Showing 0 to 0 of 0 entries",
+            "sInfoFiltered": "(filtered from _MAX_ total entries)",
+            "oPaginate": {
+                "sFirst": "First",
+                "sLast": "Last",
+                "sNext": "Next",
+                "sPrevious": "Previous"
+            }
+        },
+        "ajax": {
+            "url": "modules/masterlist/items/get_items.php",
+            "type": "GET",
+            "data": function(d) {
+                d.page = 1; // Initial page number
+                d.limit = -1; // Retrieve all items at once
+                d.search = $('#searchInput').val(); // Search query
+            },
+            "dataSrc": "" // No additional data processing needed here
+        },
+        "columns": [ // Define columns explicitly to match server response
+            { "data": "itemCode" },
+            { "data": "itemName" },
+            { "data": "itemType" },
+            { "data": "itemQty" },
+            { "data": "uom" },
+            { "data": "createdAt" },
+            {
+                "data": null,
+                "render": function(data, type, row) {
+                    return `<button type="button" class="btn btn-primary btn-sm editItemButton" style="background-color: rgb(0, 149, 77); color: white; border: 1px rgb(0, 149, 77);" data-id="${row.itemID}">Edit</button>
+                            <button type="button" class="btn btn-danger btn-sm deleteItemButton" data-id="${row.itemID}">Delete</button>`;
                 }
-            });
-        }
+            }
+        ]
+    });
+}
 
-        // Initial population when the page loads
-        populateItemsTable();
+// Search event handler
+$('#searchInput').on('input', function() {
+    dataTableInstance.ajax.reload();
+});
+
+// Initial population when the page loads
+initializeDataTable();
+
 
         // Function to display an error using SweetAlert2
         function displayError(errorMessage) {
