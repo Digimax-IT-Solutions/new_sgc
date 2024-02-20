@@ -984,41 +984,61 @@ function selectExistingCustomer() {
 
         // Function to add a new row for an item
         function addNewItemRow(item, description, quantity, uom, rate, amount, items) {
-            // Create a dropdown for selecting items
-            var itemOptions = items.map(item =>
-                `<option value="${item.itemName}" data-description="${item.itemSalesInfo}" data-amount="${item.itemSrp}">${item.itemName}</option>`
-            ).join('');
-            var newRow = `<tr>
-            <td>
-                <select class="item-dropdown select2" style="width: 400px;" name="item[]" required>
-                    <option value="" selected disabled>Select an Item</option>
-                    ${itemOptions}
-                </select>
-            </td>
-            <td><input type="text" class="form-control description-field" name="description[]" required></td>
-            <td><input type="number" class="form-control" name="quantity[]" required></td>
-            <td><input type="text" class="form-control uom-field" name="uom[]" readonly></td>
-            <td><input type="number" class="form-control rate-field" name="rate[]" required></td>
-            <td><input type="number" class="form-control amount-field" name="amount[]" readonly></td>
-            <td><button type="button" class="btn btn-danger btn-sm removeItemBtn">Remove</button></td>
-        </tr>`;
+    // Create a dropdown for selecting items
+    var itemOptions = items.map(item =>
+        `<option value="${item.itemName}" data-description="${item.itemSalesInfo}" data-amount="${item.itemSrp}">${item.itemName}</option>`
+    ).join('');
+    
+    var newRow = `<tr>
+        <td>
+            <select class="item-dropdown select2" style="width: 400px;" name="item[]" required>
+                <option value="" selected disabled>Select an Item</option>
+                ${itemOptions}
+            </select>
+        </td>
+        <td><input type="text" class="form-control description-field" name="description[]" required></td>
+        <td><input type="number" class="form-control" name="quantity[]" required></td>
+        <td><input type="text" class="form-control uom-field" name="uom[]" readonly></td>
+        <td><input type="number" class="form-control rate-field" name="rate[]" required></td>
+        <td><input type="number" class="form-control amount-field" name="amount[]" readonly></td>
+        <td><button type="button" class="btn btn-danger btn-sm removeItemBtn">Remove</button></td>
+    </tr>`;
 
-            $("#itemTableBody").append(newRow);
-            $('.item-dropdown').last().select2({
-            placeholder: "Search for an item",
-            minimumInputLength: 1 // Minimum characters to start searching
-            });
-            // Set values for the added row
-            var newRowInputs = $("#itemTableBody tr:last").find('select');
-            newRowInputs.eq(0).val(item); // Set the value for the <select> element
-            var newRowInputs2 = $("#itemTableBody tr:last").find('input');
-            newRowInputs2.eq(0).val(description);
-            newRowInputs2.eq(1).val(quantity);
-            newRowInputs2.eq(2).val(uom);
-            newRowInputs2.eq(3).val(rate);
-            newRowInputs2.eq(4).val(amount);
+    $("#itemTableBody").append(newRow);
 
+    $('.item-dropdown').last().select2({
+        placeholder: "Search for an item",
+        minimumInputLength: 1, // Minimum characters to start searching
+        ajax: {
+            url: "modules/masterlist/items/get_items.php", // Your endpoint for fetching items
+            dataType: 'json',
+            delay: 250,
+            processResults: function(data) {
+                return {
+                    results: $.map(data, function(item) {
+                        return {
+                            id: item.itemID,
+                            text: item.itemName,
+                            description: item.itemSalesInfo,
+                            amount: item.itemSrp
+                        };
+                    })
+                };
+            },
+            cache: true
         }
+    });
+
+    // Set values for the added row
+    var newRowInputs = $("#itemTableBody tr:last").find('select');
+    newRowInputs.eq(0).val(item).trigger('change'); // Set the value for the <select> element and trigger change event
+    var newRowInputs2 = $("#itemTableBody tr:last").find('input');
+    newRowInputs2.eq(0).val(description);
+    newRowInputs2.eq(1).val(quantity);
+    newRowInputs2.eq(2).val(uom);
+    newRowInputs2.eq(3).val(rate);
+    newRowInputs2.eq(4).val(amount);
+}
 
         // Populate existing purchase order items when the page loads
         salesInvoiceItems.forEach(item => {
