@@ -98,7 +98,7 @@ $productItemsJSON = json_encode($productItems);
                             <!-- Sales Invoice Form -->
                             <form id="salesInvoiceForm" action="" method="POST">
                                 <div class="form-row">
-                                    <div class="form-group col-md-2" style="border: 2px solid rgb(128, 0, 0); border-radius: 20px;">
+                                    <div class="form-group col-md-2" style="border: 5px solid rgb(128, 0, 0); border-radius: 20px; padding: 20px;">
                                         <label for="customer">CUSTOMER NAME | <span><a href="customer_list">Add new
                                                     customer</a></span></label>
                                         <div class="input-group">
