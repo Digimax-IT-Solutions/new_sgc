@@ -4,6 +4,7 @@
     #itemsTable {
         border-collapse: collapse;
         width: 100%;
+        table-layout: fixed;
     }
 
     #itemsTable th,
@@ -12,6 +13,8 @@
         width: 100px;
         border: 1px solid maroon;
         white-space: nowrap;
+        overflow: hidden; /* Hides any overflowing content */
+        text-overflow: ellipsis;
         /* Adjust the padding as needed */
     }
 
@@ -19,6 +22,9 @@
         color: white;
         background-color: maroon;
         /* Set your desired background color here */
+    }
+    .item-name-column {
+    width: 30%; /* Setting width for the itemName column */
     }
 </style>
 <div class="content-wrapper">
@@ -638,7 +644,7 @@ function initializeDataTable() {
         },
         "columns": [ // Define columns explicitly to match server response
             { "data": "itemCode" },
-            { "data": "itemName" },
+            { "data": "itemName", "className": "item-name-column" },
             { "data": "itemType" },
             { "data": "itemQty" },
             { "data": "uom" },
