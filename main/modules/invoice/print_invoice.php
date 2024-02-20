@@ -233,17 +233,17 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
 <div class="nad"><?php echo $grossAmountFormatted; ?></div>           
 </body>
 <script>
-    window.onload = function() {
+        window.onload = function() {
             window.print(); // Automatically print the page when it loads
         };
 
-        // Event listener for the afterprint event
-        window.addEventListener('afterprint', function(event) {
-            // If the afterprint event is triggered due to user cancelling print
-            if (!event.returnValue) {
-                // Redirect to the previous page
-                window.history.back();
-            }
-        });
-</script>
+        // Event listener for the beforeprint event
+        window.onbeforeprint = function() {
+            // Delay redirect to ensure the print dialog is shown
+            setTimeout(function() {
+                // Redirect to the specified URL
+                window.history.back(); // Replace 'https://example.com' with your desired URL
+            }, 0);
+        };
+    </script>
 </html>

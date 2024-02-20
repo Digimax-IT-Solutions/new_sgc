@@ -6,35 +6,42 @@ include('connect.php');
 $salesInvoice = null;
 $salesInvoiceItems = [];
 
-// Check if the 'poID' parameter is set
+// Check if the 'invoiceID' parameter is set
 if (isset($_GET['invoiceID'])) {
     $invoiceID = $_GET['invoiceID'];
 
-    // Query to retrieve purchase order details
+    // Query to retrieve sales invoice details
     $query = "SELECT * FROM sales_invoice WHERE invoiceID = :invoiceID";
     $stmt = $db->prepare($query);
     $stmt->bindParam(':invoiceID', $invoiceID);
     $stmt->execute();
 
-    // Fetch purchase order details
+    // Fetch sales invoice details
     $salesInvoice = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    // Check if purchase order details are found
+    // Check if sales invoice details are found
     if ($salesInvoice) {
-        // Fetch purchase order items
+        // Query to retrieve sales invoice items one by one
         $queryInvoiceItems = "SELECT * FROM sales_invoice_items WHERE salesInvoiceID = :invoiceID";
         $stmtInvoiceItems = $db->prepare($queryInvoiceItems);
         $stmtInvoiceItems->bindParam(':invoiceID', $invoiceID);
         $stmtInvoiceItems->execute();
 
-        $salesInvoiceItems = $stmtInvoiceItems->fetchAll(PDO::FETCH_ASSOC);
+        // Initialize an array to store sales invoice items
+        $salesInvoiceItems = array();
+
+        // Fetch sales invoice items one by one
+        while ($row = $stmtInvoiceItems->fetch(PDO::FETCH_ASSOC)) {
+            // Append each row to the sales invoice items array
+            $salesInvoiceItems[] = $row;
+        }
     } else {
-        // Redirect or display an error if purchase order details are not found
+        // Redirect or display an error if sales invoice details are not found
         header("Location: index.php"); // Redirect to the main page or display an error message
         exit();
     }
 } else {
-    // Redirect or display an error if 'poID' parameter is not set
+    // Redirect or display an error if 'invoiceID' parameter is not set
     header("Location: index.php"); // Redirect to the main page or display an error message
     exit();
 }

@@ -8,10 +8,16 @@ $query = "SELECT itemName, itemSalesInfo, itemSrp, uom FROM items";
 // Execute the query
 $result = $db->query($query);
 
-// Fetch all rows at once
-$productItems = $result->fetchAll(PDO::FETCH_ASSOC);
+// Initialize an array to store the product items
+$productItems = array();
 
-// Convert the result to JSON for faster fetching in JavaScript
+// Fetch rows one by one
+while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+    // Append each row to the product items array
+    $productItems[] = $row;
+}
+
+// Convert the result to JSON
 $productItemsJSON = json_encode($productItems);
 ?>
 
@@ -425,8 +431,7 @@ $productItemsJSON = json_encode($productItems);
                                         <button type="button" class="btn btn-info" id="saveAndCloseButton">Save and
                                             Close</button>
                                         <button type="button" class="btn btn-warning" id="clearButton">Clear</button>
-                                        
-                                        
+                                        <button type="button" class="btn btn-secondary" id="printButton">Save And Print</button>      
                                     </div>
                                 </div>
 
