@@ -863,17 +863,26 @@ var productItems = <?php echo $productItemsJSON; ?>;
         function resetInvalidField(field) {
             field.removeClass("is-invalid");
         }
+        
+        var itemCount = 0; // Variable to keep track of the count of added items
+var maxItems = 17; // Maximum number of items allowed
 
+function addNewItemRow(itemName, description, uom, amount, items, maxItems) {
+    if (itemCount >= maxItems) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: 'You can only add up to ' + maxItems + ' items. Please create a new invoice for additional items.'
+        });
+        return; // Exit the function if the limit is reached
+    }
 
-        // Function to add a new row for an item
-        function addNewItemRow(itemName, description, amount, uom, items) {
-            // Create a dropdown for selecting items
-            var itemOptions = items.map(item =>
-                `<option value="${item.itemName}" data-uom="${item.uom}" data-description="${item.itemSalesInfo}" data-amount="${item.itemCost}">${item.itemName} | stock (${item.itemQty})</option>`
-            ).join('');
+    // Create a dropdown for selecting items
+    var itemOptions = items.map(item =>
+        `<option value="${item.itemName}" data-uom="${item.uom}" data-description="${item.itemSalesInfo}" data-amount="${item.itemCost}">${item.itemName} | stock (${item.itemQty})</option>`
+    ).join('');
 
-
-            var newRow = `<tr>
+    var newRow = `<tr>
         <td>
             <select class="item-dropdown select2" style="width: 400px;" name="item[]" required>
                 <option value="" selected disabled>Select an Item</option>
@@ -888,37 +897,43 @@ var productItems = <?php echo $productItemsJSON; ?>;
         <td><button type="button" class="btn btn-danger btn-sm removeItemBtn">Remove</button></td>
     </tr>`;
 
-            $("#itemTableBody").append(newRow);
-            $('.item-dropdown').last().select2({
-            placeholder: "Search for an item",
-            minimumInputLength: 1 // Minimum characters to start searching
-            });
-        }
+    $("#itemTableBody").append(newRow);
+    $('.item-dropdown').last().select2({
+        placeholder: "Search for an item",
+        minimumInputLength: 1 // Minimum characters to start searching
+    });
 
-        // Event listener for adding a new item
-        $("#addItemBtn").on("click", function() {
-            // Get the selected item
-            var selectedItem = $("#selectProduct option:selected");
+    itemCount++; // Increment the count of added items
+}
 
-            // Manually provide itemName, description, and amount
-            var itemName = selectedItem.val();
-            var description = selectedItem.data("description");
-            var amount = selectedItem.data("amount");
-            var uom = selectedItem.data("uom");
+// Event listener for adding a new item
+$("#addItemBtn").on("click", function () {
+    // Get the selected item
+    var selectedItem = $("#selectProduct option:selected");
 
-            // Call the function with the UOM options
-            addNewItemRow(itemName, description, uom, amount, <?php echo json_encode($productItems); ?>);
-        });
+    // Manually provide itemName, description, and amount
+    var itemName = selectedItem.val();
+    var description = selectedItem.data("description");
+    var amount = selectedItem.data("amount");
+    var uom = selectedItem.data("uom");
 
-        // Event listener for removing an item
-        $("#itemTableBody").on("click", ".removeItemBtn", function() {
-            $(this).closest("tr").remove();
+    // Call the function with the UOM options and maxItems
+    addNewItemRow(itemName, description, uom, amount, <?php echo json_encode($productItems); ?>, maxItems);
+});
 
-            // Recalculate gross amount
-            calculateGrossAmount();
-            // Recalculate other percentages
-            calculatePercentages();
-        });
+// Event listener for removing an item
+$("#itemTableBody").on("click", ".removeItemBtn", function () {
+    $(this).closest("tr").remove();
+
+    // Decrement itemCount when an item is removed
+    itemCount--;
+
+    // Recalculate gross amount
+    calculateGrossAmount();
+    // Recalculate other percentages
+    calculatePercentages();
+});
+    
         // Event listener for updating description and amount based on the selected item
         $("#itemTableBody").on("change", ".item-dropdown", function() {
             var row = $(this).closest("tr");

@@ -981,9 +981,18 @@ function selectExistingCustomer() {
         var productItems = <?php echo json_encode($productItems); ?>;
 
 
-
+        var itemCount = 0; // Variable to keep track of the count of added items
+        var maxItems = 17; // Maximum number of items allowed
         // Function to add a new row for an item
-        function addNewItemRow(item, description, quantity, uom, rate, amount, items) {
+        function addNewItemRow(item, description, quantity, uom, rate, amount, items, maxItems) {
+            if (itemCount >= maxItems) {
+                Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'You can only add up to ' + maxItems + ' items. Please create a new invoice for additional items.'
+                });
+            return; // Exit the function if the limit is reached
+            }
             // Create a dropdown for selecting items
             var itemOptions = items.map(item =>
                 `<option value="${item.itemName}" data-description="${item.itemSalesInfo}" data-amount="${item.itemSrp}">${item.itemName}</option>`
@@ -1008,6 +1017,8 @@ function selectExistingCustomer() {
             placeholder: "Search for an item",
             minimumInputLength: 1 // Minimum characters to start searching
             });
+
+            itemCount++; // Increment the item count
             // Set values for the added row
             var newRowInputs = $("#itemTableBody tr:last").find('select');
             newRowInputs.eq(0).val(item); // Set the value for the <select> element
@@ -1044,12 +1055,14 @@ function selectExistingCustomer() {
             // Check if the items array is defined
             var itemsArray = productItems || []; // Use the productItems array if defined, otherwise, an empty array
             // Call the function with the UOM options
-            addNewItemRow(itemName, description, quantity, uom, amount, 0, itemsArray);
+            addNewItemRow(itemName, description, quantity, uom, amount, 0, itemsArray, maxItems);
         });
 
         // Event listener for removing an item
         $("#itemTableBody").on("click", ".removeItemBtn", function() {
             $(this).closest("tr").remove();
+
+            itemCount--;
             // Recalculate gross amount
             calculateGrossAmount();
             // Recalculate other percentages
