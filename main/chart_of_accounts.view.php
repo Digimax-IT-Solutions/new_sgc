@@ -5,6 +5,7 @@
     #accountsTable {
         border-collapse: collapse;
         width: 100%;
+        table-layout: fixed;
         /* Example fixed width */
     }
 
@@ -13,6 +14,9 @@
         padding: 1px;
         width: 100px;
         border: 1px solid maroon;
+        white-space: nowrap;
+        overflow: hidden; /* Hides any overflowing content */
+        text-overflow: ellipsis
         /* Example fixed width */
         /* Adjust the padding as needed */
     }
