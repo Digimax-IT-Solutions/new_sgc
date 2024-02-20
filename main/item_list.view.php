@@ -11,6 +11,7 @@
         padding: 1px;
         width: 100px;
         border: 1px solid maroon;
+        white-space: nowrap;
         /* Adjust the padding as needed */
     }
 
