@@ -16,6 +16,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $editCustomerDeliveryType = $_POST['editCustomerDeliveryType'];
     $editCustomerTerms = $_POST['editCustomerTerms'];
     $editCustomerEmail = $_POST['editCustomerEmail'];
+    $editCustomerBusinessStyle = $_POST['editCustomerBusinessStyle'];
 
     // Assuming you have a customerID coming from the form
     $customerID = $_POST['editCustomerID'];
@@ -33,6 +34,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                       customerDeliveryType = :customerDeliveryType,
                       customerTerms = :customerTerms,
                       customerEmail = :customerEmail,
+                      customerBusinessStyle = :customerBusinessStyle,
                       customerBalance = :customerBalance 
                   WHERE customerID = :customerID";
 
@@ -48,6 +50,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $stmt->bindParam(':customerDeliveryType', $editCustomerDeliveryType);
         $stmt->bindParam(':customerTerms', $editCustomerTerms);
         $stmt->bindParam(':customerEmail', $editCustomerEmail);
+        $stmt->bindParam(':customerBusinessStyle', $editCustomerBusinessStyle);
         $stmt->bindParam(':customerBalance', $editCustomerBalance);
         if ($stmt->execute()) {
             echo "success";        

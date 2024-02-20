@@ -14,9 +14,10 @@ try {
     $customerDeliveryType = $_POST['customerDeliveryType'];
     $customerTerms = $_POST['customerTerms'];
     $customerEmail = $_POST['customerEmail'];
+    $customerBusinessStyle = $_POST['customerBusinessStyle'];
 
     // Insert data into the customers table
-    $query = "INSERT INTO customers (customerCode, customerName, customerPaymentMethod, customerBillingAddress, customerShippingAddress, customerTin, contactNumber, customerDeliveryType, customerTerms, customerEmail) VALUES (:customerCode, :customerName, :customerPaymentMethod, :customerBillingAddress, :customerShippingAddress, :customerTin, :contactNumber, :customerDeliveryType, :customerTerms, :customerEmail)";
+    $query = "INSERT INTO customers (customerCode, customerName, customerPaymentMethod, customerBillingAddress, customerShippingAddress, customerTin, contactNumber, customerDeliveryType, customerTerms, customerEmail, customerBusinessStyle) VALUES (:customerCode, :customerName, :customerPaymentMethod, :customerBillingAddress, :customerShippingAddress, :customerTin, :contactNumber, :customerDeliveryType, :customerTerms, :customerEmail, :customerBusinessStyle)";
     
     $stmt = $db->prepare($query);
 
@@ -30,6 +31,7 @@ try {
     $stmt->bindParam(':customerDeliveryType', $customerDeliveryType);
     $stmt->bindParam(':customerTerms', $customerTerms);
     $stmt->bindParam(':customerEmail', $customerEmail);
+    $stmt->bindParam(':customerBusinessStyle', $customerBusinessStyle);
 
     $result = $stmt->execute();
 

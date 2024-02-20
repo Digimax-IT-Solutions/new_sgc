@@ -195,6 +195,11 @@ include('connect.php');
                                 <input type="text" class="form-control" id="customerEmail" name="customerEmail"
                                     placeholder="Enter Email" required>
                             </div>
+                            <div class="form-group">
+                                <label for="customerBusinessStyle">BUSINESS STYLE</label>
+                                <input type="text" class="form-control" id="customerBusinessStyle" name="customerBusinessStyle"
+                                    placeholder="Enter Business Style" required>
+                            </div>
                         </div>
                     </div>
                 </form>
@@ -313,6 +318,11 @@ include('connect.php');
                                 <label for="editCustomerEmail">EMAIL</label>
                                 <input type="text" class="form-control" id="editCustomerEmail" name="editCustomerEmail"
                                     placeholder="Enter Email" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="editCustomerBusinessStyle">BUSINESS STYLE</label>
+                                <input type="text" class="form-control" id="editCustomerBusinessStyle" name="editCustomerBusinessStyle"
+                                    placeholder="Enter Business Style" required>
                             </div>
                         </div>
                     </div>
@@ -549,6 +559,7 @@ $("#customerTable").on("click", ".editCustomerButton", function() {
             $("#editCustomerDeliveryType").val(customerDetails.customerDeliveryType);
             $("#editCustomerTerms").val(customerDetails.customerTerms);
             $("#editCustomerEmail").val(customerDetails.customerEmail);
+            $("#editCustomerBusinessStyle").val(customerDetails.customerBusinessStyle);
             // Show the edit modal
             $("#editCustomerModal").modal("show");
         },

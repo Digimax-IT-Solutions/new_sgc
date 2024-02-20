@@ -132,12 +132,12 @@ $productItemsJSON = json_encode($productItems);
                                                         <option value="">Select an existing customer</option>
                                                         <?php
                                                         // Fetch customers from the database and populate the dropdown in the modal
-                                                        $query = "SELECT customerID, customerName, customerEmail, customerBillingAddress, customerShippingAddress FROM customers";
+                                                        $query = "SELECT customerID, customerName, customerBusinessStyle, customerTin, customerBillingAddress, customerShippingAddress FROM customers";
                                                         $result = $db->query($query);
 
                                                         if ($result) {
                                                             while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
-                                                                echo "<option value='{$row['customerID']}' data-email='{$row['customerEmail']}' data-address='{$row['customerBillingAddress']}' data-shipaddress='{$row['customerShippingAddress']}'>{$row['customerName']}</option>";
+                                                                echo "<option value='{$row['customerID']}' data-tin='{$row['customerTin']}' data-businessstyle='{$row['customerBusinessStyle']}' data-address='{$row['customerBillingAddress']}' data-shipaddress='{$row['customerShippingAddress']}'>{$row['customerName']}</option>";
                                                             }
                                                         }
                                                         ?>
@@ -493,13 +493,15 @@ var productItems = <?php echo $productItemsJSON; ?>;
     function selectExistingCustomer() {
         var selectedCustomer = $("#existingCustomer").find(":selected");
         var customerName = selectedCustomer.text();
-        var customerEmail = selectedCustomer.data("email");
+        var customerBusinessStyle = selectedCustomer.data("businessstyle");
+        var customerTin = selectedCustomer.data("tin");
         var customerAddress = selectedCustomer.data("address");
         var customerShippingAddress = selectedCustomer.data("shipaddress");
 
         // Set the values in the manual input fields
         $("#customer").val(customerName);
-        $("#email").val(customerEmail);
+        $("#invoiceBusinessStyle").val(customerBusinessStyle);
+        $("#invoiceTin").val(customerTin);
         $("#address").val(customerAddress);
         $("#shippingAddress").val(customerShippingAddress);
         // Close the modal
