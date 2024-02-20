@@ -111,8 +111,6 @@ $productItemsJSON = json_encode($productItems);
                                         <input type="text" class="form-control" id="address" name="address">
                                         <label for="shippingAddress">SHIPPING ADDRESS</label>
                                         <input type="text" class="form-control" id="shippingAddress" name="shippingAddress">
-                                        <label for="email">EMAIL</label>
-                                        <input type="text" class="form-control" id="email" name="email">
                                         <label for="invoiceTin">TIN:</label>
                                         <input type="text" class="form-control" id="invoiceTin" name="invoiceTin" required>
                                     </div>
