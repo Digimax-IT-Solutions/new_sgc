@@ -11,30 +11,24 @@ if (isset($_GET['invoiceID'])) {
     $invoiceID = $_GET['invoiceID'];
 
     // Query to retrieve sales invoice details
-    $query = "SELECT * FROM sales_invoice WHERE invoiceID = :invoiceID";
-    $stmt = $db->prepare($query);
-    $stmt->bindParam(':invoiceID', $invoiceID);
-    $stmt->execute();
+    $queryInvoice = "SELECT * FROM sales_invoice WHERE invoiceID = :invoiceID";
+    $stmtInvoice = $db->prepare($queryInvoice);
+    $stmtInvoice->bindParam(':invoiceID', $invoiceID);
+    $stmtInvoice->execute();
 
     // Fetch sales invoice details
-    $salesInvoice = $stmt->fetch(PDO::FETCH_ASSOC);
+    $salesInvoice = $stmtInvoice->fetch(PDO::FETCH_ASSOC);
 
     // Check if sales invoice details are found
     if ($salesInvoice) {
-        // Query to retrieve sales invoice items one by one
+        // Query to retrieve sales invoice items
         $queryInvoiceItems = "SELECT * FROM sales_invoice_items WHERE salesInvoiceID = :invoiceID";
         $stmtInvoiceItems = $db->prepare($queryInvoiceItems);
         $stmtInvoiceItems->bindParam(':invoiceID', $invoiceID);
         $stmtInvoiceItems->execute();
 
-        // Initialize an array to store sales invoice items
-        $salesInvoiceItems = array();
-
-        // Fetch sales invoice items one by one
-        while ($row = $stmtInvoiceItems->fetch(PDO::FETCH_ASSOC)) {
-            // Append each row to the sales invoice items array
-            $salesInvoiceItems[] = $row;
-        }
+        // Fetch sales invoice items
+        $salesInvoiceItems = $stmtInvoiceItems->fetchAll(PDO::FETCH_ASSOC);
     } else {
         // Redirect or display an error if sales invoice details are not found
         header("Location: index.php"); // Redirect to the main page or display an error message
@@ -46,19 +40,22 @@ if (isset($_GET['invoiceID'])) {
     exit();
 }
 
-
-
-
 // Fetch product items
 $query = "SELECT itemName, itemSalesInfo, itemSrp, uom FROM items";
 
 // Execute the query
 $result = $db->query($query);
 
-// Fetch all rows at once
-$productItems = $result->fetchAll(PDO::FETCH_ASSOC);
+// Initialize an array to store the product items
+$productItems = array();
 
-// Convert the result to JSON for faster fetching in JavaScript
+// Fetch rows one by one
+while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+    // Append each row to the product items array
+    $productItems[] = $row;
+}
+
+// Convert the result to JSON
 $productItemsJSON = json_encode($productItems);
 ?>
 
