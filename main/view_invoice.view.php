@@ -42,7 +42,7 @@ if (isset($_GET['invoiceID'])) {
 
 // Fetch product items
 // Set the batch size for fetching items
-$batchSize = 100; // Adjust the batch size based on your requirements
+$batchSize = 10000; // Adjust the batch size based on your requirements
 
 // Initialize an array to store all product items
 $productItems = array();
