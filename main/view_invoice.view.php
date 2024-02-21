@@ -342,10 +342,10 @@ $productItemsJSON = json_encode($productItems);
                             <div class="form-group col-md-12">
                                 <button type="button" class="btn btn-success" id="addItemBtn">Add Item</button>
                             </div>
-                            <div id="loadingIndicator">
+                            <center><div id="loadingIndicator">
                             <img src="../images/loading.gif" alt="Loading..." />
                             <p>Loading the Items....</p>
-                            </div>
+                            </div></center>
                         </div>
                         <!-- Select Product Item -->
                         <div class="table-responsive">
