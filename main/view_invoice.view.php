@@ -41,16 +41,21 @@ if (isset($_GET['invoiceID'])) {
 }
 
 // Fetch product items
-$query = "SELECT itemName, itemSalesInfo, itemSrp, uom FROM items";
+$limit = 1000; // Number of items to fetch per request
+$offset = isset($_GET['offset']) ? intval($_GET['offset']) : 0; // Offset for pagination
 
-// Execute the query
-$result = $db->query($query);
+// Query to retrieve a limited number of items with the specified limit and offset
+$query = "SELECT itemName, itemSalesInfo, itemSrp, uom FROM items LIMIT :limit OFFSET :offset";
+$stmt = $db->prepare($query);
+$stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+$stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+$stmt->execute();
 
 // Initialize an array to store the product items
 $productItems = array();
 
 // Fetch rows one by one
-while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
     // Append each row to the product items array
     $productItems[] = $row;
 }
