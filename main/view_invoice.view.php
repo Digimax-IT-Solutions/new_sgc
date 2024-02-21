@@ -359,7 +359,7 @@ $productItemsJSON = json_encode($productItems);
                             </div>
                         </div>
                         <center><div id="loadingIndicator">
-                            <img src="../images/loading.gif" alt="Loading..." />
+                            <img src="../images/loading.gif" alt="Loading..." width="200px" height="200px"/>
                             <p>Loading the Items....</p>
                             </div></center>
                         <!-- Select Product Item -->
