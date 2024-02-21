@@ -162,10 +162,6 @@
             }
 
             // Handle row click event
-            $('.salesRow').click(function() {
-                var invoiceID = $(this).data('invoice-id');
-                window.location.href = 'view_invoice?invoiceID=' + invoiceID;
-            });
         },
         error: function() {
             console.log("Error fetching data.");
@@ -219,4 +215,10 @@
             }
         });
     });
+</script>
+<script>
+    $(document).on('click', '.salesRow', function() {
+    var invoiceID = $(this).data('invoice-id');
+    window.location.href = 'view_invoice?invoiceID=' + invoiceID;
+});
 </script>
