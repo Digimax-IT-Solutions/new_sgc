@@ -39,6 +39,7 @@ if (isset($_GET['invoiceID'])) {
     header("Location: index.php"); // Redirect to the main page or display an error message
     exit();
 }
+$salesInvoiceItemsJSON = json_encode($salesInvoiceItems);
 ?>
 <?php
 // Fetch product items  
@@ -990,13 +991,14 @@ function selectExistingCustomer() {
 
 // Fetch product items JSON
 var productItems = <?php echo $productItemsJSON; ?>;
+var salesInvoiceItems = <?php echo $salesInvoiceItemsJSON; ?>;
 
 // Hide loading indicator once data is fetched
 $(document).ajaxStop(function() {
     $('#loadingIndicator').hide();
 
     // Populate the table once data is fetched and loading indicator is hidden
-    populateTable($("#itemTableBody"), productItems);
+    populateTable(salesInvoiceItems, productItems);
 });
 
         var salesInvoiceItems = <?php echo json_encode($salesInvoiceItems); ?>;
