@@ -41,19 +41,22 @@ if (isset($_GET['invoiceID'])) {
 }
 
 // Fetch product items
-$batchSize = 10000; // You can adjust this value based on your requirements
+// Set the batch size for fetching items
+$batchSize = 100; // Adjust the batch size based on your requirements
 
 // Initialize an array to store all product items
 $productItems = array();
+
+// Prepare the query to retrieve a batch of items
+$query = "SELECT itemName, itemSalesInfo, itemSrp, uom FROM items LIMIT :limit OFFSET :offset";
+$stmt = $db->prepare($query);
 
 // Set the initial offset
 $offset = 0;
 
 // Fetch items in batches until all items are retrieved
 while (true) {
-    // Query to retrieve a batch of items with the specified offset and batch size
-    $query = "SELECT itemName, itemSalesInfo, itemSrp, uom FROM items LIMIT :limit OFFSET :offset";
-    $stmt = $db->prepare($query);
+    // Bind parameters and execute the statement
     $stmt->bindParam(':limit', $batchSize, PDO::PARAM_INT);
     $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
     $stmt->execute();
@@ -75,6 +78,7 @@ while (true) {
 
 // Convert the result to JSON
 $productItemsJSON = json_encode($productItems);
+
 ?>
 
 <style>
@@ -352,6 +356,10 @@ $productItemsJSON = json_encode($productItems);
                         <div class="form-row">
                             <div class="form-group col-md-12">
                                 <button type="button" class="btn btn-success" id="addItemBtn">Add Item</button>
+                            </div>
+                            <div id="loadingIndicator">
+                            <img src="../images/loading.gif" alt="Loading..." />
+                            <p>Loading the Items....</p>
                             </div>
                         </div>
                         <!-- Select Product Item -->
@@ -998,10 +1006,10 @@ function selectExistingCustomer() {
 <script>
     $(document).ready(function() {
 
-
+        $('#loadingIndicator').show();
         var salesInvoiceItems = <?php echo json_encode($salesInvoiceItems); ?>;
         var productItems = <?php echo json_encode($productItems); ?>;
-
+        $('#loadingIndicator').hide();
 
         var itemCount = 0; // Variable to keep track of the count of added items
         var maxItems = 17; // Maximum number of items allowed
