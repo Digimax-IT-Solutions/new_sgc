@@ -431,7 +431,7 @@ $productItemsJSON = json_encode($productItems);
                                         <button type="button" class="btn btn-info" id="saveAndCloseButton">Save and
                                             Close</button>
                                         <button type="button" class="btn btn-warning" id="clearButton">Clear</button>
-                                        <button type="button" class="btn btn-secondary" id="printButton">Save And Print</button>      
+                                         
                                     </div>
                                 </div>
 
