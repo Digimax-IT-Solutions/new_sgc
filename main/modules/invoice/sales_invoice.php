@@ -54,7 +54,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $customerID = $_POST["existingCustomer"];
         $address = $_POST["address"];
         $shippingAddress = $_POST["shippingAddress"];
-        $email = $_POST["email"];
         $accountID = $_POST["selectAccount"];
         $termID = $_POST["terms"];
         $locationID = $_POST["location"];
@@ -82,7 +81,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             customer, 
             address, 
             shippingAddress,
-            email, 
             account, 
             terms, 
             location, 
@@ -107,7 +105,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             :customer, 
             :shippingAddress,
             :address, 
-            :email, 
             :account, 
             :terms, 
             :location, 
@@ -137,7 +134,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->bindParam(":customer", $customer);  // <-- Replace :customerID with :customer
         $stmt->bindParam(":address", $address);
         $stmt->bindParam(":shippingAddress", $shippingAddress);
-        $stmt->bindParam(":email", $email);
         $stmt->bindParam(":account", $accountID);   // <-- Replace :accountID with :account
         $stmt->bindParam(":terms", $termID);         // <-- Replace :termID with :term
         $stmt->bindParam(":location", $locationID); // <-- Replace :locationID with :location
@@ -261,12 +257,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // If the customer doesn't exist, insert customer information into the customers table
         if ($checkCustomerStmt->rowCount() == 0) {
-            $insertCustomerQuery = "INSERT INTO customers (customerName, customerBillingAddress, customerShippingAddress, customerEmail) VALUES (:customer, :address, :shippingAddress, :email)";
+            $insertCustomerQuery = "INSERT INTO customers (customerName, customerBillingAddress, customerShippingAddress, customerTin) VALUES (:customer, :address, :shippingAddress, :customerTin)";
             $insertCustomerStmt = $db->prepare($insertCustomerQuery);
             $insertCustomerStmt->bindParam(":customer", $customer);
             $insertCustomerStmt->bindParam(":address", $address);
             $insertCustomerStmt->bindParam(":shippingAddress", $shippingAddress);
-            $insertCustomerStmt->bindParam(":email", $email);
+            $insertCustomerStmt->bindParam(":customerTin", $customerTin);
 
             // Execute the customer insertion
             if (!$insertCustomerStmt->execute()) {

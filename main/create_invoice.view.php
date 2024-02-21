@@ -789,12 +789,7 @@ var productItems = <?php echo $productItemsJSON; ?>;
                 resetInvalidField($("#shippingAddress"));
             }
             // Add validation logic for each required field
-            if ($("#email").val() === '') {
-                isValid = false;
-                highlightInvalidField($("#email"));
-            } else {
-                resetInvalidField($("#email"));
-            }
+           
             // Add validation logic for each required field
             if ($("#selectAccount").val() === '') {
                 isValid = false;
