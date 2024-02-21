@@ -39,46 +39,41 @@ if (isset($_GET['invoiceID'])) {
     header("Location: index.php"); // Redirect to the main page or display an error message
     exit();
 }
-
-// Fetch product items
+?>
+<?php
+// Fetch product items  
 // Set the batch size for fetching items
-$batchSize = 10000; // Adjust the batch size based on your requirements
+$query = "SELECT itemName, itemSalesInfo, itemSrp, uom FROM items";
 
-// Initialize an array to store all product items
+// Set the batch size
+$batchSize = 100;
+
+// Initialize an array to store the product items
 $productItems = array();
 
-// Prepare the query to retrieve a batch of items
-$query = "SELECT itemName, itemSalesInfo, itemSrp, uom FROM items LIMIT :limit OFFSET :offset";
-$stmt = $db->prepare($query);
+// Get the total number of items
+$totalItems = $db->query("SELECT COUNT(*) FROM items")->fetchColumn();
 
-// Set the initial offset
-$offset = 0;
+// Calculate the number of batches
+$numBatches = ceil($totalItems / $batchSize);
 
-// Fetch items in batches until all items are retrieved
-while (true) {
-    // Bind parameters and execute the statement
-    $stmt->bindParam(':limit', $batchSize, PDO::PARAM_INT);
-    $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
-    $stmt->execute();
+for ($i = 0; $i < $numBatches; $i++) {
+    // Calculate the offset
+    $offset = $i * $batchSize;
+    
+    // Fetch a batch of items
+    $batchQuery = $query . " LIMIT $batchSize OFFSET $offset";
+    $batchResult = $db->query($batchQuery);
 
     // Fetch rows one by one
-    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    while ($row = $batchResult->fetch(PDO::FETCH_ASSOC)) {
         // Append each row to the product items array
         $productItems[] = $row;
     }
-
-    // If no more rows are fetched, break the loop
-    if ($stmt->rowCount() < $batchSize) {
-        break;
-    }
-
-    // Increment the offset for the next batch
-    $offset += $batchSize;
 }
 
 // Convert the result to JSON
 $productItemsJSON = json_encode($productItems);
-
 ?>
 
 <style>
@@ -360,7 +355,7 @@ $productItemsJSON = json_encode($productItems);
                         </div>
                         <center><div id="loadingIndicator">
                             <img src="../images/loading.gif" alt="Loading..." width="200px" height="200px"/>
-                            <p>Loading the Items....</p>
+                            <p>Loading the Items... Please Wait... Dont Click...</p>
                             </div></center>
                         <!-- Select Product Item -->
                         <div class="table-responsive">
@@ -1007,9 +1002,20 @@ function selectExistingCustomer() {
     $(document).ready(function() {
 
         $('#loadingIndicator').show();
+
+// Fetch product items JSON
+var productItems = <?php echo $productItemsJSON; ?>;
+
+// Hide loading indicator once data is fetched
+$(document).ajaxStop(function() {
+    $('#loadingIndicator').hide();
+
+    // Populate the table once data is fetched and loading indicator is hidden
+    populateTable($("#itemTableBody"), productItems);
+});
+
         var salesInvoiceItems = <?php echo json_encode($salesInvoiceItems); ?>;
         var productItems = <?php echo json_encode($productItems); ?>;
-        $('#loadingIndicator').hide();
 
         var itemCount = 0; // Variable to keep track of the count of added items
         var maxItems = 17; // Maximum number of items allowed
