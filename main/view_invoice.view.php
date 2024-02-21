@@ -20,7 +20,16 @@ if (isset($_GET['invoiceID'])) {
     $salesInvoice = $stmtInvoice->fetch(PDO::FETCH_ASSOC);
 
     // Check if sales invoice details are found
-    if (!$salesInvoice) {
+    if ($salesInvoice) {
+        // Query to retrieve sales invoice items
+        $queryInvoiceItems = "SELECT * FROM sales_invoice_items WHERE salesInvoiceID = :invoiceID";
+        $stmtInvoiceItems = $db->prepare($queryInvoiceItems);
+        $stmtInvoiceItems->bindParam(':invoiceID', $invoiceID);
+        $stmtInvoiceItems->execute();
+
+        // Fetch sales invoice items
+        $salesInvoiceItems = $stmtInvoiceItems->fetchAll(PDO::FETCH_ASSOC);
+    } else {
         // Redirect or display an error if sales invoice details are not found
         header("Location: index.php"); // Redirect to the main page or display an error message
         exit();
@@ -31,37 +40,43 @@ if (isset($_GET['invoiceID'])) {
     exit();
 }
 
-// Function to fetch sales invoice items
-function fetchSalesInvoiceItems($db, $invoiceID) {
-    $queryInvoiceItems = "SELECT * FROM sales_invoice_items WHERE salesInvoiceID = :invoiceID";
-    $stmtInvoiceItems = $db->prepare($queryInvoiceItems);
-    $stmtInvoiceItems->bindParam(':invoiceID', $invoiceID);
-    $stmtInvoiceItems->execute();
-    return $stmtInvoiceItems->fetchAll(PDO::FETCH_ASSOC);
-}
+// Fetch product items
+// Set the batch size for fetching items
+$batchSize = 10000; // Adjust the batch size based on your requirements
 
-// Function to fetch product items
-function fetchProductItems($db, $batchSize) {
-    $productItems = [];
-    $query = "SELECT itemName, itemSalesInfo, itemSrp, uom FROM items LIMIT :limit";
-    $stmt = $db->prepare($query);
+// Initialize an array to store all product items
+$productItems = array();
+
+// Prepare the query to retrieve a batch of items
+$query = "SELECT itemName, itemSalesInfo, itemSrp, uom FROM items LIMIT :limit OFFSET :offset";
+$stmt = $db->prepare($query);
+
+// Set the initial offset
+$offset = 0;
+
+// Fetch items in batches until all items are retrieved
+while (true) {
+    // Bind parameters and execute the statement
     $stmt->bindParam(':limit', $batchSize, PDO::PARAM_INT);
+    $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
     $stmt->execute();
+
+    // Fetch rows one by one
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        // Append each row to the product items array
         $productItems[] = $row;
     }
-    return $productItems;
+
+    // If no more rows are fetched, break the loop
+    if ($stmt->rowCount() < $batchSize) {
+        break;
+    }
+
+    // Increment the offset for the next batch
+    $offset += $batchSize;
 }
 
-// Fetch sales invoice items asynchronously
-$invoiceID = $_GET['invoiceID'];
-$salesInvoiceItems = fetchSalesInvoiceItems($db, $invoiceID);
-
-// Fetch product items
-$batchSize = 10000; // Adjust the batch size based on your requirements
-$productItems = fetchProductItems($db, $batchSize);
-
-// Convert the results to JSON
+// Convert the result to JSON
 $productItemsJSON = json_encode($productItems);
 
 ?>
@@ -342,11 +357,11 @@ $productItemsJSON = json_encode($productItems);
                             <div class="form-group col-md-12">
                                 <button type="button" class="btn btn-success" id="addItemBtn">Add Item</button>
                             </div>
-                            <center><div id="loadingIndicator">
+                        </div>
+                        <center><div id="loadingIndicator">
                             <img src="../images/loading.gif" alt="Loading..." />
                             <p>Loading the Items....</p>
                             </div></center>
-                        </div>
                         <!-- Select Product Item -->
                         <div class="table-responsive">
                             <table class="table table-condensed" id="itemTable">
