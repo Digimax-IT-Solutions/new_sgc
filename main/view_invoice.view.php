@@ -45,31 +45,16 @@ if (isset($_GET['invoiceID'])) {
 // Set the batch size for fetching items
 $query = "SELECT itemName, itemSalesInfo, itemSrp, uom FROM items";
 
-// Set the batch size
-$batchSize = 100;
+// Execute the query
+$result = $db->query($query);
 
 // Initialize an array to store the product items
 $productItems = array();
 
-// Get the total number of items
-$totalItems = $db->query("SELECT COUNT(*) FROM items")->fetchColumn();
-
-// Calculate the number of batches
-$numBatches = ceil($totalItems / $batchSize);
-
-for ($i = 0; $i < $numBatches; $i++) {
-    // Calculate the offset
-    $offset = $i * $batchSize;
-    
-    // Fetch a batch of items
-    $batchQuery = $query . " LIMIT $batchSize OFFSET $offset";
-    $batchResult = $db->query($batchQuery);
-
-    // Fetch rows one by one
-    while ($row = $batchResult->fetch(PDO::FETCH_ASSOC)) {
-        // Append each row to the product items array
-        $productItems[] = $row;
-    }
+// Fetch rows one by one
+while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+    // Append each row to the product items array
+    $productItems[] = $row;
 }
 
 // Convert the result to JSON
