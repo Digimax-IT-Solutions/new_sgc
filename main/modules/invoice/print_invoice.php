@@ -91,6 +91,7 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
         top: 8em;
         font-size: 15px;  
         text-overflow: ellipsis;
+        overflow: hidden;
     }
     .terms {
         position: absolute;
