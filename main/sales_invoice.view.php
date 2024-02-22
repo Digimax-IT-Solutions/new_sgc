@@ -13,13 +13,17 @@
     #salesTable {
         border-collapse: collapse;
         width: 100%;
+        table-layout: fixed;
     }
 
     #salesTable th,
     #salesTable td {
-
-        padding: 2px;
-        /* Adjust the padding as needed */
+        padding: 1px;
+        width: 100px;
+        border: 1px solid maroon;
+        white-space: nowrap;
+        overflow: hidden; /* Hides any overflowing content */
+        text-overflow: ellipsis;
     }
 
     #salesTable tbody tr:hover {
@@ -79,7 +83,7 @@
                                         <th>INVOICE #</th>
                                         <th>CUSTOMER NAME</th>
                                         <th>DATE</th>
-                                        <th>SITE</th>
+                                        <th>BILLING ADDRESS</th>
                                         <th>ACCOUNT</th>
                                         <th>STATUS</th>
                                         <th>AMOUNT</th>
@@ -129,10 +133,10 @@
                     <td>${transaction.invoiceNo}</td>
                     <td>${transaction.customer}</td>
                     <td>${transaction.invoiceDate}</td>
-                    <td>${transaction.location}</td>
+                    <td>${transaction.address}</td>
                     <td>${transaction.account}</td>
                     <td><span class="badge ${statusColorClass}">${transaction.invoiceStatus}</span></td>
-                    <td><strong>${formattedAmount}</strong></td>
+                    <td style="text-align: right;"><strong>${formattedAmount}</strong></td>
                 </tr>`;
                 $("#salesTable tbody").append(row);
             });

@@ -53,10 +53,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $customer = $_POST["customer"];
         $customerID = $_POST["existingCustomer"];
         $address = $_POST["address"];
-        $shippingAddress = $_POST["shippingAddress"];
+        // $shippingAddress = $_POST["shippingAddress"];
         $accountID = $_POST["selectAccount"];
         $termID = $_POST["terms"];
-        $locationID = $_POST["location"];
+        // $locationID = $_POST["location"];
         $memo = $_POST["memo"];
         $paymentMethod = $_POST["paymentMethod"];
         $grossAmount = $_POST["grossAmount"];
@@ -80,10 +80,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             invoicePo, 
             customer, 
             address, 
-            shippingAddress,
+            -- shippingAddress,
             account, 
             terms, 
-            location, 
+            -- location, 
             paymentMethod, 
             grossAmount, 
             discountPercentage, 
@@ -103,11 +103,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             :invoiceTin,
             :invoicePo, 
             :customer, 
-            :shippingAddress,
+            -- :shippingAddress,
             :address, 
             :account, 
             :terms, 
-            :location, 
+            -- :location, 
             :paymentMethod, 
             :grossAmount, 
             :discountPercentage, 
@@ -133,10 +133,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->bindParam(":invoicePo", $invoicePo);
         $stmt->bindParam(":customer", $customer);  // <-- Replace :customerID with :customer
         $stmt->bindParam(":address", $address);
-        $stmt->bindParam(":shippingAddress", $shippingAddress);
+        // $stmt->bindParam(":shippingAddress", $shippingAddress);
         $stmt->bindParam(":account", $accountID);   // <-- Replace :accountID with :account
         $stmt->bindParam(":terms", $termID);         // <-- Replace :termID with :term
-        $stmt->bindParam(":location", $locationID); // <-- Replace :locationID with :location
+        // $stmt->bindParam(":location", $locationID); // <-- Replace :locationID with :location
         $stmt->bindParam(":paymentMethod", $paymentMethod);
         $stmt->bindParam(":grossAmount", $grossAmount);
         $stmt->bindParam(":discountPercentage", $discountPercentage);

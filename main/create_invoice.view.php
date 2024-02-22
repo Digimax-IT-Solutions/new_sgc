@@ -30,6 +30,11 @@ $productItemsJSON = json_encode($productItems);
         font-size: 90%;
         /* Adjust the percentage as needed */
     }
+    .memo {
+        position: absolute;
+        left: 15px;
+        font-size: 90%;
+    }
 
     .input-group-text {
         font-size: 50%;
@@ -104,7 +109,7 @@ $productItemsJSON = json_encode($productItems);
                             <!-- Sales Invoice Form -->
                             <form id="salesInvoiceForm" action="" method="POST">
                                 <div class="form-row">
-                                    <div class="form-group col-md-3" style="border: 5px solid rgb(128, 0, 0); border-radius: 20px; padding: 20px;">
+                                    <div class="form-group col-md-3">
                                         <label for="customer">CUSTOMER NAME | <span><a href="customer_list">Add new
                                                     customer</a></span></label>
                                         <div class="input-group">
@@ -119,8 +124,7 @@ $productItemsJSON = json_encode($productItems);
                                         <input type="text" class="form-control" id="shippingAddress" name="shippingAddress"> -->
                                         <label for="invoiceTin">TIN:</label>
                                         <input type="text" class="form-control" id="invoiceTin" name="invoiceTin" required>
-                                        <label for="invoiceBusinessStyle">BUSINESS STYLE</label>
-                                        <input type="text" class="form-control" id="invoiceBusinessStyle" name="invoiceBusinessStyle" required>
+        
                                     </div>
                                     <!-- Modal for selecting existing customers -->
                                     <div class="modal" id="customerModal" tabindex="-1" role="dialog" aria-labelledby="customerModalLabel" aria-hidden="true">
@@ -159,19 +163,8 @@ $productItemsJSON = json_encode($productItems);
                                         </div>
                                     </div>
 
-                                    <div class="form-group col-md-1">
-                                        <label for="invoiceNo">INVOICE #</label>
-                                        <input type="text" class="form-control" id="invoiceNo" name="invoiceNo" required>
-                                        <label for="invoicePo">PURCHASE ORDER</label>
-                                        <input type="text" class="form-control" id="invoicePo" name="invoicePo" required>
-                                        <label for="invoiceDate">INVOICE DATE</label>
-                                        <input type="date" class="form-control" id="invoiceDate" name="invoiceDate" required>
-                                        <label for="invoiceDueDate">INVOICE DUE DATE</label>
-                                        <input type="date" class="form-control" id="invoiceDueDate" name="invoiceDueDate" required>
-                                        
-                                    </div>
 
-                                    <div class="form-group col-md-2">
+                                    <div class="form-group col-md-3">
                                         <label for="selectAccount">SELECT ACCOUNT | <span><a href="chart_of_accounts">Add New Account</a></span></label>
                                         <select class="form-control" id="selectAccount" name="selectAccount" required>
                                             <option value="">Select an Account</option>
@@ -195,33 +188,17 @@ $productItemsJSON = json_encode($productItems);
                                             }
                                             ?>
                                         </select>
+                                        <label for="invoiceBusinessStyle">BUSINESS STYLE</label>
+                                        <input type="text" class="form-control" id="invoiceBusinessStyle" name="invoiceBusinessStyle" required>
                                         <br>
-                                        <div class="form-group col-md-6">
-                                            <div class="custom-control custom-switch">
-                                                <input type="checkbox" class="custom-control-input custom-control-input-green" id="accountTypeSwitch" checked>
-                                                <label class="custom-control-label custom-control-label-green" for="accountTypeSwitch">CASH SALES</label>
-                                            </div>
-                                        </div>
                                     </div>
 
                                     <!-- Terms -->
-                                    <div class="form-group col-md-2">
-                                        <label for="terms">TERMS | <span><a href="terms_list">Add New
-                                                    Terms</a></span></label>
-                                        <select class="form-control" id="terms" name="terms" required>
-                                            <option value="">Select Term</option>
-                                            <?php
-                                            $query = "SELECT term_id, term_name, term_days_due FROM terms";
-                                            $result = $db->query($query);
-
-                                            if ($result) {
-                                                while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
-                                                    echo "<option value='{$row['term_name']}' data-days-due='{$row['term_days_due']}'>{$row['term_name']}</option>";
-                                                }
-                                            }
-                                            ?>
-                                        </select>
-
+                                    <div class="form-group col-md-1">
+                                        <label for="invoiceNo">INVOICE #</label>
+                                        <input type="text" class="form-control" id="invoiceNo" name="invoiceNo" required>
+                                        <label for="invoicePo">PO NUMBER</label>
+                                        <input type="text" class="form-control" id="invoicePo" name="invoicePo" required> 
                                         <!-- LOCATION -->
                                         <!-- <label for="location">LOCATION | <span><a href="location_list">Add New
                                                     Location</a></span></label>
@@ -238,12 +215,35 @@ $productItemsJSON = json_encode($productItems);
                                             }
                                             ?>
                                         </select> -->
-                                        <label for="memo">MEMO:</label>
-                                        <textarea class="form-control" id="memo" name="memo" rows="3" cols="50"></textarea>
 
                                     </div>
                                     <div class="form-group col-md-2">
-                                        
+                                    <label for="invoiceDate">INVOICE DATE</label>
+                                        <input type="date" class="form-control" id="invoiceDate" name="invoiceDate" required>
+                                        <label for="terms">TERMS | <span><a href="terms_list">Add New
+                                                    Terms</a></span></label>
+                                        <select class="form-control" id="terms" name="terms" required>
+                                            <option value="">Select Term</option>
+                                            <?php
+                                            $query = "SELECT term_id, term_name, term_days_due FROM terms";
+                                            $result = $db->query($query);
+
+                                            if ($result) {
+                                                while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+                                                    echo "<option value='{$row['term_name']}' data-days-due='{$row['term_days_due']}'>{$row['term_name']}</option>";
+                                                }
+                                            }
+                                            ?>
+                                        </select>
+                                        <label for="invoiceDueDate">INVOICE DUE DATE</label>
+                                        <input type="date" class="form-control" id="invoiceDueDate" name="invoiceDueDate" required>
+                                        <br>
+                                        <div class="form-group col-md-6">
+                                            <div class="custom-control custom-switch">
+                                                <input type="checkbox" class="custom-control-input custom-control-input-green" id="accountTypeSwitch" checked>
+                                                <label class="custom-control-label custom-control-label-green" for="accountTypeSwitch">CASH SALES</label>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="form-row">
@@ -276,7 +276,12 @@ $productItemsJSON = json_encode($productItems);
                                         <div class="container">
                                             <!-- GORSS AMOUNT -->
                                             <div class="row">
-
+                                            
+                                            <div class="memo">
+                                            <label for="memo">MEMO:</label>
+                                            <textarea class="form-control" id="memo" name="memo" rows="3" cols="50"></textarea>
+                                            </div>
+                                            
                                                 <div class="col-md-4 d-inline-block text-right">
                                                     <label>Gross Amount:</label>
                                                 </div>

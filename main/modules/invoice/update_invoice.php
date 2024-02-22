@@ -38,12 +38,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $invoicePo = $_POST["invoicePo"];
         $customer = $_POST["customer"];
         $address = $_POST["address"];
-        $shippingAddress = $_POST["shippingAddress"];
-        $email = $_POST["email"];
+        // $shippingAddress = $_POST["shippingAddress"];
+        // $email = $_POST["email"];
         $account = $_POST["account"];
         $paymentMethod = $_POST["paymentMethod"];
         $terms = $_POST["terms"];
-        $location = $_POST["location"];
+        // $location = $_POST["location"];
         $memo = $_POST["memo"];
         $grossAmount = $_POST["grossAmount"];
         $discountPercentage = isset($_POST["discountPercentage"]) ? $_POST["discountPercentage"] : 0;
@@ -65,12 +65,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             invoicePo = :invoicePo,
             customer = :customer,
             address = :address,
-            shippingAddress = :shippingAddress,
-            email = :email,
+            -- shippingAddress = :shippingAddress,
+            -- email = :email,
             account = :account,
             paymentMethod = :paymentMethod,
             terms = :terms,
-            location = :location,
+            -- location = :location,
             memo = :memo,
             grossAmount = :grossAmount,
             discountPercentage = :discountPercentage,
@@ -90,12 +90,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->bindParam(":invoicePo", $invoicePo);
         $stmt->bindParam(":customer", $customer);
         $stmt->bindParam(":address", $address);
-        $stmt->bindParam(":shippingAddress", $shippingAddress);
-        $stmt->bindParam(":email", $email);
+        // $stmt->bindParam(":shippingAddress", $shippingAddress);
+        // $stmt->bindParam(":email", $email);
         $stmt->bindParam(":account", $account);
         $stmt->bindParam(":paymentMethod", $paymentMethod);
         $stmt->bindParam(":terms", $terms);
-        $stmt->bindParam(":location", $location);
+        // $stmt->bindParam(":location", $location);
         $stmt->bindParam(":memo", $memo);
         $stmt->bindParam(":grossAmount", $grossAmount);
         $stmt->bindParam(":discountPercentage", $discountPercentage);
