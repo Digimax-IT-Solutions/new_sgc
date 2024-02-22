@@ -223,9 +223,9 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
                 $rateFormatted = number_format($row['rate'], 2, '.', ',');
                 echo "<tr>
                     <td style='text-align: left; padding-bottom: 3.2px; white-space: nowrap;'>" . $row["description"] . "</td>
-                    <td style='padding-left: 210px; padding-bottom: 3.2px; white-space: nowrap;'>" . $row["quantity"] . "</td>
-                    <td style='padding-bottom: 3.2px; white-space: nowrap;'>" . $row["uom"] . "</td>
-                    <td style='text-align: right; padding-right: 30px; padding-bottom: 3.2px; white-space: nowrap;'>" . $rateFormatted . "</td>
+                    <td style='padding-left: 390px; padding-bottom: 3.2px; white-space: nowrap;'>" . $row["quantity"] . "</td>
+                    <td style='padding-bottom: 3.2px; padding-left: 350px; white-space: nowrap;'>" . $row["uom"] . "</td>
+                    <td style='text-align: right; width: 100px; padding-left: 300px; padding-bottom: 3.2px; white-space: nowrap;'>" . $rateFormatted . "</td>
                     <td style='text-align: right; padding-bottom: 3.2px;'>" . $amountFormatted . "</td>
                 </tr>";
             }
