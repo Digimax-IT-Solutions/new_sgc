@@ -10,12 +10,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $editCustomerBalance = $_POST['editCustomerBalance'];
     $editCustomerPaymentMethod = $_POST['editCustomerPaymentMethod'];
     $editCustomerBillingAddress = $_POST['editCustomerBillingAddress'];
-    $editCustomerShippingAddress = $_POST['editCustomerShippingAddress'];
+    // $editCustomerShippingAddress = $_POST['editCustomerShippingAddress'];
     $editCustomerTin = $_POST['editCustomerTin'];
     $editContactNumber = $_POST['editContactNumber'];
     $editCustomerDeliveryType = $_POST['editCustomerDeliveryType'];
     $editCustomerTerms = $_POST['editCustomerTerms'];
-    $editCustomerEmail = $_POST['editCustomerEmail'];
+    // $editCustomerEmail = $_POST['editCustomerEmail'];
     $editCustomerBusinessStyle = $_POST['editCustomerBusinessStyle'];
 
     // Assuming you have a customerID coming from the form
@@ -28,12 +28,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                       customerName = :customerName,
                       customerPaymentMethod = :customerPaymentMethod,
                       customerBillingAddress = :customerBillingAddress,
-                      customerShippingAddress = :customerShippingAddress,
+                    --   customerShippingAddress = :customerShippingAddress,
                       customerTin = :customerTin,
                       contactNumber = :contactNumber,
                       customerDeliveryType = :customerDeliveryType,
                       customerTerms = :customerTerms,
-                      customerEmail = :customerEmail,
+                    --   customerEmail = :customerEmail,
                       customerBusinessStyle = :customerBusinessStyle,
                       customerBalance = :customerBalance 
                   WHERE customerID = :customerID";
@@ -44,12 +44,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $stmt->bindParam(':customerName', $editCustomerName);
         $stmt->bindParam(':customerPaymentMethod', $editCustomerPaymentMethod);
         $stmt->bindParam(':customerBillingAddress', $editCustomerBillingAddress);
-        $stmt->bindParam(':customerShippingAddress', $editCustomerShippingAddress);
+        // $stmt->bindParam(':customerShippingAddress', $editCustomerShippingAddress);
         $stmt->bindParam(':customerTin', $editCustomerTin);
         $stmt->bindParam(':contactNumber', $editContactNumber);
         $stmt->bindParam(':customerDeliveryType', $editCustomerDeliveryType);
         $stmt->bindParam(':customerTerms', $editCustomerTerms);
-        $stmt->bindParam(':customerEmail', $editCustomerEmail);
+        // $stmt->bindParam(':customerEmail', $editCustomerEmail);
         $stmt->bindParam(':customerBusinessStyle', $editCustomerBusinessStyle);
         $stmt->bindParam(':customerBalance', $editCustomerBalance);
         if ($stmt->execute()) {

@@ -162,18 +162,22 @@ $productItemsJSON = json_encode($productItems);
                                             </div>
                                         </div>
                                         <label for="address">BILLING ADDRESS</label>
-                                        <input type="text" class="form-control" id="address" name="address"
-                                            value="<?php echo $salesInvoice['address']; ?>">
-                                        <label for="shippingAddress">SHIPPING ADDRESS</label>
-                                        <input type="text" class="form-control" id="shippingAddress"
+                                        <textarea class="form-control" id="address" name="address" rows="3" cols="50">
+                                        <?php echo $salesInvoice['address']; ?>
+                                        </textarea>
+                                        <!-- <label for="shippingAddress">SHIPPING ADDRESS</label> -->
+                                        <!-- <input type="text" class="form-control" id="shippingAddress"
                                             name="shippingAddress"
-                                            value="<?php echo $salesInvoice['shippingAddress']; ?>">
-                                        <label for="email">EMAIL</label>
+                                            value="<?php echo $salesInvoice['shippingAddress']; ?>"> -->
+                                        <!-- <label for="email">EMAIL</label>
                                         <input type="text" class="form-control" id="email" name="email"
-                                            value="<?php echo $salesInvoice['email']; ?>">
+                                            value="<?php echo $salesInvoice['email']; ?>"> -->
                                         <label for="invoiceTin">TIN:</label>
                                         <input type="text" class="form-control" id="invoiceTin" name="invoiceTin"
-                                            value="<?php echo $salesInvoice['invoiceTin']; ?>">
+                                         value="<?php echo $salesInvoice['invoiceTin']; ?>">
+                                        <label for="invoiceBusinessStyle">BUSINESS STYLE</label>
+                                        <input type="text" class="form-control" id="invoiceBusinessStyle" name="invoiceBusinessStyle" required
+                                        value="<?php echo $salesInvoice['invoiceBusinessStyle']; ?>">    
 
                                     </div>
                                     <!-- Modal for selecting existing customers -->
@@ -220,7 +224,7 @@ $productItemsJSON = json_encode($productItems);
                                         </div>
                                     </div>
 
-                                    <div class="form-group col-md-2">
+                                    <div class="form-group col-md-1">
                                         <label for="invoiceNo">INVOICE #</label>
                                         <input type="text" class="form-control" id="invoiceNo" name="invoiceNo" required
                                             value="<?php echo $salesInvoice['invoiceNo']; ?>">
@@ -229,17 +233,14 @@ $productItemsJSON = json_encode($productItems);
                                             required value="<?php echo $salesInvoice['invoiceDate']; ?>">
                                         <label for="invoiceDueDate">INVOICE DUE DATE</label>
                                         <input type="date" class="form-control" id="invoiceDueDate"
-                                            name="invoiceDueDate" required
-                                            value="<?php echo $salesInvoice['invoiceDueDate']; ?>">
-                                        <label for="invoiceBusinessStyle">BUSINESS STYLE</label>
-                                        <input type="text" class="form-control" id="invoiceBusinessStyle" name="invoiceBusinessStyle" required
-                                        value="<?php echo $salesInvoice['invoiceBusinessStyle']; ?>">
-                                    </div>
-
-                                    <div class="form-group col-md-2">
+                                        name="invoiceDueDate" required
+                                        value="<?php echo $salesInvoice['invoiceDueDate']; ?>">
                                         <label for="invoicePo">PURCHASE ORDER</label>
                                         <input type="text" class="form-control" id="invoicePo" name="invoicePo" required
                                         value="<?php echo $salesInvoice['invoicePo']; ?>">
+                                    </div>
+
+                                    <div class="form-group col-md-2">
                                         <label for="account">SELECT ACCOUNT | <span><a href="chart_of_accounts">Add New
                                                     Account</a></span></label>
                                         <select class="form-control" id="account" name="account" required>
@@ -300,7 +301,7 @@ $productItemsJSON = json_encode($productItems);
                                         </select>
 
                                         <!-- LOCATION -->
-                                        <label for="location">LOCATION | <span><a href="location_list">Add New
+                                        <!-- <label for="location">LOCATION | <span><a href="location_list">Add New
                                                     Location</a></span></label>
                                         <select class="form-control" id="location" name="location" required>
                                             <option value="<?php echo $salesInvoice['location']; ?>">
@@ -315,11 +316,8 @@ $productItemsJSON = json_encode($productItems);
                                                 }
                                             }
                                             ?>
-                                        </select>
+                                        </select> -->
 
-
-                                    </div>
-                                    <div class="form-group col-md-2">
                                         <label for="memo">MEMO:</label>
                                         <textarea class="form-control" id="memo" name="memo" rows="3"
                                             cols="50"><?php echo $salesInvoice['memo']; ?></textarea>

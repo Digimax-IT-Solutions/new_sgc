@@ -114,11 +114,13 @@ $productItemsJSON = json_encode($productItems);
                                             </div>
                                         </div>
                                         <label for="address">BILLING ADDRESS</label>
-                                        <input type="text" class="form-control" id="address" name="address">
-                                        <label for="shippingAddress">SHIPPING ADDRESS</label>
-                                        <input type="text" class="form-control" id="shippingAddress" name="shippingAddress">
+                                        <textarea class="form-control" id="address" name="address" rows="2" cols="50"></textarea>
+                                        <!-- <label for="shippingAddress">SHIPPING ADDRESS</label>
+                                        <input type="text" class="form-control" id="shippingAddress" name="shippingAddress"> -->
                                         <label for="invoiceTin">TIN:</label>
                                         <input type="text" class="form-control" id="invoiceTin" name="invoiceTin" required>
+                                        <label for="invoiceBusinessStyle">BUSINESS STYLE</label>
+                                        <input type="text" class="form-control" id="invoiceBusinessStyle" name="invoiceBusinessStyle" required>
                                     </div>
                                     <!-- Modal for selecting existing customers -->
                                     <div class="modal" id="customerModal" tabindex="-1" role="dialog" aria-labelledby="customerModalLabel" aria-hidden="true">
@@ -127,7 +129,7 @@ $productItemsJSON = json_encode($productItems);
                                                 <div class="modal-header">
 
                                                     <h5 class="modal-title" id="customerModalLabel">Select Customer | <a href="customer_list">Add new
-                                                            customer</a></h5>
+                                                    customer</a></h5>
                                                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                                         <span aria-hidden="true">&times;</span>
                                                     </button>
@@ -157,20 +159,19 @@ $productItemsJSON = json_encode($productItems);
                                         </div>
                                     </div>
 
-                                    <div class="form-group col-md-2">
+                                    <div class="form-group col-md-1">
                                         <label for="invoiceNo">INVOICE #</label>
                                         <input type="text" class="form-control" id="invoiceNo" name="invoiceNo" required>
+                                        <label for="invoicePo">PURCHASE ORDER</label>
+                                        <input type="text" class="form-control" id="invoicePo" name="invoicePo" required>
                                         <label for="invoiceDate">INVOICE DATE</label>
                                         <input type="date" class="form-control" id="invoiceDate" name="invoiceDate" required>
                                         <label for="invoiceDueDate">INVOICE DUE DATE</label>
                                         <input type="date" class="form-control" id="invoiceDueDate" name="invoiceDueDate" required>
-                                        <label for="invoiceBusinessStyle">BUSINESS STYLE</label>
-                                        <input type="text" class="form-control" id="invoiceBusinessStyle" name="invoiceBusinessStyle" required>
+                                        
                                     </div>
 
                                     <div class="form-group col-md-2">
-                                        <label for="invoicePo">PURCHASE ORDER</label>
-                                        <input type="text" class="form-control" id="invoicePo" name="invoicePo" required>
                                         <label for="selectAccount">SELECT ACCOUNT | <span><a href="chart_of_accounts">Add New Account</a></span></label>
                                         <select class="form-control" id="selectAccount" name="selectAccount" required>
                                             <option value="">Select an Account</option>
@@ -222,7 +223,7 @@ $productItemsJSON = json_encode($productItems);
                                         </select>
 
                                         <!-- LOCATION -->
-                                        <label for="location">LOCATION | <span><a href="location_list">Add New
+                                        <!-- <label for="location">LOCATION | <span><a href="location_list">Add New
                                                     Location</a></span></label>
                                         <select class="form-control" id="location" name="location" required>
                                             <option value="">Select Location</option>
@@ -236,13 +237,13 @@ $productItemsJSON = json_encode($productItems);
                                                 }
                                             }
                                             ?>
-                                        </select>
-
+                                        </select> -->
+                                        <label for="memo">MEMO:</label>
+                                        <textarea class="form-control" id="memo" name="memo" rows="3" cols="50"></textarea>
 
                                     </div>
                                     <div class="form-group col-md-2">
-                                        <label for="memo">MEMO:</label>
-                                        <textarea class="form-control" id="memo" name="memo" rows="3" cols="50"></textarea>
+                                        
                                     </div>
                                 </div>
                                 <div class="form-row">

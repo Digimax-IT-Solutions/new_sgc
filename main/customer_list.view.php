@@ -76,7 +76,7 @@ include('connect.php');
                                         <th>COMPANY NAME</th>
                                         <th>CONTACT NO.</th>
                                         <th>TIN NO.</th>
-                                        <th>EMAIL</th>
+                                        <th>BILLING ADDRESS</th>
                                         <th><center>BALANCE</center></th>
                                         <th>ACTION</th>
                                     </tr>
@@ -121,7 +121,18 @@ include('connect.php');
                                 <input type="text" class="form-control" id="customerCode" name="customerCode"
                                     placeholder="Enter Customer Code" required>
                             </div>
-
+                        </div>
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <label for="customerBillingAddress">BILLING ADDRESS</label>
+                                <input type="text" class="form-control" id="customerBillingAddress"
+                                    name="customerBillingAddress" placeholder="Enter Billing Address" required>
+                            </div>
+                            <!-- <div class="form-group">
+                                <label for="customerShippingAddress">SHIPPING ADDRESS</label>
+                                <input type="text" class="form-control" id="customerShippingAddress"
+                                    name="customerShippingAddress" placeholder="Enter Shipping Address" required>
+                            </div> -->
                             <div class="form-group">
                             <label for="customerPaymentMethod">PAYMENT METHOD</label>
                                         <select class="form-control" id="customerPaymentMethod" name="customerPaymentMethod" required>
@@ -137,18 +148,6 @@ include('connect.php');
                                             }
                                             ?>
                                         </select>
-                            </div>
-                        </div>
-                        <div class="col-md-8">
-                            <div class="form-group">
-                                <label for="customerBillingAddress">BILLING ADDRESS</label>
-                                <input type="text" class="form-control" id="customerBillingAddress"
-                                    name="customerBillingAddress" placeholder="Enter Billing Address" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="customerShippingAddress">SHIPPING ADDRESS</label>
-                                <input type="text" class="form-control" id="customerShippingAddress"
-                                    name="customerShippingAddress" placeholder="Enter Shipping Address" required>
                             </div>
                         </div>
                     </div>
@@ -190,11 +189,11 @@ include('connect.php');
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <div class="form-group">
+                            <!-- <div class="form-group">
                                 <label for="customerEmail">EMAIL</label>
                                 <input type="text" class="form-control" id="customerEmail" name="customerEmail"
                                     placeholder="Enter Email" required>
-                            </div>
+                            </div> -->
                             <div class="form-group">
                                 <label for="customerBusinessStyle">BUSINESS STYLE</label>
                                 <input type="text" class="form-control" id="customerBusinessStyle" name="customerBusinessStyle"
@@ -246,6 +245,18 @@ include('connect.php');
                                     placeholder="Enter Balance" required>
                             </div>
 
+                        </div>
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <label for="editCustomerBillingAddress">BILLING ADDRESS</label>
+                                <input type="text" class="form-control" id="editCustomerBillingAddress"
+                                    name="editCustomerBillingAddress" placeholder="Enter Billing Address" required>
+                            </div>
+                            <!-- <div class="form-group">
+                                <label for="editCustomerShippingAddress">SHIPPING ADDRESS</label>
+                                <input type="text" class="form-control" id="editCustomerShippingAddress"
+                                    name="editCustomerShippingAddress" placeholder="Enter Shipping Address" required>
+                            </div> -->
                             <div class="form-group">
                                 <label for="editCustomerPaymentMethod">PAYMENT METHOD</label>
                                 <select class="form-control" id="editCustomerPaymentMethod" name="editCustomerPaymentMethod" required>
@@ -261,18 +272,6 @@ include('connect.php');
                                             }
                                             ?>
                                         </select>
-                            </div>
-                        </div>
-                        <div class="col-md-8">
-                            <div class="form-group">
-                                <label for="editCustomerBillingAddress">BILLING ADDRESS</label>
-                                <input type="text" class="form-control" id="editCustomerBillingAddress"
-                                    name="editCustomerBillingAddress" placeholder="Enter Billing Address" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="editCustomerShippingAddress">SHIPPING ADDRESS</label>
-                                <input type="text" class="form-control" id="editCustomerShippingAddress"
-                                    name="editCustomerShippingAddress" placeholder="Enter Shipping Address" required>
                             </div>
                         </div>
                     </div>
@@ -313,12 +312,12 @@ include('connect.php');
                                         </select>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <!-- <div class="col-md-4">
                             <div class="form-group">
                                 <label for="editCustomerEmail">EMAIL</label>
                                 <input type="text" class="form-control" id="editCustomerEmail" name="editCustomerEmail"
                                     placeholder="Enter Email" required>
-                            </div>
+                            </div> -->
                             <div class="form-group">
                                 <label for="editCustomerBusinessStyle">BUSINESS STYLE</label>
                                 <input type="text" class="form-control" id="editCustomerBusinessStyle" name="editCustomerBusinessStyle"
@@ -435,7 +434,7 @@ $(document).ready(function() {
                             <td>${customer.customerName || ''}</td>
                             <td>${customer.contactNumber || ''}</td>
                             <td>${customer.customerTin || ''}</td>
-                            <td>${customer.customerEmail || ''}</td>
+                            <td>${customer.customerBillingAddress || ''}</td>
                             <td><center><b>${customer.customerBalance ? formatCurrency(customer.customerBalance) : ''}</b></center></td>
                             <td>
                             <button type="button" class="btn btn-primary btn-sm editCustomerButton" style="background-color: rgb(0, 149, 77); color: white; border: 1px rgb(0, 149, 77);" data-id="${customer.customerID}">Edit</button>
