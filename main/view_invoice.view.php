@@ -1112,6 +1112,9 @@ $(document).ajaxStop(function() {
             var description = selectedOption.data("description");
             row.find(".description-field").val(description !== undefined ? description : '');
 
+            var uom = selectedOption.data("uom");
+            row.find(".uom-field").val(uom !== undefined ? uom : '');
+
             // Update the amount field based on the selected item
             var amount = selectedOption.data("amount");
             row.find(".rate-field").val(amount !== undefined ? amount : '');
