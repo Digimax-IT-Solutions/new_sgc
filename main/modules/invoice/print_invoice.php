@@ -88,13 +88,13 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
         position: absolute;
         left: 19px;
         top: 100px;
-        font-size: 15px;
+        font-size: 11px;
     }
     .address {
         position: absolute;
         left: 19px;
-        top: 120px;
-        font-size: 15px;  
+        top: 115px;
+        font-size: 11px;  
         text-overflow: ellipsis;
         overflow: hidden;
         width: 350px;
@@ -103,86 +103,86 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
         position: absolute;
         right: 220px;
         top: 137px;
-        font-size: 15px;
+        font-size: 11px;
     }
     .bstyle {
         position: absolute;
         left: 310px;
         top: 180px;
-        font-size: 15px;
+        font-size: 11px;
     }
     .tin {
         position: absolute;
         left: 50px;
         top: 180px;
-        font-size: 15px;
+        font-size: 11px;
     }
     .date {
         position: absolute;
         right: 0px;
         top: 100px;
-        font-size: 15px;
+        font-size: 11px;
     }
     table {
         position: absolute;
         top: 239px;
         left: 18px;
         width: 96%;
-        font-size: 15px;
+        font-size: 11px;
     }
     .totalamount {
         position: absolute;
         right: 14px;
         bottom: 310px;
-        font-size: 15px;
+        font-size: 11px;
     }
     .netofvat {
         position: absolute;
         right: 14px;
         bottom: 272px;
-        font-size:15px;
+        font-size:11px;
     }
     .netamount {
         position: absolute;
         right: 14px;
         bottom: 153.2px;
-        font-size: 15px;   
+        font-size: 11px;   
     }
     .vat {
         position: absolute;
         left: 275px;
         bottom: 177px;
-        font-size: 15px; 
+        font-size: 11px; 
     }
     .wvat{
         position: absolute;
         right: 14px;
         bottom: 220px;
-        font-size: 15px; 
+        font-size: 11px; 
     }
     .vat1{
         position: absolute;
         right: 14px;
         bottom: 290px;
-        font-size: 15px; 
+        font-size: 11px; 
     }
     .nad {
         position: absolute;
         right: 14px;
         bottom: 200px;
-        font-size: 15px;   
+        font-size: 11px;   
     }
     .ves {
         position: absolute;
         left: 275px;
         bottom: 217px;
-        font-size: 15px; 
+        font-size: 11px; 
     }
     .po {
         position: absolute;
         right: 150px;
         top: 100px;
-        font-size: 15px;  
+        font-size: 11px;  
     }
 </style>
 <body>
