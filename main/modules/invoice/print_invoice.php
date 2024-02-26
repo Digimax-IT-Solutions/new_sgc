@@ -76,6 +76,14 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
 <meta name="author" content="harnishdesign.net">
 </head>
 <style>
+    /* @media print {
+        body {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: calibri;
+        }
+    } */
     table {
         border-collapse: collapse;
         width: 100%;
@@ -83,9 +91,6 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
     }
    td {
         text-overflow: ellipsis;
-    }
-    body {
-        font-family: calibri;
     }
     .invoiceno {
         position: absolute;
@@ -110,9 +115,10 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
     }
     .bstyle {
         position: absolute;
-        left: 295px;
+        left: 290px;
         top: 180px;
         font-size: 11px;
+        text-align: left;
     }
     .tin {
         position: absolute;
@@ -142,55 +148,55 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
     .totalamount {
         position: absolute;
         right: 14px;
-        bottom: 310px;
+        bottom: 349px;
         font-size: 13px;
     }
     .vat1{
         position: absolute;
         right: 14px;
-        bottom: 290px;
+        bottom: 327px;
         font-size: 13px; 
     }
     .netofvat {
         position: absolute;
         right: 14px;
-        bottom: 272px;
+        bottom: 306px;
         font-size:13px;
     }
     .wvat{
         position: absolute;
         right: 14px;
-        bottom: 220px;
+        bottom: 264px;
         font-size: 13px; 
     }
     .nad {
         position: absolute;
         right: 14px;
-        bottom: 200px;
+        bottom: 243px;
         font-size: 13px;   
     }
     .netofvat2 {
         position: absolute;
         right: 14px;
-        bottom: 180px;
+        bottom: 222px;
         font-size: 13px;   
     }
     .netamount {
         position: absolute;
         right: 14px;
-        bottom: 162px;
+        bottom: 200px;
         font-size: 13px;   
     }
     .ves {
         position: absolute;
         left: 275px;
-        bottom: 217px;
+        bottom: 264px;
         font-size: 13px; 
     }
     .vat {
         position: absolute;
         left: 275px;
-        bottom: 177px;
+        bottom: 222px;
         font-size: 13px; 
     }
     
