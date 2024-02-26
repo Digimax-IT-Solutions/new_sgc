@@ -110,19 +110,19 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
     }
     .bstyle {
         position: absolute;
-        left: 310px;
+        left: 295px;
         top: 180px;
-        font-size: 13px;
+        font-size: 11px;
     }
     .tin {
         position: absolute;
-        left: 50px;
+        left: 43px;
         top: 180px;
         font-size: 13px;
     }
     .po {
         position: absolute;
-        right: 140px;
+        right: 130px;
         top: 107px;
         font-size: 13px;  
     }
@@ -145,34 +145,22 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
         bottom: 310px;
         font-size: 13px;
     }
+    .vat1{
+        position: absolute;
+        right: 14px;
+        bottom: 290px;
+        font-size: 13px; 
+    }
     .netofvat {
         position: absolute;
         right: 14px;
         bottom: 272px;
         font-size:13px;
     }
-    .netamount {
-        position: absolute;
-        right: 14px;
-        bottom: 162px;
-        font-size: 13px;   
-    }
-    .vat {
-        position: absolute;
-        left: 275px;
-        bottom: 177px;
-        font-size: 13px; 
-    }
     .wvat{
         position: absolute;
         right: 14px;
         bottom: 220px;
-        font-size: 13px; 
-    }
-    .vat1{
-        position: absolute;
-        right: 14px;
-        bottom: 290px;
         font-size: 13px; 
     }
     .nad {
@@ -181,18 +169,31 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
         bottom: 200px;
         font-size: 13px;   
     }
-    .ves {
-        position: absolute;
-        left: 275px;
-        bottom: 217px;
-        font-size: 13px; 
-    }
     .netofvat2 {
         position: absolute;
         right: 14px;
         bottom: 180px;
         font-size: 13px;   
     }
+    .netamount {
+        position: absolute;
+        right: 14px;
+        bottom: 162px;
+        font-size: 13px;   
+    }
+    .ves {
+        position: absolute;
+        left: 275px;
+        bottom: 217px;
+        font-size: 13px; 
+    }
+    .vat {
+        position: absolute;
+        left: 275px;
+        bottom: 177px;
+        font-size: 13px; 
+    }
+    
 </style>
 <body>
     <div class="invoiceno"><?php echo $salesInvoice['customer']; ?></div>
