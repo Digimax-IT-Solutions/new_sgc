@@ -8,7 +8,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $termCode = $_POST['edittermCode'];
     $termName = $_POST['edittermName'];
     $termDescription = $_POST['edittermDescription'];
-    $termDaysDue = $_POST['edittermDescription'];
+    $termDaysDue = $_POST['edittermDaysDue'];
     $activeStatus = isset($_POST['editActiveStatus']) ? 1 : 0;
 
     // Update term details in the database
