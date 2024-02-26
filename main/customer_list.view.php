@@ -424,9 +424,7 @@ $(document).ready(function() {
                 // Parse the JSON response
                 var customers = JSON.parse(response);
 
-                customers.sort((a, b) => {
-                    return a.customerName.localeCompare(b.customerName);
-                });
+                customers.reverse();
                 // Clear existing table rows
                 $("#customerTable tbody").empty();
 
