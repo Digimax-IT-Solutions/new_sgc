@@ -161,6 +161,12 @@
                             <label for="edittermName">TERM NAME</label>
                             <input type="text" class="form-control" id="edittermName" name="edittermName" required>
                         </div>
+
+                        <div class="form-group">
+                            <label for="edittermDue">TERM DAYS DUE</label>
+                            <input type="text" class="form-control" id="edittermDue" name="edittermDue" required>
+                        </div>
+
                         <div class="form-group">
                             <label for="edittermDescription">DESCRPTION</label>
                             <input type="text" class="form-control" id="edittermDescription" name="edittermDescription"
@@ -358,6 +364,7 @@ $("#termsTable").on("click", ".editTermButton", function() {
             $("#edittermID").val(termDetails.term_id);
             $("#edittermCode").val(termDetails.term_code);
             $("#edittermName").val(termDetails.term_name);
+            $("#edittermDue").val(termDetails.term_days_due);
             $("#edittermDescription").val(termDetails.term_description);
             $("#editActiveStatus").prop("checked", termDetails.active_status);
 

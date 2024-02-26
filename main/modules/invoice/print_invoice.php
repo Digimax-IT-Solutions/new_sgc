@@ -251,7 +251,7 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
 <div class="ves"><?php echo $netOfVatFormatted ?></div>  
 <div class="wvat"><?php echo $wvatAmount; ?></div>
 <div class="vat1"><?php echo $vatAmount; ?></div>
-<div class="netofvat2"><?php echo $netOfVatFormatted ?></div>
+<div class="netofvat2"><?php echo $vatAmount ?></div>
 <div class="nad"><?php echo $grossAmountFormatted; ?></div>           
 </body>
 <script>
