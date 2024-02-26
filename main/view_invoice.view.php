@@ -590,9 +590,9 @@ $(document).ready(function() {
         }
     }
 
-    // Initialize receiveItemDate with the current date
-    var currentDate = new Date();
-    setFormattedDate($("#invoiceDate"), currentDate);
+    // Initialize receiveItemDate with the value from PHP
+    var invoiceDateValue = "<?php echo $salesInvoice['invoiceDate']; ?>";
+    setFormattedDate($("#invoiceDate"), new Date(invoiceDateValue));
 
     // Event listener for when the receiveItemDate input changes
     $("#invoiceDate").on("change", function() {
@@ -603,6 +603,8 @@ $(document).ready(function() {
     $("#terms").on("change", function() {
         updateDueDate();
     });
+
+    // Call updateDueDate initially to set the due date based on the selected term and the invoice date
 
 });
 </script>
