@@ -90,13 +90,13 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
     .invoiceno {
         position: absolute;
         left: 19px;
-        top: 112px;
+        top: 100px;
         font-size: 12px;
     }
     .address {
         position: absolute;
         left: 19px;
-        top: 125px;
+        top: 115px;
         font-size: 12px;  
         text-overflow: ellipsis;
         overflow: hidden;
@@ -105,30 +105,30 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
     .terms {
         position: absolute;
         right: 220px;
-        top: 137px;
+        top: 134px;
         font-size: 12px;
     }
     .bstyle {
         position: absolute;
         left: 310px;
-        top: 187px;
+        top: 180px;
         font-size: 12px;
     }
     .tin {
         position: absolute;
         left: 50px;
-        top: 187px;
+        top: 180px;
         font-size: 12px;
     }
     .date {
         position: absolute;
         right: 0px;
-        top: 112px;
+        top: 100px;
         font-size: 12px;
     }
     table {
         position: absolute;
-        top: 239px;
+        top: 235px;
         left: 18px;
         width: 96%;
         font-size: 12px;
@@ -184,7 +184,7 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
     .po {
         position: absolute;
         right: 150px;
-        top: 112px;
+        top: 100px;
         font-size: 12px;  
     }
     .netofvat2 {
@@ -233,7 +233,7 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
                 echo "<tr>
                     <td style='text-align: left; padding-bottom: 13.5px; white-space: nowrap;'>" . $row["description"] . "</td>
                     <td style='padding-left: 325px; padding-bottom: 13.5px; white-space: nowrap;'>" . $row["quantity"] . "</td>
-                    <td style='text-align: left; padding-bottom: 13.5px; padding-left: 265px; white-space: nowrap;'>" . $row["uom"] . "</td>
+                    <td style='text-align: left; padding-bottom: 13.5px; padding-left: 270px; white-space: nowrap;'>" . $row["uom"] . "</td>
                     <td style='text-align: right; width: 100px; padding-left: 210px; padding-bottom: 13.5px; white-space: nowrap;'>" . $rateFormatted . "</td>
                     <td style='text-align: right; padding-bottom: 13.5px;'>" . $amountFormatted . "</td>
                 </tr>";
