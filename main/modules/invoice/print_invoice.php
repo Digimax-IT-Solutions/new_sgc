@@ -76,14 +76,14 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
 <meta name="author" content="harnishdesign.net">
 </head>
 <style>
-    /* @media print {
+    @media print {
         body {
             width: 100%;
             margin: 0;
             padding: 0;
             font-family: calibri;
         }
-    } */
+    }
     table {
         border-collapse: collapse;
         width: 100%;
@@ -115,7 +115,7 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
     }
     .bstyle {
         position: absolute;
-        left: 290px;
+        left: 292px;
         top: 180px;
         font-size: 11px;
         text-align: left;
