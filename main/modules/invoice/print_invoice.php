@@ -196,7 +196,7 @@ body {
     .ves {
         position: absolute;
         left: 330px;
-        bottom: 263px;
+        bottom: 286px;
         font-size: 15px; 
     }
     .vat {
