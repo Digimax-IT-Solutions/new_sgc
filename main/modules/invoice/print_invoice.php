@@ -70,7 +70,7 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
 <meta charset="utf-8" />
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="icon" type="image/x-icon" href="../images/conogas.png">
+<link rel="icon" type="image/x-icon" href="../images/sgc.png">
 <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Poppins:100,200,300,400,500,600,700,800,900' type='text/css'>
 <title>Invoice Print</title>
 <meta name="author" content="harnishdesign.net">
