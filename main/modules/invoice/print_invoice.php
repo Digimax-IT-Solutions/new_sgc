@@ -115,14 +115,15 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
     }
     .bstyle {
         position: absolute;
-        left: 292px;
+        left: 270px;
         top: 180px;
         font-size: 11px;
         text-align: left;
+        width: 350px;
     }
     .tin {
         position: absolute;
-        left: 43px;
+        left: 35px;
         top: 180px;
         font-size: 13px;
     }
@@ -148,55 +149,55 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
     .totalamount {
         position: absolute;
         right: 14px;
-        bottom: 349px;
+        bottom: 393px;
         font-size: 13px;
     }
     .vat1{
         position: absolute;
         right: 14px;
-        bottom: 327px;
+        bottom: 371px;
         font-size: 13px; 
     }
     .netofvat {
         position: absolute;
         right: 14px;
-        bottom: 306px;
+        bottom: 349px;
         font-size:13px;
     }
     .wvat{
         position: absolute;
         right: 14px;
-        bottom: 264px;
+        bottom: 305px;
         font-size: 13px; 
     }
     .nad {
         position: absolute;
         right: 14px;
-        bottom: 243px;
+        bottom: 283px;
         font-size: 13px;   
     }
     .netofvat2 {
         position: absolute;
         right: 14px;
-        bottom: 222px;
+        bottom: 261px;
         font-size: 13px;   
     }
     .netamount {
         position: absolute;
         right: 14px;
-        bottom: 200px;
+        bottom: 239px;
         font-size: 13px;   
     }
     .ves {
         position: absolute;
         left: 275px;
-        bottom: 264px;
+        bottom: 283px;
         font-size: 13px; 
     }
     .vat {
         position: absolute;
         left: 275px;
-        bottom: 222px;
+        bottom: 261px;
         font-size: 13px; 
     }
     
@@ -238,11 +239,11 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
                 $amountFormatted = number_format($row['amount'], 2, '.', ',');
                 $rateFormatted = number_format($row['rate'], 2, '.', ',');
                 echo "<tr>
-                    <td style='text-align: left; padding-bottom: 13px; white-space: nowrap;'>" . $row["description"] . "</td>
-                    <td style='padding-left: 325px; padding-bottom: 13px; white-space: nowrap;'>" . $row["quantity"] . "</td>
-                    <td style='text-align: left; padding-bottom: 13px; padding-left: 270px; white-space: nowrap;'>" . $row["uom"] . "</td>
-                    <td style='text-align: right; width: 100px; padding-left: 210px; padding-bottom: 13px; white-space: nowrap;'>" . $rateFormatted . "</td>
-                    <td style='text-align: right; padding-bottom: 13px;'>" . $amountFormatted . "</td>
+                    <td style='text-align: left; padding-bottom: 12px; white-space: nowrap;'>" . $row["description"] . "</td>
+                    <td style='padding-left: 325px; padding-bottom: 12px; white-space: nowrap;'>" . $row["quantity"] . "</td>
+                    <td style='text-align: left; padding-bottom: 12px; padding-left: 270px; white-space: nowrap;'>" . $row["uom"] . "</td>
+                    <td style='text-align: right; width: 100px; padding-left: 210px; padding-bottom: 12px; white-space: nowrap;'>" . $rateFormatted . "</td>
+                    <td style='text-align: right; padding-bottom: 12px;'>" . $amountFormatted . "</td>
                 </tr>";
             }
         } else {
