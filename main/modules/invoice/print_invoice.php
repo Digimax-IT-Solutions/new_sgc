@@ -76,16 +76,21 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
 <meta name="author" content="harnishdesign.net">
 </head>
 <style>
-  @media print {
-  body {
 
-    -webkit-print-color-adjust: exact; /* For Chrome */
+body {
+    margin: 0; /* Remove default margins */
+    padding: 0; /* Remove default padding */
     background-image: url('../images/print.jpg'); /* Set the background image */
     background-size: cover; /* Adjust background size */
     background-repeat: no-repeat;
-    font-family: calibri; /* Remove default margins *//* Prevent the image from repeating */
+    font-family: calibri; /* Prevent the image from repeating */
   }
-}
+  @media print {
+    body {
+      -webkit-print-color-adjust: exact; /* For Chrome */
+      background-color: white; /* Ensure background color is white for printing */
+    }
+  }
     .invoiceno {
         position: absolute;
         left: 54px;
