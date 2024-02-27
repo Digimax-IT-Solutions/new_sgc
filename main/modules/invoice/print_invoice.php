@@ -95,13 +95,13 @@ body {
         position: absolute;
         left: 54px;
         top: 150px;
-        font-size: 17px;
+        font-size: 15px;
     }
     .address {
         position: absolute;
         left: 54px;
         top: 170px;
-        font-size: 17px;  
+        font-size: 15px;  
         text-overflow: ellipsis;
         overflow: hidden;
         width: 350px;
@@ -110,16 +110,18 @@ body {
         position: absolute;
         right: 250px;
         top: 180px;
-        font-size: 17px;
+        font-size: 15px;
         text-align: left;
     }
     .bstyle {
         position: absolute;
         left: 350px;
-        top: 222px;
-        font-size: 13px;
+        top: 205px;
+        font-size: 15px;
         text-align: left;
-        width: 350px;
+        width: 115px;
+        text-overflow: ellipsis;
+        overflow: hidden;
     }
     .tin {
         position: absolute;
@@ -131,13 +133,13 @@ body {
         position: absolute;
         right: 190px;
         top: 145px;
-        font-size: 17px;  
+        font-size: 15px;  
     }
     .date {
         position: absolute;
         right: 35px;
         top: 145px;
-        font-size: 17px;
+        font-size: 15px;
     }
     table {
         position: absolute;
@@ -151,57 +153,57 @@ body {
         position: absolute;
         right: 27px;
         bottom: 355px;
-        font-size: 17px;
+        font-size: 15px;
         text-align: right;
     }
     .vat1{
         position: absolute;
         right: 27px;
         bottom: 332px;
-        font-size: 17px; 
+        font-size: 15px; 
         text-align: right;
     }
     .netofvat {
         position: absolute;
         right: 27px;
         bottom: 309px;
-        font-size: 17px;
+        font-size: 15px;
     }
     .wvat{
         position: absolute;
         right: 27px;
         bottom: 263px;
-        font-size: 17px; 
+        font-size: 15px; 
     }
     .nad {
         position: absolute;
         right: 27px;
         bottom: 242px;
-        font-size: 17px;   
+        font-size: 15px;   
     }
     .netofvat2 {
         position: absolute;
         right: 27px;
         bottom: 219px;
-        font-size: 17px;   
+        font-size: 15px;   
     }
     .netamount {
         position: absolute;
         right: 27px;
         bottom: 196px;
-        font-size: 17px;   
+        font-size: 15px;   
     }
     .ves {
         position: absolute;
         left: 330px;
         bottom: 219px;
-        font-size: 17px; 
+        font-size: 15px; 
     }
     .vat {
         position: absolute;
         left: 330px;
         bottom: 263px;
-        font-size: 17px; 
+        font-size: 15px; 
     }
     
 </style>
