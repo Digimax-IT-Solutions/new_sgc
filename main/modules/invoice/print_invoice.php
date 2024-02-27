@@ -76,129 +76,127 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
 <meta name="author" content="harnishdesign.net">
 </head>
 <style>
-    @media print {
-        body {
-            width: 100%;
-            margin: 0;
-            padding: 0;
-            font-family: calibri;
-        }
-    }
-    table {
-        border-collapse: collapse;
-        width: 100%;
-        table-layout: fixed;
-    }
-   td {
-        text-overflow: ellipsis;
-    }
+  @media print {
+  body {
+
+    -webkit-print-color-adjust: exact; /* For Chrome */
+    background-image: url('../images/print.jpg'); /* Set the background image */
+    background-size: cover; /* Adjust background size */
+    background-repeat: no-repeat;
+    font-family: calibri; /* Remove default margins *//* Prevent the image from repeating */
+  }
+}
     .invoiceno {
         position: absolute;
-        left: 19px;
-        top: 107px;
-        font-size: 13px;
+        left: 54px;
+        top: 150px;
+        font-size: 17px;
     }
     .address {
         position: absolute;
-        left: 19px;
-        top: 122px;
-        font-size: 13px;  
+        left: 54px;
+        top: 170px;
+        font-size: 17px;  
         text-overflow: ellipsis;
         overflow: hidden;
         width: 350px;
     }
     .terms {
         position: absolute;
-        right: 220px;
-        top: 134px;
-        font-size: 13px;
+        right: 250px;
+        top: 180px;
+        font-size: 17px;
+        text-align: left;
     }
     .bstyle {
         position: absolute;
-        left: 270px;
-        top: 180px;
-        font-size: 11px;
+        left: 350px;
+        top: 222px;
+        font-size: 13px;
         text-align: left;
         width: 350px;
     }
     .tin {
         position: absolute;
-        left: 35px;
-        top: 180px;
-        font-size: 13px;
+        left: 84px;
+        top: 220px;
+        font-size: 15px;
     }
     .po {
         position: absolute;
-        right: 130px;
-        top: 107px;
-        font-size: 13px;  
+        right: 190px;
+        top: 145px;
+        font-size: 17px;  
     }
     .date {
         position: absolute;
-        right: 0px;
-        top: 107px;
-        font-size: 13px;
+        right: 35px;
+        top: 145px;
+        font-size: 17px;
     }
     table {
         position: absolute;
-        top: 235px;
-        left: 18px;
+        top: 273px;
+        left: 50px;
         width: 96%;
-        font-size: 13px;
+        font-size: 15px;
+        table-layout: fixed;
     }
     .totalamount {
         position: absolute;
-        right: 14px;
-        bottom: 393px;
-        font-size: 13px;
+        right: 27px;
+        bottom: 355px;
+        font-size: 17px;
+        text-align: right;
     }
     .vat1{
         position: absolute;
-        right: 14px;
-        bottom: 371px;
-        font-size: 13px; 
+        right: 27px;
+        bottom: 332px;
+        font-size: 17px; 
+        text-align: right;
     }
     .netofvat {
         position: absolute;
-        right: 14px;
-        bottom: 349px;
-        font-size:13px;
+        right: 27px;
+        bottom: 309px;
+        font-size: 17px;
     }
     .wvat{
         position: absolute;
-        right: 14px;
-        bottom: 305px;
-        font-size: 13px; 
+        right: 27px;
+        bottom: 263px;
+        font-size: 17px; 
     }
     .nad {
         position: absolute;
-        right: 14px;
-        bottom: 283px;
-        font-size: 13px;   
+        right: 27px;
+        bottom: 242px;
+        font-size: 17px;   
     }
     .netofvat2 {
         position: absolute;
-        right: 14px;
-        bottom: 261px;
-        font-size: 13px;   
+        right: 27px;
+        bottom: 219px;
+        font-size: 17px;   
     }
     .netamount {
         position: absolute;
-        right: 14px;
-        bottom: 239px;
-        font-size: 13px;   
+        right: 27px;
+        bottom: 196px;
+        font-size: 17px;   
     }
     .ves {
         position: absolute;
-        left: 275px;
-        bottom: 283px;
-        font-size: 13px; 
+        left: 330px;
+        bottom: 219px;
+        font-size: 17px; 
     }
     .vat {
         position: absolute;
-        left: 275px;
-        bottom: 261px;
-        font-size: 13px; 
+        left: 330px;
+        bottom: 263px;
+        font-size: 17px; 
     }
     
 </style>
@@ -239,11 +237,11 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
                 $amountFormatted = number_format($row['amount'], 2, '.', ',');
                 $rateFormatted = number_format($row['rate'], 2, '.', ',');
                 echo "<tr>
-                    <td style='text-align: left; padding-bottom: 12px; white-space: nowrap;'>" . $row["description"] . "</td>
-                    <td style='padding-left: 325px; padding-bottom: 12px; white-space: nowrap;'>" . $row["quantity"] . "</td>
-                    <td style='text-align: left; padding-bottom: 12px; padding-left: 270px; white-space: nowrap;'>" . $row["uom"] . "</td>
-                    <td style='text-align: right; width: 100px; padding-left: 210px; padding-bottom: 12px; white-space: nowrap;'>" . $rateFormatted . "</td>
-                    <td style='text-align: right; padding-bottom: 12px;'>" . $amountFormatted . "</td>
+                    <td style='text-align: left; padding-bottom: 9px; white-space: nowrap;'>" . $row["description"] . "</td>
+                    <td style='text-align: left; padding-left: 255px; padding-bottom: 9px; white-space: nowrap;'>" . $row["quantity"] . "</td>
+                    <td style='text-align: left; padding-bottom: 9px; padding-left: 270px; white-space: nowrap;'>" . $row["uom"] . "</td>
+                    <td style='text-align: right; width: 100px; padding-left: 40px; padding-bottom: 9px; white-space: nowrap;'>" . $rateFormatted . "</td>
+                    <td style='text-align: right; padding-right: 40px; padding-bottom: 9px;'>" . $amountFormatted . "</td>
                 </tr>";
             }
         } else {
