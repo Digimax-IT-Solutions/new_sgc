@@ -116,10 +116,10 @@ body {
     .bstyle {
         position: absolute;
         left: 350px;
-        top: 205px;
+        top: 219px;
         font-size: 15px;
         text-align: left;
-        width: 115px;
+        width: 350px;
         text-overflow: ellipsis;
         overflow: hidden;
     }
@@ -244,11 +244,11 @@ body {
                 $amountFormatted = number_format($row['amount'], 2, '.', ',');
                 $rateFormatted = number_format($row['rate'], 2, '.', ',');
                 echo "<tr>
-                    <td style='text-align: left; padding-bottom: 9px; white-space: nowrap;'>" . $row["description"] . "</td>
-                    <td style='text-align: left; padding-left: 255px; padding-bottom: 9px; white-space: nowrap;'>" . $row["quantity"] . "</td>
-                    <td style='text-align: left; padding-bottom: 9px; padding-left: 157px; white-space: nowrap;'>" . $row["uom"] . "</td>
-                    <td style='text-align: right; width: 100px; padding-left: 40px; padding-bottom: 9px; white-space: nowrap;'>" . $rateFormatted . "</td>
-                    <td style='text-align: right; padding-right: 40px; padding-bottom: 9px;'>" . $amountFormatted . "</td>
+                    <td style='text-align: left; padding-bottom: 4.5px; white-space: nowrap;'>" . $row["description"] . "</td>
+                    <td style='text-align: left; padding-left: 255px; padding-bottom: 4.5px; white-space: nowrap;'>" . $row["quantity"] . "</td>
+                    <td style='text-align: left; padding-bottom: 4.5px; padding-left: 157px; white-space: nowrap;'>" . $row["uom"] . "</td>
+                    <td style='text-align: right; width: 100px; padding-left: 40px; padding-bottom: 4.5px; white-space: nowrap;'>" . $rateFormatted . "</td>
+                    <td style='text-align: right; padding-right: 40px; padding-bottom: 4.5px;'>" . $amountFormatted . "</td>
                 </tr>";
             }
         } else {
