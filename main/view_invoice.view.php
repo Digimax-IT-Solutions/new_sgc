@@ -336,7 +336,21 @@ $productItemsJSON = json_encode($productItems);
                                         <div class="form-group">
                                             <?php
                                             $status = $salesInvoice['invoiceStatus'];
-                                            $statusColor = ($status === 'PAID') ? 'green' : 'red';
+                                            $statusColor = '';
+                                            switch ($status) {
+                                                case 'PAID':
+                                                    $statusColor = 'green';
+                                                    break;
+                                                case 'UNPAID':
+                                                    $statusColor = 'red';
+                                                    break;
+                                                case 'VOID':
+                                                    $statusColor = 'rgba(255, 0, 0, 0.5)';
+                                                    break;
+                                                default:
+                                                    // Handle any other cases here if needed
+                                                    break;
+                                            }
                                             echo "<h2 style='color: {$statusColor}'>{$status}</h2>";
                                             ?>
                                         </div>
@@ -564,10 +578,13 @@ $productItemsJSON = json_encode($productItems);
                                 <button type="button" class="btn btn-info" id="saveAndCloseButton">Save and
                                     Close</button>
                                 <button type="button" class="btn btn-warning" id="clearButton">Clear</button>
+                                <button type="button" class="btn btn-danger" style="background-color: rgba(220, 53, 69, 0.8);
+                                border: 1px solid rgba(220, 53, 69, 0.8);" id="cancelButton">Void</button>
                                 <button type="button" class="btn btn-danger" id="deleteButton">Delete</button>
                                 <button type="button" class="btn btn-secondary"
                                     data-invoice-id="<?php echo $salesInvoice['invoiceID']; ?>"
                                     id="printButton">Print</button>
+                                
                             </div>
                         </div>
 
@@ -751,6 +768,63 @@ $(document).ready(function() {
                     text: 'Error updating invoice. Please try again.',
                 });
                 console.error('Error updating invoice: ' + error);
+            }
+        });
+    });
+
+    $("#cancelButton").on("click", function() {
+        var invoiceID = <?php echo $salesInvoice['invoiceID']; ?>;
+
+        // Show a confirmation prompt before proceeding
+        Swal.fire({
+            icon: 'warning',
+            title: 'Are you sure?',
+            text: 'This action cannot be undone.',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, Void it!',
+            cancelButtonText: 'Cancel',
+        }).then((result) => {
+            // Proceed with deletion if the user confirms
+            if (result.isConfirmed) {
+                // Use AJAX to send a request to delete_invoice.php
+                $.ajax({
+                    url: 'modules/invoice/cancel_invoice.php',
+                    method: 'POST',
+                    data: {
+                        invoiceID: invoiceID
+                    },
+                    dataType: 'json', // Expect JSON response
+                    success: function(response) {
+                        // Handle the success response using SweetAlert or any other method
+                        if (response.status === "success") {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                text: response.message,
+                            }).then((result) => {
+                                // Redirect to the sales_invoice page after clicking OK
+                                if (result.isConfirmed) {
+                                    window.location.href = 'sales_invoice';
+                                }
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: response.message,
+                            });
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        // Handle the error response using SweetAlert or any other method
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: 'Error voiding invoice. Please try again.',
+                        });
+                        console.error('Error voiding invoice: ' + error);
+                    }
+                });
             }
         });
     });
