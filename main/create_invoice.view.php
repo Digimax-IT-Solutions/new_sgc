@@ -383,19 +383,20 @@ $productItemsJSON = json_encode($productItems);
                                                     <label>Tax Withheld (%):</label>
                                                 </div>
                                                 <div class="col-md-3 d-inline-block">
-                                                    <select class="form-control" id="taxWithheldPercentage" name="taxWithheldPercentage" required>
-                                                       
-                                                        <?php
-                                                        $query = "SELECT wTaxRate, wTaxName FROM wtax ORDER BY wTaxCode";
-                                                        $result = $db->query($query);
+                                                <select class="form-control" id="taxWithheldPercentage" name="taxWithheldPercentage" required>
+    <?php
+    $query = "SELECT wTaxRate, wTaxName FROM wtax ORDER BY wTaxCode";
+    $result = $db->query($query);
 
-                                                        if ($result) {
-                                                            while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
-                                                                echo "<option value='{$row['wTaxRate']}'>{$row['wTaxName']}</option>";
-                                                            }
-                                                        }
-                                                        ?>
-                                                    </select>
+    if ($result) {
+        while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+            // Check if wTaxRate is 0.00 and wTaxName is "Zero 0%", if so, mark it as selected
+            $selected = ($row['wTaxRate'] == 0.00 && $row['wTaxName'] == "Zero 0%") ? 'selected' : '';
+            echo "<option value='{$row['wTaxRate']}' $selected>{$row['wTaxName']}</option>";
+        }
+    }
+    ?>
+</select>
                                                 </div>  
                                                 <div class="col-md-5 d-inline-block">
                                                     <div class="input-group">

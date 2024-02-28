@@ -29,6 +29,7 @@ if (isset($_GET['invoiceID'])) {
 
         // Fetch sales invoice items
         $salesInvoiceItems = $stmtInvoiceItems->fetchAll(PDO::FETCH_ASSOC);
+
     } else {
         // Redirect or display an error if sales invoice details are not found
         header("Location: index.php"); // Redirect to the main page or display an error message
@@ -490,13 +491,32 @@ $productItemsJSON = json_encode($productItems);
                                         </div>
                                         <div class="col-md-3 d-inline-block">
                                             <select class="form-control" id="taxWithheldPercentage"
-                                                name="taxWithheldPercentage" required><?php echo $salesInvoice['taxWithheldPercentage']; ?>
+                                                name="taxWithheldPercentage" required>
                                                 <?php
+                                                // Fetch the wTaxData based on vatPercentage
+                                                $queryWTax = "SELECT * FROM wtax WHERE wTaxRate = :taxWithheldPercentage";
+                                                $stmtWTax = $db->prepare($queryWTax);
+                                                $stmtWTax->bindParam(':taxWithheldPercentage', $salesInvoice['taxWithheldPercentage']);
+                                                $stmtWTax->execute();
+                                                $wTaxData = $stmtWTax->fetch(PDO::FETCH_ASSOC);
+
+                                                if ($wTaxData) {
+                                                    // If there is a match, echo the selected option
+                                                    echo "<option value='{$wTaxData['wTaxRate']}' selected>{$wTaxData['wTaxName']}</option>";
+                                                } else {
+                                                    echo "<option value='' disabled selected>Select a tax</option>"; // Default placeholder option
+                                                }   
+
+                                                // Fetch all wTax options
                                                 $query = "SELECT wTaxRate, wTaxName FROM wtax";
                                                 $result = $db->query($query);
 
                                                 if ($result) {
                                                     while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+                                                        // Skip the option already selected
+                                                        if ($wTaxData && $wTaxData['wTaxRate'] == $row['wTaxRate']) {
+                                                            continue;
+                                                        }
                                                         echo "<option value='{$row['wTaxRate']}'>{$row['wTaxName']}</option>";
                                                     }
                                                 }
