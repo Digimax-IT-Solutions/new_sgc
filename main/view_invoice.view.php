@@ -173,7 +173,7 @@ $productItemsJSON = json_encode($productItems);
                                         <!-- <label for="shippingAddress">SHIPPING ADDRESS</label> -->
                                         <!-- <input type="text" class="form-control" id="shippingAddress"
                                             name="shippingAddress"
-                                            value="<?php echo $salesInvoice['shippingAddress']; ?>"> -->
+                                            value="<?php echo $salesInvoice['billingAddress']; ?>"> -->
                                         <!-- <label for="email">EMAIL</label>
                                         <input type="text" class="form-control" id="email" name="email"
                                             value="<?php echo $salesInvoice['email']; ?>"> -->
@@ -204,13 +204,12 @@ $productItemsJSON = json_encode($productItems);
                                                         <option value="">Select an existing customer</option>
                                                         <?php
                                                         // Fetch customers from the database and populate the dropdown in the modal
-                                                        $query = "SELECT customerID, customerName, customerEmail, customerBillingAddress, customerShippingAddress, customerBusinessStyle FROM customers";
+                                                        $query = "SELECT customerID, customerName, customerBusinessStyle, customerTin, customerBillingAddress FROM customers";
                                                         $result = $db->query($query);
 
                                                         if ($result) {
                                                             while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
-                                                                echo "<option value='{$row['customerID']}' data-email='{$row['customerEmail']}' data-address='{$row['customerBillingAddress']}' data-shipaddress='{$row['customerShippingAddress']}
-                                                                data-businessStyle='{$row['customerBusinessStyle']}'>{$row['customerName']}</option>";
+                                                                echo "<option value='{$row['customerID']}' data-tin='{$row['customerTin']}' data-businessstyle='{$row['customerBusinessStyle']}' data-address='{$row['customerBillingAddress']}'>{$row['customerName']}</option>";
                                                             }
                                                         }
                                                         ?>
@@ -944,7 +943,7 @@ function selectExistingCustomer() {
     var customerEmail = selectedCustomer.data("email");
     var customerAddress = selectedCustomer.data("address");
     var customerShippingAddress = selectedCustomer.data("shipaddress");
-    var customerBusinessStyle = selectedCustomer.data("invoiceBusinessStyle");
+    var customerBusinessStyle = selectedCustomer.data("businessstyle");
 
     // Set the values in the manual input fields
     $("#customer").val(customerName);
