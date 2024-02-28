@@ -943,12 +943,15 @@ function selectExistingCustomer() {
     var customerEmail = selectedCustomer.data("email");
     var customerAddress = selectedCustomer.data("address");
     var customerShippingAddress = selectedCustomer.data("shipaddress");
+    var customerBusinessStyle = selectedCustomer.data("invoiceBusinessStyle");
 
     // Set the values in the manual input fields
     $("#customer").val(customerName);
     $("#email").val(customerEmail);
     $("#address").val(customerAddress);
     $("#shippingAddress").val(customerShippingAddress);
+    $("#invoiceBusinessStyle").val(customerBusinessStyle);
+    
     // Close the modal
     $("#customerModal").modal("hide");
 }
