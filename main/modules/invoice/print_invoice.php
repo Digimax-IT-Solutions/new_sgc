@@ -93,13 +93,13 @@ body {
   }
     .invoiceno {
         position: absolute;
-        left: 54px;
+        left: 35px;
         top: 150px;
         font-size: 15px;
     }
     .address {
         position: absolute;
-        left: 54px;
+        left: 35px;
         top: 170px;
         font-size: 15px;  
         text-overflow: ellipsis;
@@ -115,8 +115,8 @@ body {
     }
     .bstyle {
         position: absolute;
-        left: 350px;
-        top: 219px;
+        left: 318px;
+        top: 217px;
         font-size: 15px;
         text-align: left;
         width: 350px;
@@ -125,8 +125,8 @@ body {
     }
     .tin {
         position: absolute;
-        left: 84px;
-        top: 220px;
+        left: 65px;
+        top: 217px;
         font-size: 15px;
     }
     .po {
@@ -143,8 +143,8 @@ body {
     }
     table {
         position: absolute;
-        top: 273px;
-        left: 50px;
+        top: 270px;
+        left: 35px;
         width: 96%;
         font-size: 15px;
         table-layout: fixed;
@@ -245,10 +245,10 @@ body {
                 $rateFormatted = number_format($row['rate'], 2, '.', ',');
                 echo "<tr>
                     <td style='text-align: left; padding-bottom: 4.5px; white-space: nowrap;'>" . $row["description"] . "</td>
-                    <td style='text-align: left; padding-left: 230px; padding-bottom: 4.5px; white-space: nowrap;'>" . $row["quantity"] . "</td>
-                    <td style='text-align: left; padding-bottom: 4.5px; padding-left: 128px; white-space: nowrap;'>" . $row["uom"] . "</td>
-                    <td style='text-align: right; width: 100px; padding-right: 10px; padding-bottom: 4.5px; white-space: nowrap;'>" . $rateFormatted . "</td>
-                    <td style='text-align: right; padding-right: 53px; padding-bottom: 4.5px;'>" . $amountFormatted . "</td>
+                    <td style='text-align: left; padding-left: 240px; padding-bottom: 4.5px; white-space: nowrap;'>" . $row["quantity"] . "</td>
+                    <td style='text-align: left; padding-bottom: 4.5px; padding-left: 150px; white-space: nowrap;'>" . $row["uom"] . "</td>
+                    <td style='text-align: right; width: 100px; padding-left: 40px; padding-bottom: 4.5px; white-space: nowrap;'>" . $rateFormatted . "</td>
+                    <td style='text-align: right; padding-right: 40px; padding-bottom: 4.5px;'>" . $amountFormatted . "</td>
                 </tr>";
             }
         } else {
