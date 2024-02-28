@@ -204,12 +204,13 @@ $productItemsJSON = json_encode($productItems);
                                                         <option value="">Select an existing customer</option>
                                                         <?php
                                                         // Fetch customers from the database and populate the dropdown in the modal
-                                                        $query = "SELECT customerID, customerName, customerEmail, customerBillingAddress, customerShippingAddress FROM customers";
+                                                        $query = "SELECT customerID, customerName, customerEmail, customerBillingAddress, customerShippingAddress, customerBusinessStyle FROM customers";
                                                         $result = $db->query($query);
 
                                                         if ($result) {
                                                             while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
-                                                                echo "<option value='{$row['customerID']}' data-email='{$row['customerEmail']}' data-address='{$row['customerBillingAddress']}' data-shipaddress='{$row['customerShippingAddress']}'>{$row['customerName']}</option>";
+                                                                echo "<option value='{$row['customerID']}' data-email='{$row['customerEmail']}' data-address='{$row['customerBillingAddress']}' data-shipaddress='{$row['customerShippingAddress']}
+                                                                data-businessStyle='{$row['customerBusinessStyle']}'>{$row['customerName']}</option>";
                                                             }
                                                         }
                                                         ?>
