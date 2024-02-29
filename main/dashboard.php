@@ -174,6 +174,18 @@
                 }
             }
         });
+
+        // Add click event listener to the chart
+        ctx.canvas.addEventListener('click', function(evt) {
+            var activeElement = myChart.getElementsAtEventForMode(evt, 'nearest', {intersect: true, axis: 'xy'});
+            var clickedSegmentIndex = activeElement[0].index;
+
+            // Check if the clicked segment is the 'Past Due' segment
+            if (clickedSegmentIndex === 2) { // 'Past Due' is at index 2
+                // Redirect to sales_invoice.view.php
+                window.location.href = 'sales_invoice_pastdue';
+            }
+        });
     }
 
     document.addEventListener('DOMContentLoaded', function () {

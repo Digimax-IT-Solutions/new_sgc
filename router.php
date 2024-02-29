@@ -23,6 +23,7 @@ $pages = [
     'main/bill' => 'main/Vendor/bill.view.php',
     'main/credit' => 'main/Vendor/credit.view.php',
     'main/print_invoice' => 'main/modules/invoice/print_invoice.php',
+    'main/sales_invoice_pastdue' => 'main/sales_invoice_pastdue.view.php',
     // BANKING
     'main/write_check' => 'main/Banking/write_check.view.php',
     'main/expenses' => 'main/Banking/expenses.view.php',
