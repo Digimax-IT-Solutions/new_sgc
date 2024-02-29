@@ -87,7 +87,7 @@
             </div>
         </div>
         <!-- /.Invoice Chart -->
-        <!-- <div class="row">
+        <div class="row">
             <section class="col-lg-6">
                 <div class="card">
                     <div class="card-header">
@@ -106,7 +106,7 @@
                         </div>
                     </div>
                 </div>
-            </section> -->
+            </section>
             <!-- /.Purchase order Chart -->
             <!-- <section class="col-lg-6">
                 <div class="card">
@@ -150,11 +150,11 @@
         var myChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: ['Unpaid', 'Paid'],
+                labels: ['Unpaid', 'Paid', 'Past Due', 'Void'],
                 datasets: [{
-                    data: [data.unpaidCount, data.paidCount],
-                    backgroundColor: ['rgba(255, 99, 132, 0.2)', 'rgba(40, 167, 69, 0.2)'],
-                    borderColor: ['rgba(255, 99, 132, 1)', 'rgba(40, 167, 69, 1)'],
+                    data: [data.unpaidCount, data.paidCount, data.voidCount, data.pastDueCount],
+                    backgroundColor: ['rgba(255, 99, 132, 0.2)', 'rgba(40, 167, 69, 0.2)', 'rgba(220, 53, 69, 0.5)', 'rgba(108, 117, 125, 0.8)'],
+                    borderColor: ['rgba(255, 99, 132, 1)', 'rgba(40, 167, 69, 1)','rgba(220, 53, 69, 1)', 'rgba(108, 117, 125, 1)'],
                     borderWidth: 1,
                 }]
             },
