@@ -23,7 +23,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         // Soft delete the sales invoice
-        $softDeleteInvoiceQuery = "UPDATE sales_invoice SET invoiceStatus = 'VOID' WHERE invoiceID = :invoiceID";
+        $softDeleteInvoiceQuery = "UPDATE sales_invoice SET invoiceStatus = 'VOID', invoiceNo = 'VOID', invoicePo = 'VOID' WHERE invoiceID = :invoiceID";
         $softDeleteInvoiceStmt = $db->prepare($softDeleteInvoiceQuery);
         $softDeleteInvoiceStmt->bindParam(":invoiceID", $invoiceID);
 

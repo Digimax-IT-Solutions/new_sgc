@@ -179,7 +179,9 @@
             case 'paid':
                 return 'bg-success'; // AdminLTE class for green background
             case 'unpaid':
-                return 'bg-danger'; // AdminLTE class for red background
+                return 'bg-danger'; 
+            case 'past due':
+                return 'bg-danger';// AdminLTE class for red background
             default:
                 return 'bg-secondary'; // AdminLTE class for default background
         }

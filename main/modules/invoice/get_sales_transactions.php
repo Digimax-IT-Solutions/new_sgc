@@ -37,6 +37,16 @@ try {
         foreach ($columnsToFormat as $column) {
             $transaction["formatted_$column"] = '₱' . number_format($transaction[$column], 2);
         }
+
+        // Check if the invoice is unpaid and due date has passed, then update status to "PAST DUE"
+        $invoiceDueDate = $transaction['invoiceDueDate'];
+        if ($transaction['invoiceStatus'] == 'UNPAID' && strtotime($invoiceDueDate) < strtotime(date('d-m-Y'))) {
+            // Query to update invoice status to PAST DUE
+            $updateQuery = "UPDATE sales_invoice SET invoiceStatus = 'PAST DUE' WHERE invoiceID = :invoiceID AND invoiceStatus = 'UNPAID' AND invoiceDueDate < CURDATE()";
+            $stmtUpdate = $db->prepare($updateQuery);
+            $stmtUpdate->bindParam(':invoiceID', $transaction['invoiceID']);
+            $stmtUpdate->execute();
+        }
     }
 
     // Output sales transactions as JSON

@@ -30,6 +30,16 @@ if (isset($_GET['invoiceID'])) {
         // Fetch sales invoice items
         $salesInvoiceItems = $stmtInvoiceItems->fetchAll(PDO::FETCH_ASSOC);
 
+        // Update invoice status if due date has passed and status is UNPAID
+        $invoiceDueDate = $salesInvoice['invoiceDueDate'];
+        if ($salesInvoice['invoiceStatus'] == 'UNPAID' && strtotime($invoiceDueDate) < strtotime(date('Y-m-d'))) {
+            // Query to update invoice status to PAST DUE
+            $updateQuery = "UPDATE sales_invoice SET invoiceStatus = 'PAST DUE' WHERE invoiceID = :invoiceID AND invoiceStatus = 'UNPAID' AND invoiceDueDate < CURDATE()";
+            $stmtUpdate = $db->prepare($updateQuery);
+            $stmtUpdate->bindParam(':invoiceID', $invoiceID);
+            $stmtUpdate->execute();
+        }
+
     } else {
         // Redirect or display an error if sales invoice details are not found
         header("Location: index.php"); // Redirect to the main page or display an error message
@@ -40,8 +50,10 @@ if (isset($_GET['invoiceID'])) {
     header("Location: index.php"); // Redirect to the main page or display an error message
     exit();
 }
+
 $salesInvoiceItemsJSON = json_encode($salesInvoiceItems);
 ?>
+
 <?php
 // Fetch product items  
 // Set the batch size for fetching items
@@ -338,6 +350,9 @@ $productItemsJSON = json_encode($productItems);
                                             $status = $salesInvoice['invoiceStatus'];
                                             $statusColor = '';
                                             switch ($status) {
+                                                case 'PAST DUE':
+                                                    $statusColor = 'rgba(255, 0, 0, 0.5)';
+                                                    break;
                                                 case 'PAID':
                                                     $statusColor = 'green';
                                                     break;
@@ -572,21 +587,35 @@ $productItemsJSON = json_encode($productItems);
 
                         <!-- Submit Button -->
                         <div class="row">
-                            <div class="col-md-10 d-inline-block">
-                                <button type="button" class="btn btn-success" id="saveAndNewButton">Save and
-                                    New</button>
-                                <button type="button" class="btn btn-info" id="saveAndCloseButton">Save and
-                                    Close</button>
-                                <button type="button" class="btn btn-warning" id="clearButton">Clear</button>
-                                <button type="button" class="btn btn-danger" style="background-color: rgba(220, 53, 69, 0.8);
-                                border: 1px solid rgba(220, 53, 69, 0.8);" id="cancelButton">Void</button>
-                                <button type="button" class="btn btn-danger" id="deleteButton">Delete</button>
-                                <button type="button" class="btn btn-secondary"
-                                    data-invoice-id="<?php echo $salesInvoice['invoiceID']; ?>"
-                                    id="printButton">Print</button>
-                                
-                            </div>
-                        </div>
+    <div class="col-md-10 d-inline-block">
+        <?php
+        // Check if the invoice status is 'VOID'
+        if ($salesInvoice['invoiceStatus'] !== 'VOID') {
+            ?>
+            <button type="button" class="btn btn-success" id="saveAndNewButton">Save and New</button>
+            <button type="button" class="btn btn-info" id="saveAndCloseButton">Save and Close</button>
+            <button type="button" class="btn btn-warning" id="clearButton">Clear</button>
+            <button type="button" class="btn btn-danger" style="background-color: rgba(220, 53, 69, 0.8);
+            border: 1px solid rgba(220, 53, 69, 0.8);" id="cancelButton">Void</button>
+            <button type="button" class="btn btn-danger" id="deleteButton">Delete</button>
+            <button type="button" class="btn btn-secondary" data-invoice-id="<?php echo $salesInvoice['invoiceID']; ?>" id="printButton">Print</button>
+            <?php
+        } else {
+            // If status is 'VOID', hide buttons and change save and close button to close button
+            ?>
+            <button type="button" class="btn btn-info" id="saveAndCloseButton">Close</button>
+            <script>
+                // Hide buttons if invoice is void
+                document.getElementById('saveAndNewButton').style.display = 'none';
+                document.getElementById('clearButton').style.display = 'none';
+                document.getElementById('cancelButton').style.display = 'none';
+                document.getElementById('deleteButton').style.display = 'none';
+                document.getElementById('printButton').style.display = 'none';
+            </script>
+            <?php
+        }
+        ?>
+    </div>
 
 
                         </form>
