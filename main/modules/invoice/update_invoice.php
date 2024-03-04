@@ -50,6 +50,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $netAmountDue = $_POST["netAmountDue"];
         $vatPercentage = $_POST["vatPercentage"];
         $netOfVat = $_POST["netOfVat"];
+        $taxWithheldPercentage = $_POST["taxWithheldPercentage"];
         $totalAmountDue = $_POST["totalAmountDue"];
 
         // Validate the discountPercentage value (you may add additional validation if needed)
@@ -77,6 +78,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             netAmountDue = :netAmountDue,
             vatPercentage = :vatPercentage,
             netOfVat = :netOfVat,
+            taxWithheldPercentage = :taxWithheldPercentage,
             totalAmountDue = :totalAmountDue
             WHERE invoiceID = :invoiceID";
 
@@ -102,6 +104,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->bindParam(":netAmountDue", $netAmountDue);
         $stmt->bindParam(":vatPercentage", $vatPercentage);
         $stmt->bindParam(":netOfVat", $netOfVat);
+        $stmt->bindParam(":taxWithheldPercentage", $taxWithheldPercentage);
         $stmt->bindParam(":totalAmountDue", $totalAmountDue);
 
         if (!$stmt->execute()) {

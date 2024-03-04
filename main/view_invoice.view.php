@@ -435,7 +435,7 @@ $productItemsJSON = json_encode($productItems);
                                         </div>
                                         <div class="col-md-3 d-inline-block">
                                             <input type="number" class="form-control" name="discountPercentage"
-                                                id="discountPercentage" placeholder="Enter %">
+                                                id="discountPercentage" value="<?php echo $salesInvoice['discountPercentage'] ?>">
                                         </div>
                                         <div class="col-md-5 d-inline-block">
                                             <div class="input-group">
@@ -471,19 +471,40 @@ $productItemsJSON = json_encode($productItems);
                                             <label for="vatPercentage">VAT (%):</label>
                                         </div>
                                         <div class="col-md-3 d-inline-block">
-                                            <select class="form-control" id="vatPercentage" name="vatPercentage"
-                                                required>
-                                                <?php
-                                                $query = "SELECT salesTaxRate, salesTaxName FROM sales_tax";
-                                                $result = $db->query($query);
+                                        <?php
+                                            // Fetch the wTaxData based on vatPercentage
+                                            $querysalesTax = "SELECT * FROM sales_tax WHERE salesTaxRate = :vatPercentage";
+                                            $stmtsalesTax = $db->prepare($querysalesTax);
+                                            $stmtsalesTax->bindParam(':vatPercentage', $salesInvoice['vatPercentage']);
+                                            $stmtsalesTax->execute();
+                                            $salesTaxData = $stmtsalesTax->fetch(PDO::FETCH_ASSOC);
 
-                                                if ($result) {
-                                                    while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
-                                                        echo "<option value='{$row['salesTaxRate']}'>{$row['salesTaxName']}</option>";
+                                            echo "<select class='form-control' id='vatPercentage' name='vatPercentage' required>";
+
+                                            if ($salesTaxData) {
+                                                // If there is a match, echo the selected option
+                                                echo "<option value='{$salesTaxData['salesTaxRate']}' selected data-id='{$salesTaxData['salesTaxID']}'>{$salesTaxData['salesTaxName']}</option>";
+                                            } else {
+                                                echo "<option value='' disabled selected>Select a tax</option>"; // Default placeholder option
+                                            }   
+                                            
+                                            // Fetch all wTax options
+                                            $query = "SELECT salesTaxID, salesTaxRate, salesTaxName FROM sales_tax";
+                                            $result = $db->query($query);
+                                            
+                                            if ($result) {
+                                                while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+                                                    // Skip the option already selected
+                                                    if ($salesTaxData && $salesTaxData['salesTaxRate'] == $row['salesTaxRate']) {
+                                                        continue;
                                                     }
+                                                    echo "<option value='{$row['salesTaxRate']}' data-id='{$row['salesTaxID']}'>{$row['salesTaxName']}</option>";
                                                 }
-                                                ?>
-                                            </select>
+                                            }
+
+                                            echo "</select>";
+                                            ?>
+
                                         </div>
                                         <div class="col-md-5 d-inline-block">
                                             <div class="input-group">
@@ -1330,4 +1351,21 @@ $(document).ajaxStop(function() {
 $(document).ready(function() {
     $('.select2').select2();
 });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var vatPercentageSelect = document.getElementById('vatPercentage');
+
+        vatPercentageSelect.addEventListener('change', function(event) {
+            var selectedOption = vatPercentageSelect.options[vatPercentageSelect.selectedIndex];
+            var salesTaxID = selectedOption.getAttribute('data-id');
+            var salesTaxRate = selectedOption.value;
+            var salesTaxName = selectedOption.text;
+
+            // You can perform any action with the captured values here
+            console.log('Selected salesTaxID:', salesTaxID);
+            console.log('Selected salesTaxRate:', salesTaxRate);
+            console.log('Selected salesTaxName:', salesTaxName);
+        });
+    });
 </script>
