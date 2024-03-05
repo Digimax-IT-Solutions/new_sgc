@@ -152,7 +152,7 @@
             data: {
                 labels: ['Unpaid', 'Paid', 'Past Due', 'Void'],
                 datasets: [{
-                    data: [data.unpaidCount, data.paidCount, data.voidCount, data.pastDueCount],
+                    data: [data.unpaidCount, data.paidCount,  data.pastDueCount, data.voidCount],
                     backgroundColor: ['rgba(255, 99, 132, 0.2)', 'rgba(40, 167, 69, 0.2)', 'rgba(220, 53, 69, 0.5)', 'rgba(108, 117, 125, 0.8)'],
                     borderColor: ['rgba(255, 99, 132, 1)', 'rgba(40, 167, 69, 1)','rgba(220, 53, 69, 1)', 'rgba(108, 117, 125, 1)'],
                     borderWidth: 1,
