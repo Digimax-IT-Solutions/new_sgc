@@ -224,7 +224,10 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
                                     </div>
                                 </div>
 
-                                <center><button type="button" class="btn btn-primary" id="saveAndNewButton">Submit</button></center>
+                                <center>
+                                <button type="button" class="btn btn-info" id="saveAndCloseButton">Save and
+                                    Close</button>
+                                <button type="button" class="btn btn-danger" id="deleteButton">Delete</button></center>
                             </form>
                         </div>
                     </div>
