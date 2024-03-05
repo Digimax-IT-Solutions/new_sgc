@@ -262,6 +262,7 @@ body {
 </table>
 <div class="vat"><?php echo $vatAmount; ?></div>
 <div class="netamount"><?php echo $totalAmountDue; ?></div>
+<div class="nad"><?php echo $grossAmountFormatted; ?></div>
 
 <?php if ($vatAmount != 0): ?>
     <div class="totalamount"><?php echo $grossAmountFormatted; ?></div>
@@ -270,7 +271,6 @@ body {
     <div class="ves"><?php echo $netOfVatFormatted ?></div>  
     <div class="wvat"><?php echo $wvatAmount; ?></div>
     <div class="vat1"><?php echo $vatAmount; ?></div>
-    <div class="nad"><?php echo $grossAmountFormatted; ?></div>
 <?php endif; ?>       
 </body>
 <script>
