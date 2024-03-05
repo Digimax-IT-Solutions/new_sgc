@@ -205,6 +205,12 @@ body {
         bottom: 219px;
         font-size: 15px; 
     }
+    .zrsale {
+        position: absolute;
+        left: 317px;
+        bottom: 239px;
+        font-size: 15px;  
+    }
     
 </style>
 <body>
@@ -260,9 +266,11 @@ body {
         ?>
     </tbody>
 </table>
-<div class="vat"><?php echo $vatAmount; ?></div>
+<?php if ($vatAmount <= 0): ?>
+    <div class="zrsale"><?php echo $totalAmountDue; ?></div>
+<?php endif; ?>
+
 <div class="netamount"><?php echo $totalAmountDue; ?></div>
-<div class="nad"><?php echo $grossAmountFormatted; ?></div>
 
 <?php if ($vatAmount != 0): ?>
     <div class="totalamount"><?php echo $grossAmountFormatted; ?></div>
@@ -271,6 +279,8 @@ body {
     <div class="ves"><?php echo $netOfVatFormatted ?></div>  
     <div class="wvat"><?php echo $wvatAmount; ?></div>
     <div class="vat1"><?php echo $vatAmount; ?></div>
+    <div class="vat"><?php echo $vatAmount; ?></div>
+    <div class="nad"><?php echo $grossAmountFormatted; ?></div>
 <?php endif; ?>       
 </body>
 <script>
