@@ -260,15 +260,18 @@ body {
         ?>
     </tbody>
 </table>
-<div class="totalamount"><?php echo $grossAmountFormatted; ?></div>
-<div class="netofvat"><?php echo $netOfVatFormatted ?></div>
-<div class="netamount"><?php echo $totalAmountDue; ?></div>
 <div class="vat"><?php echo $vatAmount; ?></div>
-<div class="ves"><?php echo $netOfVatFormatted ?></div>  
-<div class="wvat"><?php echo $wvatAmount; ?></div>
-<div class="vat1"><?php echo $vatAmount; ?></div>
-<div class="netofvat2"><?php echo $vatAmount ?></div>
-<div class="nad"><?php echo $grossAmountFormatted; ?></div>           
+<div class="netamount"><?php echo $totalAmountDue; ?></div>
+
+<?php if ($vatAmount != 0): ?>
+    <div class="totalamount"><?php echo $grossAmountFormatted; ?></div>
+    <div class="netofvat"><?php echo $netOfVatFormatted ?></div>
+    <div class="netofvat2"><?php echo $vatAmount ?></div>
+    <div class="ves"><?php echo $netOfVatFormatted ?></div>  
+    <div class="wvat"><?php echo $wvatAmount; ?></div>
+    <div class="vat1"><?php echo $vatAmount; ?></div>
+    <div class="nad"><?php echo $grossAmountFormatted; ?></div>
+<?php endif; ?>       
 </body>
 <script>
         window.onload = function() {
