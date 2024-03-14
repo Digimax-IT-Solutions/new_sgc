@@ -333,11 +333,8 @@ $productItemsJSON = json_encode($productItems);
                                         <br>
                                         <div class="form-group col-md-6">
                                             <div class="custom-control custom-switch">
-                                                <input type="checkbox"
-                                                    class="custom-control-input custom-control-input-green"
-                                                    id="accountTypeSwitch" checked>
-                                                <label class="custom-control-label custom-control-label-green"
-                                                    for="accountTypeSwitch">CASH SALES</label>
+                                                <input type="checkbox" class="custom-control-input custom-control-input-green" id="accountTypeSwitch" <?php echo ($salesInvoice['paymentMethod'] == 'check') ? '' : 'checked'; ?>>
+                                                <label class="custom-control-label custom-control-label-green" for="accountTypeSwitch">CASH SALES</label>
                                             </div>
                                         </div>
                                         <br><br>
@@ -1104,13 +1101,18 @@ function selectExistingCustomer() {
 
 <script>
     $(document).ready(function() {
-        // Function to update the account options based on the switch state
-        function updateAccountOptions() {
-            var accountType = $('#accountTypeSwitch').prop('checked') ? 'Other Current Assets' : 'Accounts Receivable';
+        // Function to update the account options based on the switch state and payment method
+        function updateOptions() {
+            var paymentMethod = $('#paymentMethod').val();
+            var accountType = '';
 
-            // If the account type is 'Accounts Receivable', uncheck the checkbox
-            if (accountType === 'Accounts Receivable') {
+            // If the payment method is 'check', uncheck the checkbox and set account type to 'Accounts Receivable'
+            if (paymentMethod === 'Check') {
                 $('#accountTypeSwitch').prop('checked', false);
+                accountType = 'Accounts Receivable';
+            } else {
+                // Otherwise, set the account type based on the switch state
+                accountType = $('#accountTypeSwitch').prop('checked') ? 'Other Current Assets' : 'Accounts Receivable';
             }
 
             $.ajax({
@@ -1135,14 +1137,14 @@ function selectExistingCustomer() {
             });
         }
 
-        // Handle switch state change event
-        $('#accountTypeSwitch').on('change', function() {
-            // Update account options when the switch state changes
-            updateAccountOptions();
+        // Handle change events for both payment method select and switch
+        $('#paymentMethod, #accountTypeSwitch').on('change', function() {
+            // Update options when the payment method or switch state changes
+            updateOptions();
         });
 
-        // Call updateAccountOptions initially to set up the page
-        updateAccountOptions();
+        // Call updateOptions initially to set up the page
+        updateOptions();
     });
 </script>
 <script>

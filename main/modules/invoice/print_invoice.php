@@ -242,17 +242,24 @@ body {
         $sql = "SELECT `itemID`, `item`, `description`, `quantity`, `uom`, `rate`, `amount`, `status`, `created_at` FROM `sales_invoice_items`
             WHERE `salesInvoiceId` = '$invoiceID'";
 
+        
         $result = $conn->query($sql);
 
         // If rows are found, display them in HTML table rows
         if ($result->num_rows > 0) {
             while ($row = $result->fetch_assoc()) {
+                $prefix = '';
+                $uom = $row["uom"];
+                if (preg_match('/\((.*?)\)/', $uom, $matches)) {
+                    $prefix = $matches[1];
+                    $uom = trim(str_replace('(' . $prefix . ')', '', $uom));
+                }
                 $amountFormatted = number_format($row['amount'], 2, '.', ',');
                 $rateFormatted = number_format($row['rate'], 2, '.', ',');
                 echo "<tr>
                     <td style='text-align: left; padding-bottom: 4.5px; white-space: nowrap;'>" . $row["description"] . "</td>
                     <td style='text-align: left; padding-left: 240px; padding-bottom: 4.5px; white-space: nowrap;'>" . $row["quantity"] . "</td>
-                    <td style='text-align: left; padding-bottom: 4.5px; padding-left: 150px; white-space: nowrap;'>" . $row["uom"] . "</td>
+                    <td style='text-align: left; padding-bottom: 4.5px; padding-left: 150px; white-space: nowrap;'>" . $uom . "</td>
                     <td style='text-align: right; width: 100px; padding-left: 40px; padding-bottom: 4.5px; white-space: nowrap;'>" . $rateFormatted . "</td>
                     <td style='text-align: right; padding-right: 40px; padding-bottom: 4.5px;'>" . $amountFormatted . "</td>
                 </tr>";

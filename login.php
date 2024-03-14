@@ -55,6 +55,7 @@ if ($result) {
         $_SESSION['SESS_MEMBER_ID'] = $member['id'];
         $_SESSION['SESS_FIRST_NAME'] = $member['name'];
         $_SESSION['SESS_POSITION'] = $member['position'];
+        $_SESSION['SESS_CREATED_AT'] = $member['createdAt'];
         session_write_close();
         header("location: main/dashboard");
         exit();
