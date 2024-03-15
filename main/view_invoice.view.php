@@ -1192,7 +1192,7 @@ $(document).ajaxStop(function() {
             </td>
             <td><input type="text" class="form-control description-field" name="description[]" required></td>
             <td><input type="number" class="form-control" name="quantity[]" required></td>
-            <td><input type="text" class="form-control uom-field" name="uom[]" readonly></td>
+            <td><input type="text" class="form-control uom-field" name="uom[]"></td>
             <td><input type="number" class="form-control rate-field" name="rate[]" required></td>
             <td><input type="number" class="form-control amount-field" name="amount[]" readonly></td>
             <td><button type="button" class="btn btn-danger btn-sm removeItemBtn">Remove</button></td>

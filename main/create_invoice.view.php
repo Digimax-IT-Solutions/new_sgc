@@ -349,7 +349,7 @@ $productItemsJSON = json_encode($productItems);
                                                             $optionText = "{$row['salesTaxName']}";
 
                                                             // Check if salesTaxRate is 0.00 and salesTaxName is "Zero 0%", if so, mark it as selected
-                                                            $selected = ($row['salesTaxRate'] == 0.00 && $row['salesTaxName'] == "Zero-Rated Sales") ? 'selected' : '';
+                                                            $selected = ($row['salesTaxRate'] == 12 && $row['salesTaxName'] == "12%") ? 'selected' : '';
 
                                                             echo "<option value='{$row['salesTaxRate']}' data-id='{$row['salesTaxID']}' $selected>{$optionText}</option>";
                                                         }
@@ -907,7 +907,7 @@ function addNewItemRow(itemName, description, uom, amount, items, maxItems) {
         </td>
         <td><input type="text" class="form-control description-field" name="description[]" required></td>
         <td><input type="number" class="form-control" name="quantity[]" required></td>
-        <td><input type="text" class="form-control uom-field" name="uom[]" readonly></td>
+        <td><input type="text" class="form-control uom-field" name="uom[]"></td>
         <td><input type="number" class="form-control rate-field" name="rate[]" required></td>
         <td><input type="number" class="form-control amount-field" name="amount[]" readonly></td>
         <td><button type="button" class="btn btn-danger btn-sm removeItemBtn">Remove</button></td>
