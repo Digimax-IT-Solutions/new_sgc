@@ -138,10 +138,14 @@
                                             <!-- Place your vendor list here -->
                                             <?php
                                             // Fetch vendors with purchase orders having poStatus = 'WAITING FOR DELIVERY' from the database and populate the dropdown in the modal
-                                            $vendorQuery = "SELECT purchase_order.vendor, MIN(purchase_order.poNo) AS poNo, GROUP_CONCAT(purchase_order.poID) AS poIDs
-                    FROM purchase_order 
-                    WHERE purchase_order.poStatus = 'WAITING FOR DELIVERY'
-                    GROUP BY purchase_order.vendor";
+                                            $vendorQuery = "SELECT 
+                    purchase_order.vendor, 
+                    MIN(purchase_order.poNo) AS poNo, 
+                    GROUP_CONCAT(purchase_order.poID) AS poIDs
+                FROM purchase_order 
+                WHERE purchase_order.poStatus = 'WAITING FOR DELIVERY' 
+                    AND purchase_order.status = 'active'
+                GROUP BY purchase_order.vendor";
 
                                             try {
                                                 $vendorStmt = $db->prepare($vendorQuery);

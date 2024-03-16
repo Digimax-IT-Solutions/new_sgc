@@ -11,22 +11,27 @@ if (isset($_POST['vendor'])) {
 }
 
 
-$query = "SELECT DISTINCT purchase_order.poID,
-                purchase_order.poNo, 
-                purchase_order.poDate, 
-                purchase_order.poDueDate, 
-                purchase_order.vendor,
-                purchase_order.grossAmount, 
-                purchase_order.discountPercentage, 
-                purchase_order.netAmountDue,
-                purchase_order.vatPercentage, 
-                purchase_order.netOfVat, 
-                purchase_order.memo,
-                purchase_order.totalAmountDue,
-                purchase_order.poStatus
+$query = "SELECT DISTINCT 
+            purchase_order.poID,
+            purchase_order.poNo, 
+            purchase_order.poDate, 
+            purchase_order.poDueDate, 
+            purchase_order.vendor,
+            purchase_order.grossAmount, 
+            purchase_order.discountPercentage, 
+            purchase_order.netAmountDue,
+            purchase_order.vatPercentage, 
+            purchase_order.netOfVat, 
+            purchase_order.memo,
+            purchase_order.totalAmountDue,
+            purchase_order.poStatus,
+            purchase_order.status
           FROM purchase_order
           JOIN purchase_order_items ON purchase_order.poID = purchase_order_items.poID
-          WHERE purchase_order.vendor = :vendor AND UPPER(purchase_order.poStatus) NOT LIKE 'RECEIVED'";
+          WHERE purchase_order.vendor = :vendor 
+          AND UPPER(purchase_order.poStatus) NOT LIKE 'RECEIVED' 
+          AND purchase_order.status = 'active'";
+
 
 try {
     $stmt = $db->prepare($query);
