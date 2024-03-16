@@ -88,12 +88,12 @@ $userPosition = $_SESSION['SESS_POSITION'];
                                 <p>Sales Returns</p>
                             </a>
                         </li> -->
-                        <li class="nav-item">
+                        <!-- <li class="nav-item">
                             <a href="receive_payments" class="nav-link <?php echo ($page == 'main/receive_payments') ? 'active' : ''; ?>">
                                 <i class="nav-icon fas fa-money-check-alt"></i>
                                 <p>Receive Payment</p>
                             </a>
-                        <!-- </li>
+                        </li>
                         <li class="nav-item">
                             <a href="statement_of_account" class="nav-link <?php echo ($page == 'main/statement_of_account') ? 'active' : ''; ?>">
                                 <i class="nav-icon fas fa-file-alt"></i>
@@ -137,12 +137,12 @@ $userPosition = $_SESSION['SESS_POSITION'];
                                 <p>Purchase Returns</p>
                             </a>
                         </li> -->
-                        <li class="nav-item">
+                        <!-- <li class="nav-item">
                             <a href="" class="nav-link">
                                 <i class="nav-icon fas fa-money-check-alt"></i>
                                 <p>Pay Bills</p>
                             </a>
-                        </li>
+                        </li> -->
                     </ul>
                 </li>
                 <!-- BANKING -->
