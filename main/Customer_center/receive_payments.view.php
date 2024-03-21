@@ -24,18 +24,30 @@ include __DIR__ . ('../../includes/header.php');
         /* Change the text color on hover */
     }
 
-    #writeCheckTable {
+    #receivePaymentsTable {
         border-collapse: collapse;
         width: 100%;
+        table-layout: fixed;
+        
     }
 
-    #writeCheckTable th,
-    #writeCheckTable td {
-        padding: 2px;
-        /* Adjust the padding as needed */
+    #receivePaymentsTable th
+    {
+        font-size: 10px;
+        white-space: nowrap;
+        border: none;
+   
+    }
+    #receivePaymentsTable td {
+        font-size: 13px;
+        padding: 5px;
+        overflow: hidden; /* Hides any overflowing content */
+        border: none;
+        border-bottom: 1px solid rgb(0, 149, 77);
+      
     }
 
-    #writeCheckTable tbody tr:hover {
+    #receivePaymentsTable tbody tr:hover {
 
         color: white;
         background-color: rgb(0, 149, 77);
@@ -77,28 +89,31 @@ include __DIR__ . ('../../includes/header.php');
                                         </button>
                                         <div class="dropdown-menu" aria-labelledby="newTransactionDropdown">
                                             <a class="dropdown-item" href="create_receive_payments" style="background-color: white;">Receive Payment</a>
-                                      
+                                            <a class="dropdown-item" href="credit" style="background-color: white;">Credit And Refunds</a>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <br><br>
-                            <table id="writeCheckTable" class="table table-hover table-bordered table-striped">
+                            <table id="receivePaymentsTable" class="table table-hover table-bordered">
                                 <thead>
+
                                     <tr>
-                                        <th>REF #</th>
-                                        <th>ACCOUNT</th>
-                                        <th>PAYEE NAME</th>
-                                        <th>ADDRESS</th>
-                                        <th>CHECK DATE</th>
-                                        <th>MEMO</th>
-                                        <th>TOTAL AMOUNT</th>
+                                        <th>REF NO</th>
+                                        <th>INVOICE NO</th>
+                                        <th>RECEIVE DATE</th>
+                                        <th>AR ACCOUNT</th>
+                                        <th>CUSTOMER NAME</th>
+                                        <th>PAYMENT AMOUNT</th>
+                                        <th>PAYMENT TYPE</th>
+
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <!-- Your purchase order data will go here -->
                                 </tbody>
                             </table>
+                            
                         </div>
                     </div>
                 </div>
@@ -112,5 +127,58 @@ include __DIR__ . ('../../includes/header.php');
 
 
 <script>
+    // Variable to check if DataTables is already initialized
+    var dataTableInitialized = false;
+    // Function to fetch and populate purchase order data
+    function populateReceivePaymentsTable() {
+        $.ajax({
+            type: "GET",
+            url: "modules/customer_center/get_receive_payments.php",
+            success: function(response) {
+                var receivePayments = JSON.parse(response);
 
+                // Clear existing table rows
+                $("#receivePaymentsTable tbody").empty();
+
+                receivePayments.forEach(function(payments) {
+                    var row = `<tr>
+                    <td>${payments.RefNo}</td>
+                    <td>${payments.invoiceNo}</td>
+                    <td>${payments.receivedDate}</td>
+                    <td>${payments.ar_account}</td>
+                    <td>${payments.customerName}</td>
+                    <td>${payments.payment_amount}</td>
+                    <td>${payments.paymentType}</td>
+                  
+                </tr>`;
+
+                    $("#receivePaymentsTable tbody").append(row);
+                });
+
+                // Initialize DataTables only if it's not already initialized
+                if (!$.fn.DataTable.isDataTable("#receivePaymentsTable")) {
+                    $('#receivePaymentsTable').DataTable({
+                        // DataTable options
+                    });
+                }
+            },
+            error: function() {
+                console.error("Error fetching purchase order data.");
+            }
+        });
+    }
+
+    // Attach click event to table rows
+    // $("#purchaseOrderTable tbody").on("click", "tr", function() {
+    //     // Get the Purchase Order ID (poID) from the first cell of the clicked row
+    //     var poID = $(this).find("td:first").text();
+    //     // Redirect to the view_purchase_order.php with the poID parameter
+    //     window.location.href = "view_purchase_order?poID=" + poID;
+    // });
+
+
+    // Initial population when the page loads
+    $(document).ready(function() {
+        populateReceivePaymentsTable();
+    });
 </script>

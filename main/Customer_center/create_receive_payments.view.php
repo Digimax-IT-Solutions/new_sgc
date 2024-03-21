@@ -1,9 +1,42 @@
 <?php
 include __DIR__ . ('../../includes/header.php');
 include('connect.php');
+
+try {
+    // Prepare the SQL query
+    $query = "SELECT customerName, creditAmount FROM credits WHERE status = 'active'";
+
+    // Prepare and execute the statement
+    $statement = $db->prepare($query);
+    $statement->execute();
+
+    // Fetch all rows as an associative array
+    $credits = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+    // Create an array to store customer names with credit balances
+    $customersWithCredit = [];
+    foreach ($credits as $credit) {
+        if ($credit['creditAmount'] > 0) {
+            // Store customer names with credit balances
+            $customersWithCredit[] = $credit['customerName'];
+        }
+    }
+} catch (PDOException $e) {
+    // Handle the exception, log the error, or return an error message with MySQL error information
+    echo "Error: " . $e->getMessage();
+}
 ?>
 
 <style>
+    .invalid-border {
+        border: 2px solid red;
+        /* You can adjust the border properties as needed */
+    }
+
+    font {
+        color: black;
+    }
+
     /* Add styles for active status */
     .active {
         color: green;
@@ -63,6 +96,56 @@ include('connect.php');
     label {
         color: grey;
     }
+
+    #creditMemoTable {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    #creditMemoTable tbody {
+        color: black;
+    }
+
+    #creditMemoTable tbody td:not(.first-column) {
+        padding: 1px;
+        white-space: nowrap;
+        overflow: hidden;
+        /* Hides any overflowing content */
+        text-overflow: ellipsis;
+        width: 100px;
+        /* Adjust the width as needed */
+    }
+
+    #creditMemoTable tbody .first-column {
+        width: 20px;
+    }
+
+    .updated-amount {
+        text-align: right;
+    }
+
+    #invoice_table {
+        border-collapse: collapse;
+        width: 100%;
+        table-layout: fixed;
+    }
+
+    #invoice_table th,
+    #invoice_table td {
+        padding: 1px;
+        white-space: nowrap;
+        overflow: hidden;
+        /* Hides any overflowing content */
+        text-overflow: ellipsis;
+    }
+
+    #invoice_table tbody tr:hover {
+
+        color: white;
+        background-color: rgb(0, 149, 77);
+        /* Set your desired background color here */
+    }
 </style>
 
 <div class="content-wrapper">
@@ -91,28 +174,28 @@ include('connect.php');
                 <div class="col-12">
                     <div class="card">
                         <div class="card-body">
-                            <form action="process_payment.php" method="post">
+                            <form id="paymentForm" method="post">
                                 <div class="form-row">
                                     <div class="form-group col-md-4">
                                         <label for="ar_account">A/R ACCOUNT</label>
                                         <select name="ar_account" id="ar_account" class="form-control" required>
                                             <?php
-                                            // Fetch vendors with purchase orders having poStatus = 'WAITING FOR DELIVERY' from the database and populate the dropdown in the modal
-                                            $vendorQuery = "SELECT * FROM chart_of_accounts where account_type = 'Accounts Receivable'";
+                                            // Fetch chartsOfAccounts with purchase orders having poStatus = 'WAITING FOR DELIVERY' from the database and populate the dropdown in the modal
+                                            $chartsOfAccountQuery = "SELECT * FROM chart_of_accounts where account_type = 'Accounts Receivable'";
 
                                             try {
-                                                $vendorStmt = $db->prepare($vendorQuery);
-                                                $vendorStmt->execute();
+                                                $chartsOfAccountStmt = $db->prepare($chartsOfAccountQuery);
+                                                $chartsOfAccountStmt->execute();
 
-                                                $vendors = $vendorStmt->fetchAll(PDO::FETCH_ASSOC);
+                                                $chartsOfAccounts = $chartsOfAccountStmt->fetchAll(PDO::FETCH_ASSOC);
 
-                                                foreach ($vendors as $vendor) {
-                                                    echo "<option value='" . htmlspecialchars($vendor['account_name'], ENT_QUOTES) . "' data-poid='{$vendor['account_id']}'>" . htmlspecialchars($vendor['account_code'] . ' ' . $vendor['account_name'], ENT_QUOTES) . "</option>";
+                                                foreach ($chartsOfAccounts as $chartsOfAccount) {
+                                                    echo "<option value='" . htmlspecialchars($chartsOfAccount['account_name'], ENT_QUOTES) . "' data-poid='{$chartsOfAccount['account_id']}'>" . htmlspecialchars($chartsOfAccount['account_code'] . ' ' . $chartsOfAccount['account_name'], ENT_QUOTES) . "</option>";
                                                 }
                                             } catch (PDOException $e) {
                                                 // Handle the exception, log the error or return an error message with MySQL error information
-                                                $errorInfo = $vendorStmt->errorInfo();
-                                                $errorMessage = "Error fetching vendors: " . $errorInfo[2]; // MySQL error message
+                                                $errorInfo = $chartsOfAccountStmt->errorInfo();
+                                                $errorMessage = "Error fetching chartsOfAccounts: " . $errorInfo[2]; // MySQL error message
                                                 echo "<option value=''>$errorMessage</option>";
                                             }
                                             ?>
@@ -121,37 +204,56 @@ include('connect.php');
                                     <div class="form-group col-md-4">
                                         <label for="customer_balance">CUSTOMER BALANCE</label>
                                         <input type="text" class="form-control" id="customer_balance" name="customer_balance" readonly>
-
                                     </div>
                                 </div>
 
-
                                 <div class="form-row">
                                     <div class="form-group col-md-4">
-                                        <label for="received_from">RECEIVED FROM</label>
-                                        <select class="form-control" id="received_from" name="received_from">
-                                            <option value="">Select Customer</option>
+                                        <label for="customerName">RECEIVED FROM</label>
+                                        <select class="form-control" id="customerName" name="customerName">
+                                            <option value="" disabled selected>Select Customer</option>
+                                            <?php
+                                            // Fetch customers with purchase orders having poStatus = 'WAITING FOR DELIVERY' from the database and populate the dropdown in the modal
+                                            $customerQuery = "SELECT * FROM customers";
+
+                                            try {
+                                                $customerStmt = $db->prepare($customerQuery);
+                                                $customerStmt->execute();
+
+                                                $customers = $customerStmt->fetchAll(PDO::FETCH_ASSOC);
+
+                                                foreach ($customers as $customer) {
+                                                    echo "<option value='{$customer['customerName']}' data-balance='{$customer['customerBalance']}'>{$customer['customerName']}</option>";
+                                                }
+                                            } catch (PDOException $e) {
+                                                // Handle the exception, log the error or return an error message with MySQL error information
+                                                $errorInfo = $customerStmt->errorInfo();
+                                                $errorMessage = "Error fetching customers: " . $errorInfo[2]; // MySQL error message
+                                                echo "<option value=''>$errorMessage</option>";
+                                            }
+                                            ?>
                                         </select>
                                     </div>
                                     <div class="form-group col-md-4">
                                         <label for="payment_amount">PAYMENT AMOUNT</label>
-                                        <input type="text" class="form-control" id="payment_amount" name="payment_amount">
+                                        <input type="text" class="form-control" id="payment_amount" name="payment_amount" readonly>
+                                    </div>
+                                    <div class="form-group col-md-4" hidden>
+                                        <label for="excessAmount">EXCESS CREDIT</label>
+                                        <input type="text" class="form-control" id="excessAmount" name="excessAmount" readonly>
                                     </div>
                                     <div class="form-group col-md-4">
-                                        <label for="date">DATE</label>
-                                        <input type="date" class="form-control" id="date" name="date">
+                                        <label for="receivedDate">DATE</label>
+                                        <input type="date" class="form-control" id="receivedDate" name="receivedDate">
                                     </div>
                                 </div>
 
-                                <div class="form-row ">
+                                <div class="form-row">
                                     <div class="icon-select col-md-2">
                                         <div class="form-group">
-
-
-                                            <div class="icon-option " data-value="cash">
+                                            <div class="icon-option" data-value="cash">
                                                 <i class="fas fa-money-bill-wave"></i>CASH
                                             </div>
-
                                         </div>
                                         <div class="form-group">
                                             <div class="icon-option" data-value="check">
@@ -160,16 +262,28 @@ include('connect.php');
                                         </div>
                                     </div>
                                     <div class="form-group col-md-2" id="reference_number_group">
-                                        <label for="reference_number">REFERENCE #</label>
-                                        <input type="text" class="form-control" id="reference_number" name="reference_number">
+                                        <label for="RefNo">REFERENCE #</label>
+                                        <input type="text" class="form-control" id="RefNo" name="RefNo">
                                     </div>
-                                    <div class="form-group col-md-2" id="check_number_group">
-                                        <label for="check_number">CHECK #</label>
-                                        <input type="text" class="form-control" id="check_number" name="check_number">
+                                    <div class="form-group col-md-2" id="check_number_group" style="display: none;">
+                                        <label for="checkNo">CHECK #</label>
+                                        <input type="text" class="form-control" id="checkNo" name="RefNo">
+                                        <!-- Same name as the reference number input -->
                                     </div>
+                                    <input type="hidden" id="paymentType" name="paymentType" value="">
                                     <div class="form-group">
                                         <label for="memo">Memo</label>
                                         <textarea class="form-control" id="memo" name="memo"></textarea>
+                                    </div>
+                                    <div id="creditCheckboxIDsContainer" hidden>
+                                        <?php
+                                        // Loop through each credit checkbox and echo its ID if checked
+                                        foreach ($credits as $credit) {
+                                            if (isset($_POST['credit']) && in_array($credit['ID'], $_POST['credit'])) {
+                                                echo $credit['ID'] . ', ';
+                                            }
+                                        }
+                                        ?>
                                     </div>
                                 </div>
                                 <div class="form-group">
@@ -178,9 +292,12 @@ include('connect.php');
                                         <table id="invoice_table" class="table">
                                             <thead>
                                                 <tr>
+                                                    <th>✔</th>
                                                     <th>Date</th>
                                                     <th>Number</th>
                                                     <th>Original Amount</th>
+                                                    <th>Discount & Credit</th>
+                                                    <th>Credit</th>
                                                     <th>Amount Due</th>
                                                     <th>Payment</th>
                                                 </tr>
@@ -203,7 +320,7 @@ include('connect.php');
                                                         <div class="input-group-prepend">
                                                             <span class="input-group-text">&#8369;</span>
                                                         </div>
-                                                        <input type="text" class="form-control" name="amount_due" id="amount_due" readonly>
+                                                        <input type="text" class="form-control font-weight-bold" name="amount_due" id="amount_due" readonly>
                                                     </div>
                                                 </div>
                                             </div>
@@ -217,7 +334,21 @@ include('connect.php');
                                                         <div class="input-group-prepend">
                                                             <span class="input-group-text">&#8369;</span>
                                                         </div>
-                                                        <input type="text" class="form-control" name="applied" id="applied" readonly>
+                                                        <input type="text" class="form-control font-weight-bold" name="applied" id="applied" readonly>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <br>
+                                            <div class="row">
+                                                <div class="col-md-5 d-inline-block text-right">
+                                                    <label>Discount and Credits Applied:</label>
+                                                </div>
+                                                <div class="col-md-7 d-inline-block">
+                                                    <div class="input-group">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text">&#8369;</span>
+                                                        </div>
+                                                        <input type="text" class="form-control font-weight-bold" name="discCredapplied" id="discCredapplied" readonly>
                                                     </div>
                                                 </div>
                                             </div>
@@ -233,88 +364,96 @@ include('connect.php');
         </div>
     </section>
 
+    <!-- add discount & credit modal -->
+    <div class="modal" id="addDiscCred" tabindex="-1" role="dialog" aria-labelledby="addDiscCredLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document" style="max-width: 700px;">
+            <div class="modal-content">
+                <div class="modal-header" style="color: green;">
+                    <h5 class="modal-title" id="addDiscCredLabel"><b>Add Discount & Credit</b></h5>
+                    <button type="buttonsaveTermButton" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" style="color: white;">
+                    <form id="addDiscCredForm" style="padding: 20px; color: white; border-radius: 10px;">
+                        <div class="form-row">
+                            <!-- Left column -->
+                            <div class="col-md-6">
+                                <div class="form-group" hidden>
+                                    <label for="DiscCredID">ID</label>
+                                    <font id="DiscCredID"></font>
+                                </div>
+                                <div class="form-group">
+                                    <label for="DiscCredName">Customer</label>
+                                    <font id="DiscCredName"></font>
+                                </div>
+                                <div class="form-group">
+                                    <label for="DiscCredDate">Date</label>
+                                    <font id="DiscCredDate"></font>
+                                </div>
+                                <div class="form-group">
+                                    <label for="DiscCredNumber">Number</label>
+                                    <font id="DiscCredNumber"></font>
+                                </div>
+                                <div class="form-group">
+                                    <label for="DiscCredOrigAmt">Original Amount</label>
+                                    <font id="DiscCredOrigAmt"></font>
+                                </div>
+                            </div>
+                            <!-- Right column -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="DiscCredAmtDue">Amount Due</label>
+                                    <font id="DiscCredAmtDue"></font>
+                                </div>
+                                <div class="form-group">
+                                    <label for="DiscCredDiscountUsed">Discount Used</label>
+                                    <font id="DiscCredDiscountUsed"><strong>0.00</strong></font>
+                                </div>
+                                <div class="form-group">
+                                    <label for="DiscCredCredUsed">Credit Used</label>
+                                    <font class="font-weight-bold" id="DiscCredCredUsed"><strong></strong></font>
+                                </div>
+                                <div class="form-group">
+                                    <label for="DiscCredBalanceDue">Balance Due</label>
+                                    <font id="DiscCredBalanceDue"></font>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+
+                    <table id="creditMemoTable">
+                        <thead>
+                            <tr>
+                                <th>✔</th>
+                                <th>Credit No</th>
+                                <th>Customer Name</th>
+                                <th>Credit Amount</th>
+                                <th>Amount</th>
+                                <th>CreditBalance</th>
+                            </tr>
+                        <tbody>
+                        </tbody>
+                        </thead>
+                    </table>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button id="saveModalDataBtn" type="button" class="btn btn-primary">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /end discount & credit modal -->
 
 
     <?php include __DIR__ . ('../../includes/footer.php'); ?>
 </div>
 
-
 <script>
-    $(document).ready(function() {
-        var customerBalanceInput = $('#customer_balance'); // Move the variable declaration here
-        $.ajax({
-            url: 'modules/customer_center/get_customers.php',
-            type: 'GET',
-            success: function(response) {
-                var customers = JSON.parse(response);
-                var select = $('#received_from');
-                customers.forEach(function(customer) {
-                    var option = '<option value="' + customer.customerName + '">' + customer
-                        .customerName + '</option>';
-                    select.append(option);
-
-                    select.change(function() {
-                        var selectedCustomerName = $(this).val();
-                        var selectedCustomer = customers.find(function(customer) {
-                            return customer.customerName ===
-                                selectedCustomerName;
-                        });
-                        if (selectedCustomer) {
-                            customerBalanceInput.val(selectedCustomer.customerBalance);
-                        } else {
-                            customerBalanceInput.val('');
-                        }
-                    });
-                });
-            }
-        });
-        $('#received_from').change(function() {
-            var customerName = $(this).val();
-            console.log(customerName); // Log the response to the console
-            $.ajax({
-                url: 'modules/customer_center/get_unpaid_invoices.php',
-                type: 'POST',
-                data: {
-                    customerName: customerName
-                },
-                success: function(response) {
-                    console.log(response); // Log the response to the console
-                    var invoices = JSON.parse(response);
-                    var tableBody = $('#invoice_table tbody');
-                    tableBody.empty();
-                    if (invoices.length === 0) {
-                        tableBody.append(
-                            '<tr><td colspan="5">There are no unpaid invoices for this customer</td></tr>'
-                        );
-                    } else {
-                        invoices.forEach(function(invoice) {
-                            var row = '<tr>' +
-                                '<td>' + invoice.invoiceDate + '</td>' +
-                                '<td>' + invoice.invoiceNo + '</td>' +
-                                '<td>' + invoice.totalAmountDue + '</td>' +
-                                '<td>' + invoice.totalAmountDue + '</td>' +
-                                '<td></td>' +
-                                '</tr>';
-                            tableBody.append(row);
-                        });
-                    }
-                }
-            });
-        });
-        $(document).ready(function() {
-            $('.icon-option').click(function() {
-                $('.icon-option').removeClass('selected');
-                $(this).addClass('selected');
-                var value = $(this).data('value');
-                if (value === 'cash') {
-                    $('#reference_number_group').show();
-                    $('#check_number_group').hide();
-                } else {
-                    $('#reference_number_group').hide();
-                    $('#check_number_group').show();
-                }
-            });
-        });
-
+    $('.icon-option').click(function() {
+        $('.icon-option').removeClass('active'); // Remove active class from all options
+        $(this).addClass('active'); // Add active class to the clicked option
     });
 </script>
+<?php include('receive_payment_js.php'); ?>
