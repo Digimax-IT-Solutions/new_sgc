@@ -912,7 +912,8 @@ $(document).ready(function() {
                     // Handle the error response using SweetAlert
                     Swal.fire({
                         icon: 'error',
-                        title: 'Existing invoice #!',
+                        title: 'Check invoice #!',
+                        text: '' + response.message,
                     });
                 }
             },

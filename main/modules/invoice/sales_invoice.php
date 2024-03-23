@@ -1,8 +1,41 @@
 <?php
+/*
+    Sales Invoice Submission Script
+
+    This script processes the submission of sales invoices in an accounting system. It performs the following tasks:
+    - Initiates a session for user authentication.
+    - Connects to the database using the included connection script.
+    - Validates and sanitizes form data submitted via POST method.
+    - Begins a transaction to ensure atomicity and consistency in database operations.
+
+    Sales Invoice Data Insertion:
+    - Inserts sales invoice data into the 'sales_invoice' table.
+    - Retrieves the inserted sales invoice ID for reference.
+
+    Item Data Insertion:
+    - Iterates over each item in the invoice and inserts item data into the 'sales_invoice_items' table.
+    - Updates the quantity of items in the 'items' table.
+
+    Database Transaction Commit:
+    - Commits the database transaction if all operations are successful.
+
+    Audit Trail Logging:
+    - Logs the creation of the sales invoice in the 'audit_trail' table for tracking changes.
+
+    Customer Existence Check and Insertion:
+    - Checks if the customer exists in the 'customers' table. If not, inserts customer information.
+
+    Exception Handling:
+    - Rolls back the transaction and outputs an error message in case of any exceptions.
+
+    Note: Ensure proper validation and error handling are implemented for production use.
+*/
+
+// Start session for user authentication
 session_start();
 
 // Include the database connection script
-include ('../connect.php');
+include('../connect.php');
 
 // Check if the form is submitted using POST method
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -12,18 +45,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // Retrieve and sanitize form data
         $invoiceNo = $_POST["invoiceNo"];
-
-        if ($invoiceNo !== null) {
-            $checkInvoiceNoQuery = "SELECT COUNT(*) FROM sales_invoice WHERE invoiceNo = :invoiceNo";
-            $checkInvoiceNoStmt = $db->prepare($checkInvoiceNoQuery);
-            $checkInvoiceNoStmt->bindParam(":invoiceNo", $invoiceNo);
-            $checkInvoiceNoStmt->execute();
-
-            if ($checkInvoiceNoStmt->fetchColumn() > 0) {
-                throw new Exception("Invoice with the same invoiceNo already exists.");
-            }
-        }
-
         $invoiceDate = $_POST["invoiceDate"];
         $invoiceDueDate = $_POST["invoiceDueDate"];
         $invoiceBusinessStyle = $_POST["invoiceBusinessStyle"];
@@ -39,7 +60,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $memo = $_POST["memo"];
         $paymentMethod = $_POST["paymentMethod"];
         $grossAmount = $_POST["grossAmount"];
-        $discountPercentage = isset ($_POST["discountPercentage"]) ? $_POST["discountPercentage"] : 0;
+        $discountPercentage = isset($_POST["discountPercentage"]) ? $_POST["discountPercentage"] : 0;
         $netAmountDue = $_POST["netAmountDue"];
         $vatPercentage = $_POST["vatPercentage"];
         $netOfVat = $_POST["netOfVat"];
@@ -130,7 +151,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Execute the sales invoice insertion
         if ($stmt->execute()) {
             $salesInvoiceID = $db->lastInsertId(); // Get the ID of the inserted sales invoice
-
+         
             // Iterate over each item and insert into the database
             foreach ($_POST["item"] as $key => $item) {
                 $description = $_POST["description"][$key];
@@ -250,39 +271,39 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         // Retrieve the customer's balance from the database
-        $getCustomerBalanceQuery = "SELECT customerBalance FROM customers WHERE customerID = :customerID";
+$getCustomerBalanceQuery = "SELECT customerBalance FROM customers WHERE customerID = :customerID";
 
-        // Prepare the SQL statement for retrieving the customer's balance
-        $getCustomerBalanceStmt = $db->prepare($getCustomerBalanceQuery);
+// Prepare the SQL statement for retrieving the customer's balance
+$getCustomerBalanceStmt = $db->prepare($getCustomerBalanceQuery);
 
-        // Bind parameters for retrieving the customer's balance
-        $getCustomerBalanceStmt->bindParam(":customerID", $customerID);
+// Bind parameters for retrieving the customer's balance
+$getCustomerBalanceStmt->bindParam(":customerID", $customerID);
 
-        // Execute the retrieval of the customer's balance
-        if (!$getCustomerBalanceStmt->execute()) {
-            throw new Exception("Error retrieving customer balance from the customers table.");
-        }
+// Execute the retrieval of the customer's balance
+if (!$getCustomerBalanceStmt->execute()) {
+    throw new Exception("Error retrieving customer balance from the customers table.");
+}
 
-        // Fetch the customer's balance
-        $customerBalance = $getCustomerBalanceStmt->fetchColumn();
+// Fetch the customer's balance
+$customerBalance = $getCustomerBalanceStmt->fetchColumn();
 
-        // Calculate the new balance
-        $newBalance = $totalAmountDue + $customerBalance;
+// Calculate the new balance
+$newBalance = $totalAmountDue + $customerBalance;
 
-        // Update the customer's balance in the customers table
-        $updateCustomerBalanceQuery = "UPDATE customers SET customerBalance = :newBalance WHERE customerID = :customerID";
+// Update the customer's balance in the customers table
+$updateCustomerBalanceQuery = "UPDATE customers SET customerBalance = :newBalance WHERE customerID = :customerID";
 
-        // Prepare the SQL statement for updating the customer's balance
-        $updateCustomerBalanceStmt = $db->prepare($updateCustomerBalanceQuery);
+// Prepare the SQL statement for updating the customer's balance
+$updateCustomerBalanceStmt = $db->prepare($updateCustomerBalanceQuery);
 
-        // Bind parameters for updating the customer's balance
-        $updateCustomerBalanceStmt->bindParam(":newBalance", $newBalance);
-        $updateCustomerBalanceStmt->bindParam(":customerID", $customerID);
+// Bind parameters for updating the customer's balance
+$updateCustomerBalanceStmt->bindParam(":newBalance", $newBalance);
+$updateCustomerBalanceStmt->bindParam(":customerID", $customerID);
 
-        // Execute the update of the customer's balance
-        if (!$updateCustomerBalanceStmt->execute()) {
-            throw new Exception("Error updating customer balance in the customers table.");
-        }
+// Execute the update of the customer's balance
+if (!$updateCustomerBalanceStmt->execute()) {
+    throw new Exception("Error updating customer balance in the customers table.");
+}
 
     } catch (Exception $e) {
         // Rollback the database transaction on exception

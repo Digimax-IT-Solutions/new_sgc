@@ -1,6 +1,6 @@
 <?php include __DIR__ . ('/includes/header.php'); ?>
 <?php
-include ('connect.php');
+include('connect.php');
 
 // Fetch product items
 $query = "SELECT itemName, itemSalesInfo, itemSrp, uom FROM items";
@@ -30,7 +30,6 @@ $productItemsJSON = json_encode($productItems);
         font-size: 90%;
         /* Adjust the percentage as needed */
     }
-
     .memo {
         position: absolute;
         left: 15px;
@@ -90,8 +89,7 @@ $productItemsJSON = json_encode($productItems);
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item"><a style="color:maroon;" href="dashboard">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a style="color:maroon;" href="sales_invoice">Sales Transaction</a>
-                        </li>
+                        <li class="breadcrumb-item"><a style="color:maroon;" href="sales_invoice">Sales Transaction</a></li>
                         <li class="breadcrumb-item active">Create Sales Invoice</li>
 
                     </ol>
@@ -115,44 +113,34 @@ $productItemsJSON = json_encode($productItems);
                                         <label for="customer">CUSTOMER NAME | <span><a href="customer_list">Add new
                                                     customer</a></span></label>
                                         <div class="input-group">
-                                            <input type="text" class="form-control" id="customer" name="customer"
-                                                placeholder="Select customer">
+                                            <input type="text" class="form-control" id="customer" name="customer" placeholder="Select customer">
                                             <div class="input-group-append">
-                                                <button class="btn btn-outline-secondary"
-                                                    style="background-color: rgb(0, 149, 77); color: white; font-size: 70%;"
-                                                    type="button" data-toggle="modal"
-                                                    data-target="#customerModal">Select</button>
+                                                <button class="btn btn-outline-secondary" style="background-color: rgb(0, 149, 77); color: white; font-size: 70%;" type="button" data-toggle="modal" data-target="#customerModal">Select</button>
                                             </div>
                                         </div>
                                         <label for="address">BILLING ADDRESS</label>
-                                        <textarea class="form-control" id="address" name="address" rows="2"
-                                            cols="50"></textarea>
+                                        <textarea class="form-control" id="address" name="address" rows="2" cols="50"></textarea>
                                         <!-- <label for="shippingAddress">SHIPPING ADDRESS</label>
                                         <input type="text" class="form-control" id="shippingAddress" name="shippingAddress"> -->
                                         <label for="invoiceTin">TIN:</label>
-                                        <input type="text" class="form-control" id="invoiceTin" name="invoiceTin"
-                                            required>
-
+                                        <input type="text" class="form-control" id="invoiceTin" name="invoiceTin" required>
+        
                                     </div>
                                     <!-- Modal for selecting existing customers -->
-                                    <div class="modal" id="customerModal" tabindex="-1" role="dialog"
-                                        aria-labelledby="customerModalLabel" aria-hidden="true">
+                                    <div class="modal" id="customerModal" tabindex="-1" role="dialog" aria-labelledby="customerModalLabel" aria-hidden="true">
                                         <div class="modal-dialog modal-dialog-centered" role="document">
                                             <div class="modal-content">
                                                 <div class="modal-header">
 
-                                                    <h5 class="modal-title" id="customerModalLabel">Select Customer | <a
-                                                            href="customer_list">Add new
-                                                            customer</a></h5>
-                                                    <button type="button" class="close" data-dismiss="modal"
-                                                        aria-label="Close">
+                                                    <h5 class="modal-title" id="customerModalLabel">Select Customer | <a href="customer_list">Add new
+                                                    customer</a></h5>
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                                         <span aria-hidden="true">&times;</span>
                                                     </button>
                                                 </div>
                                                 <div class="modal-body">
                                                     <!-- Place your customer list here -->
-                                                    <select class="form-control" id="existingCustomer"
-                                                        name="existingCustomer">
+                                                    <select class="form-control" id="existingCustomer" name="existingCustomer">
                                                         <option value="">Select an existing customer</option>
                                                         <?php
                                                         // Fetch customers from the database and populate the dropdown in the modal
@@ -168,11 +156,8 @@ $productItemsJSON = json_encode($productItems);
                                                     </select>
                                                 </div>
                                                 <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary"
-                                                        data-dismiss="modal">Close</button>
-                                                    <button type="button" class="btn btn-primary"
-                                                        style="background-color: rgb(0, 149, 77); color: white;"
-                                                        onclick="selectExistingCustomer()">Select Customer</button>
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                                    <button type="button" class="btn btn-primary" style="background-color: rgb(0, 149, 77); color: white;" onclick="selectExistingCustomer()">Select Customer</button>
                                                 </div>
                                             </div>
                                         </div>
@@ -180,16 +165,14 @@ $productItemsJSON = json_encode($productItems);
 
 
                                     <div class="form-group col-md-3">
-                                        <label for="selectAccount">SELECT ACCOUNT | <span><a
-                                                    href="chart_of_accounts">Add New Account</a></span></label>
+                                        <label for="selectAccount">SELECT ACCOUNT | <span><a href="chart_of_accounts">Add New Account</a></span></label>
                                         <select class="form-control" id="selectAccount" name="selectAccount" required>
                                             <option value="">Select an Account</option>
                                             <!-- Options will be dynamically populated using JavaScript/jQuery -->
                                         </select>
 
                                         <!-- PAYMENT METHOD -->
-                                        <label for="paymentMethod">PAYMENT METHOD | <span><a
-                                                    href="payment_method_list">Add
+                                        <label for="paymentMethod">PAYMENT METHOD | <span><a href="payment_method_list">Add
                                                     New
                                                     Payment</a></span></label>
                                         <select class="form-control" id="paymentMethod" name="paymentMethod" required>
@@ -206,19 +189,16 @@ $productItemsJSON = json_encode($productItems);
                                             ?>
                                         </select>
                                         <label for="invoiceBusinessStyle">BUSINESS STYLE</label>
-                                        <input type="text" class="form-control" id="invoiceBusinessStyle"
-                                            name="invoiceBusinessStyle" required>
+                                        <input type="text" class="form-control" id="invoiceBusinessStyle" name="invoiceBusinessStyle" required>
                                         <br>
                                     </div>
 
                                     <!-- Terms -->
                                     <div class="form-group col-md-1">
                                         <label for="invoiceNo">INVOICE #</label>
-                                        <input type="text" class="form-control" id="invoiceNo" name="invoiceNo"
-                                            required>
+                                        <input type="text" class="form-control" id="invoiceNo" name="invoiceNo" required>
                                         <label for="invoicePo">PO NUMBER</label>
-                                        <input type="text" class="form-control" id="invoicePo" name="invoicePo"
-                                            required>
+                                        <input type="text" class="form-control" id="invoicePo" name="invoicePo" required> 
                                         <!-- LOCATION -->
                                         <!-- <label for="location">LOCATION | <span><a href="location_list">Add New
                                                     Location</a></span></label>
@@ -238,9 +218,8 @@ $productItemsJSON = json_encode($productItems);
 
                                     </div>
                                     <div class="form-group col-md-2">
-                                        <label for="invoiceDate">INVOICE DATE</label>
-                                        <input type="date" class="form-control" id="invoiceDate" name="invoiceDate"
-                                            required>
+                                    <label for="invoiceDate">INVOICE DATE</label>
+                                        <input type="date" class="form-control" id="invoiceDate" name="invoiceDate" required>
                                         <label for="terms">TERMS | <span><a href="terms_list">Add New
                                                     Terms</a></span></label>
                                         <select class="form-control" id="terms" name="terms" required>
@@ -257,16 +236,12 @@ $productItemsJSON = json_encode($productItems);
                                             ?>
                                         </select>
                                         <label for="invoiceDueDate">INVOICE DUE DATE</label>
-                                        <input type="date" class="form-control" id="invoiceDueDate"
-                                            name="invoiceDueDate" required>
+                                        <input type="date" class="form-control" id="invoiceDueDate" name="invoiceDueDate" required>
                                         <br>
                                         <div class="form-group col-md-6">
                                             <div class="custom-control custom-switch">
-                                                <input type="checkbox"
-                                                    class="custom-control-input custom-control-input-green"
-                                                    id="accountTypeSwitch" checked>
-                                                <label class="custom-control-label custom-control-label-green"
-                                                    for="accountTypeSwitch">CASH SALES</label>
+                                                <input type="checkbox" class="custom-control-input custom-control-input-green" id="accountTypeSwitch" checked>
+                                                <label class="custom-control-label custom-control-label-green" for="accountTypeSwitch">CASH SALES</label>
                                             </div>
                                         </div>
                                     </div>
@@ -301,13 +276,12 @@ $productItemsJSON = json_encode($productItems);
                                         <div class="container">
                                             <!-- GORSS AMOUNT -->
                                             <div class="row">
-
-                                                <div class="memo">
-                                                    <label for="memo">MEMO:</label>
-                                                    <textarea class="form-control" id="memo" name="memo" rows="3"
-                                                        cols="50"></textarea>
-                                                </div>
-
+                                            
+                                            <div class="memo">
+                                            <label for="memo">MEMO:</label>
+                                            <textarea class="form-control" id="memo" name="memo" rows="3" cols="50"></textarea>
+                                            </div>
+                                            
                                                 <div class="col-md-4 d-inline-block text-right">
                                                     <label>Gross Amount:</label>
                                                 </div>
@@ -319,8 +293,7 @@ $productItemsJSON = json_encode($productItems);
                                                         <div class="input-group-prepend">
                                                             <span class="input-group-text">&#8369;</span>
                                                         </div>
-                                                        <input type="text" class="form-control" name="grossAmount"
-                                                            id="grossAmount" readonly>
+                                                        <input type="text" class="form-control" name="grossAmount" id="grossAmount" readonly>
                                                     </div>
                                                 </div>
                                             </div>
@@ -331,16 +304,14 @@ $productItemsJSON = json_encode($productItems);
                                                         (%):</label>
                                                 </div>
                                                 <div class="col-md-3 d-inline-block">
-                                                    <input type="number" class="form-control" name="discountPercentage"
-                                                        id="discountPercentage" placeholder="Enter %">
+                                                    <input type="number" class="form-control" name="discountPercentage" id="discountPercentage" placeholder="Enter %">
                                                 </div>
                                                 <div class="col-md-5 d-inline-block">
                                                     <div class="input-group">
                                                         <div class="input-group-prepend">
                                                             <span class="input-group-text">&#8369;</span>
                                                         </div>
-                                                        <input type="text" class="form-control" name="discountAmount"
-                                                            id="discountAmount" readonly>
+                                                        <input type="text" class="form-control" name="discountAmount" id="discountAmount" readonly>
                                                     </div>
                                                 </div>
                                             </div>
@@ -357,8 +328,7 @@ $productItemsJSON = json_encode($productItems);
                                                         <div class="input-group-prepend">
                                                             <span class="input-group-text">&#8369;</span>
                                                         </div>
-                                                        <input type="text" class="form-control" name="netAmountDue"
-                                                            id="netAmountDue" readonly>
+                                                        <input type="text" class="form-control" name="netAmountDue" id="netAmountDue" readonly>
                                                     </div>
                                                 </div>
                                             </div>
@@ -368,7 +338,7 @@ $productItemsJSON = json_encode($productItems);
                                                     <label for="vatPercentage">VAT (%):</label>
                                                 </div>
                                                 <div class="col-md-3 d-inline-block">
-                                                    <?php
+                                                <?php
                                                     $query = "SELECT salesTaxID, salesTaxRate, salesTaxName FROM sales_tax";
                                                     $result = $db->query($query);
                                                     echo "<select class='form-control' id='vatPercentage' name='vatPercentage' required>";
@@ -386,16 +356,14 @@ $productItemsJSON = json_encode($productItems);
                                                     }
 
                                                     echo "</select>";
-                                                    ?>
+                                                ?>
                                                 </div>
                                                 <div class="col-md-5 d-inline-block">
                                                     <div class="input-group">
                                                         <div class="input-group-prepend">
                                                             <span class="input-group-text">&#8369;</span>
                                                         </div>
-                                                        <input type="text" class="form-control"
-                                                            name="vatPercentageAmount" id="vatPercentageAmount"
-                                                            readonly>
+                                                        <input type="text" class="form-control" name="vatPercentageAmount" id="vatPercentageAmount" readonly>
                                                     </div>
                                                 </div>
                                             </div>
@@ -412,8 +380,7 @@ $productItemsJSON = json_encode($productItems);
                                                         <div class="input-group-prepend">
                                                             <span class="input-group-text">&#8369;</span>
                                                         </div>
-                                                        <input type="text" class="form-control" name="netOfVat"
-                                                            id="netOfVat" readonly>
+                                                        <input type="text" class="form-control" name="netOfVat" id="netOfVat" readonly>
                                                     </div>
                                                 </div>
                                             </div>
@@ -423,31 +390,30 @@ $productItemsJSON = json_encode($productItems);
                                                     <label>Tax Withheld (%):</label>
                                                 </div>
                                                 <div class="col-md-3 d-inline-block">
-                                                    <select class="form-control" id="taxWithheldPercentage"
+                                                <select class="form-control" id="taxWithheldPercentage"
                                                         name="taxWithheldPercentage" required>
-
+                                                        
                                                         <?php
-                                                        $query = "SELECT wTaxRate, wTaxName FROM wtax ORDER BY wTaxCode";
-                                                        $result = $db->query($query);
+                                                    $query = "SELECT wTaxRate, wTaxName FROM wtax ORDER BY wTaxCode";
+                                                    $result = $db->query($query);
 
-                                                        if ($result) {
-                                                            while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
-                                                                // Check if wTaxRate is 0.00 and wTaxName is "Zero 0%", if so, mark it as selected
-                                                                $selected = ($row['wTaxRate'] == 0.00 && $row['wTaxName'] == "Zero 0%") ? 'selected' : '';
-                                                                echo "<option value='{$row['wTaxRate']}' $selected>{$row['wTaxName']}</option>";
-                                                            }
+                                                    if ($result) {
+                                                        while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+                                                            // Check if wTaxRate is 0.00 and wTaxName is "Zero 0%", if so, mark it as selected
+                                                            $selected = ($row['wTaxRate'] == 0.00 && $row['wTaxName'] == "Zero 0%") ? 'selected' : '';
+                                                            echo "<option value='{$row['wTaxRate']}' $selected>{$row['wTaxName']}</option>";
                                                         }
-                                                        ?>
+                                                    }
+                                                    ?>
                                                     </select>
-                                                </div>
+                                                </div>  
                                                 <div class="col-md-5 d-inline-block">
                                                     <div class="input-group">
                                                         <div class="input-group">
                                                             <div class="input-group-prepend">
                                                                 <span class="input-group-text">&#8369;</span>
                                                             </div>
-                                                            <input type="text" class="form-control"
-                                                                name="taxWitheldAmount" id="taxWitheldAmount" readonly>
+                                                            <input type="text" class="form-control" name="taxWitheldAmount" id="taxWitheldAmount" readonly>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -463,8 +429,7 @@ $productItemsJSON = json_encode($productItems);
                                                         <div class="input-group-prepend">
                                                             <span class="input-group-text">&#8369;</span>
                                                         </div>
-                                                        <input type="text" class="form-control" name="totalAmountDue"
-                                                            id="totalAmountDue" readonly>
+                                                        <input type="text" class="form-control" name="totalAmountDue" id="totalAmountDue" readonly>
                                                     </div>
                                                 </div>
                                             </div>
@@ -476,14 +441,13 @@ $productItemsJSON = json_encode($productItems);
                                 <!-- Submit Button -->
                                 <div class="row">
                                     <div class="col-md-10 d-inline-block">
-                                        <button type="button" class="btn btn-primary"
-                                            id="saveInvoiceButton">Save</button>
+                                        <button type="button" class="btn btn-primary" id="saveInvoiceButton">Save</button>
                                         <button type="button" class="btn btn-success" id="saveAndNewButton">Save and
                                             New</button>
                                         <button type="button" class="btn btn-info" id="saveAndCloseButton">Save and
                                             Close</button>
                                         <button type="button" class="btn btn-warning" id="clearButton">Clear</button>
-
+                                         
                                     </div>
                                 </div>
 
@@ -496,18 +460,18 @@ $productItemsJSON = json_encode($productItems);
             </div>
         </div>
     </section>
-    <?php include ('includes/footer.php'); ?>
+    <?php include('includes/footer.php'); ?>
 </div>
 
 
 
 <!-- DATE -->
 <script>
-    // Use the fetched data in JavaScript
-    var productItems = <?php echo $productItemsJSON; ?>;
+// Use the fetched data in JavaScript
+var productItems = <?php echo $productItemsJSON; ?>;
 </script>
 <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
         // Function to set the formatted date value for a given input field
         function setFormattedDate(inputField, date) {
             var formattedDate = date.toISOString().split('T')[0];
@@ -533,12 +497,12 @@ $productItemsJSON = json_encode($productItems);
         setFormattedDate($("#invoiceDate"), currentDate);
 
         // Event listener for when the receiveItemDate input changes
-        $("#invoiceDate").on("change", function () {
+        $("#invoiceDate").on("change", function() {
             updateDueDate();
         });
 
         // Event listener for when the terms dropdown changes
-        $("#terms").on("change", function () {
+        $("#terms").on("change", function() {
             updateDueDate();
         });
 
@@ -568,7 +532,7 @@ $productItemsJSON = json_encode($productItems);
 
 <!-- SELECT ACCOUNTS -->
 <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
         // Function to update the account options based on the switch state
         function updateAccountOptions() {
             var accountType = $('#accountTypeSwitch').prop('checked') ? 'Other Current Assets' :
@@ -579,7 +543,7 @@ $productItemsJSON = json_encode($productItems);
                 data: {
                     accountType: accountType
                 },
-                success: function (response) {
+                success: function(response) {
                     // Parse the JSON response
                     var options = JSON.parse(response);
 
@@ -591,13 +555,13 @@ $productItemsJSON = json_encode($productItems);
                         'Undeposited Fund');
 
                     // Add new options to the dropdown
-                    options.forEach(function (option) {
+                    options.forEach(function(option) {
                         $("#selectAccount").append(
                             `<option value='${option.account_name}' ${undepositedFundsOption && option.account_name === 'Undeposited Fund' ? 'selected' : ''}>${option.account_name}</option>`
                         );
                     });
                 },
-                error: function () {
+                error: function() {
                     console.log("Error fetching account options.");
                 }
             });
@@ -606,7 +570,7 @@ $productItemsJSON = json_encode($productItems);
         updateAccountOptions();
 
         // Handle switch state change event
-        $('#accountTypeSwitch').on('change', function () {
+        $('#accountTypeSwitch').on('change', function() {
             // Update account options when the switch state changes
             updateAccountOptions();
         });
@@ -615,13 +579,13 @@ $productItemsJSON = json_encode($productItems);
 
 
 <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
         // Function to save form data to localStorage
         function saveFormData() {
             const formData = {};
             // Collect form data
             const inputs = $("#salesInvoiceForm").find('input, select, textarea');
-            inputs.each(function () {
+            inputs.each(function() {
                 formData[$(this).attr('name')] = $(this).val();
             });
             // Store form data in localStorage
@@ -629,20 +593,20 @@ $productItemsJSON = json_encode($productItems);
 
             // Display a SweetAlert notification
             if (!isFormValid()) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Fill-Up First',
-                    showConfirmButton: false,
-                    timer: 1500
-                });
+            Swal.fire({
+                icon: 'error',
+                title: 'Fill-Up First',
+                showConfirmButton: false,
+                timer: 1500
+            });
             }
-            else {
+            else{
                 Swal.fire({
-                    icon: 'success',
-                    title: 'Data saved successfully',
-                    showConfirmButton: false,
-                    timer: 1500
-                });
+                icon: 'success',
+                title: 'Data saved successfully',
+                showConfirmButton: false,
+                timer: 1500
+            });
             }
         }
 
@@ -657,7 +621,7 @@ $productItemsJSON = json_encode($productItems);
             if (savedData) {
                 const formData = JSON.parse(savedData);
                 // Set form input values
-                $.each(formData, function (name, value) {
+                $.each(formData, function(name, value) {
                     const input = $("#salesInvoiceForm").find('[name="' + name + '"]');
                     if (input.length) {
                         input.val(value);
@@ -670,16 +634,16 @@ $productItemsJSON = json_encode($productItems);
         loadFormData();
 
         // Save form data and show SweetAlert when the save button is clicked
-        $("#saveInvoiceButton").on("click", function () {
+        $("#saveInvoiceButton").on("click", function() {
             saveFormData();
         });
 
         // Clear saved form data when the form is submitted or cleared
-        $("#saveAndCloseButton, #saveAndNewButton, #clearButton").on('click', function () {
+        $("#saveAndCloseButton, #saveAndNewButton, #clearButton").on('click', function() {
             clearFormData();
         });
 
-        $("#clearButton").on("click", function () {
+        $("#clearButton").on("click", function() {
             // Reset all form fields to their default values
             $("#salesInvoiceForm")[0].reset();
 
@@ -688,7 +652,7 @@ $productItemsJSON = json_encode($productItems);
             $("#itemTableBody").empty();
         });
 
-        $("#saveAndCloseButton").on("click", function () {
+        $("#saveAndCloseButton").on("click", function() {
             // Validate the form
             if (!isFormValid()) {
                 // Show SweetAlert error if the form is not valid
@@ -707,29 +671,20 @@ $productItemsJSON = json_encode($productItems);
                 url: 'modules/invoice/sales_invoice.php',
                 method: 'POST',
                 data: $("#salesInvoiceForm").serialize(),
-                success: function (response) {
-                    if (response.status === 'success') {
-                        // Handle the success response using SweetAlert
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success!',
-                            text: response.message,
-                        }).then((result) => {
-                            // Redirect to the purchase_order page after clicking OK
-                            if (result.isConfirmed) {
-                                window.location.href = 'sales_invoice';
-                            }
-                        });
-                    } else {
-                        // Handle the error response using SweetAlert
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Check invoice #!',
-                            text: '' + response.message,
-                        });
-                    }
+                success: function(response) {
+                    // Handle the success response using SweetAlert
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: response,
+                    }).then((result) => {
+                        // Redirect to the sales_invoice page after clicking OK
+                        if (result.isConfirmed) {
+                            window.location.href = 'sales_invoice';
+                        }
+                    });
                 },
-                error: function (xhr, status, error) {
+                error: function(xhr, status, error) {
                     // Handle the error response using SweetAlert
                     Swal.fire({
                         icon: 'error',
@@ -740,7 +695,7 @@ $productItemsJSON = json_encode($productItems);
                 }
             });
         });
-        $("#saveAndNewButton").on("click", function () {
+        $("#saveAndNewButton").on("click", function() {
             // Validate the form
             if (!isFormValid()) {
                 // Show SweetAlert error if the form is not valid
@@ -759,7 +714,7 @@ $productItemsJSON = json_encode($productItems);
                 url: 'modules/invoice/sales_invoice.php',
                 method: 'POST',
                 data: $("#salesInvoiceForm").serialize(),
-                success: function (response) {
+                success: function(response) {
                     // Handle the success response using SweetAlert
                     Swal.fire({
                         icon: 'success',
@@ -772,7 +727,7 @@ $productItemsJSON = json_encode($productItems);
                         }
                     });
                 },
-                error: function (xhr, status, error) {
+                error: function(xhr, status, error) {
                     // Handle the error response using SweetAlert
                     Swal.fire({
                         icon: 'error',
@@ -812,16 +767,16 @@ $productItemsJSON = json_encode($productItems);
                 resetInvalidField($("#invoiceDueDate"));
             }
 
-            // Add validation logic for each required field
-            if ($("#invoiceBusinessStyle").val() === '') {
+             // Add validation logic for each required field
+             if ($("#invoiceBusinessStyle").val() === '') {
                 isValid = false;
                 highlightInvalidField($("#invoiceBusinessStyle"));
             } else {
                 resetInvalidField($("#invoiceBusinessStyle"));
             }
 
-            // Add validation logic for each required field
-            if ($("#invoicePo").val() === '') {
+             // Add validation logic for each required field
+             if ($("#invoicePo").val() === '') {
                 isValid = false;
                 highlightInvalidField($("#invoicePo"));
             } else {
@@ -850,7 +805,7 @@ $productItemsJSON = json_encode($productItems);
                 resetInvalidField($("#shippingAddress"));
             }
             // Add validation logic for each required field
-
+           
             // Add validation logic for each required field
             if ($("#selectAccount").val() === '') {
                 isValid = false;
@@ -883,13 +838,13 @@ $productItemsJSON = json_encode($productItems);
                 resetInvalidField($("#paymentMethod"));
             }
 
-
+            
 
             if ($("#itemTableBody tr").length === 0) {
                 isValid = false;
             } else {
                 // Iterate through each row
-                $("#itemTableBody tr").each(function () {
+                $("#itemTableBody tr").each(function() {
                     var itemName = $(this).find(".item-dropdown").val();
                     var description = $(this).find(".description-field").val();
                     var quantity = $(this).find("[name='quantity[]']").val();
@@ -924,26 +879,26 @@ $productItemsJSON = json_encode($productItems);
         function resetInvalidField(field) {
             field.removeClass("is-invalid");
         }
-
+        
         var itemCount = 0; // Variable to keep track of the count of added items
         var maxItems = 17; // Maximum number of items allowed
 
-        function addNewItemRow(itemName, description, uom, amount, items, maxItems) {
-            if (itemCount >= maxItems) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Oops...',
-                    text: 'You can only add up to ' + maxItems + ' items. Please create a new invoice for additional items.'
-                });
-                return; // Exit the function if the limit is reached
-            }
+function addNewItemRow(itemName, description, uom, amount, items, maxItems) {
+    if (itemCount >= maxItems) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: 'You can only add up to ' + maxItems + ' items. Please create a new invoice for additional items.'
+        });
+        return; // Exit the function if the limit is reached
+    }
 
-            // Create a dropdown for selecting items
-            var itemOptions = items.map(item =>
-                `<option value="${item.itemName}" data-uom="${item.uom}" data-description="${item.itemSalesInfo}" data-amount="${item.itemCost}">${item.itemName}</option>`
-            ).join('');
+    // Create a dropdown for selecting items
+    var itemOptions = items.map(item =>
+        `<option value="${item.itemName}" data-uom="${item.uom}" data-description="${item.itemSalesInfo}" data-amount="${item.itemCost}">${item.itemName}</option>`
+    ).join('');
 
-            var newRow = `<tr>
+    var newRow = `<tr>
         <td>
             <select class="item-dropdown select2" style="width: 400px;" name="item[]" required>
                 <option value="" selected disabled>Select an Item</option>
@@ -958,45 +913,45 @@ $productItemsJSON = json_encode($productItems);
         <td><button type="button" class="btn btn-danger btn-sm removeItemBtn">Remove</button></td>
     </tr>`;
 
-            $("#itemTableBody").append(newRow);
-            $('.item-dropdown').last().select2({
-                placeholder: "Search for an item",
-                minimumInputLength: 1 // Minimum characters to start searching
-            });
+    $("#itemTableBody").append(newRow);
+    $('.item-dropdown').last().select2({
+        placeholder: "Search for an item",
+        minimumInputLength: 1 // Minimum characters to start searching
+    });
 
-            itemCount++; // Increment the count of added items
-        }
+    itemCount++; // Increment the count of added items
+}
 
-        // Event listener for adding a new item
-        $("#addItemBtn").on("click", function () {
-            // Get the selected item
-            var selectedItem = $("#selectProduct option:selected");
+// Event listener for adding a new item
+$("#addItemBtn").on("click", function () {
+    // Get the selected item
+    var selectedItem = $("#selectProduct option:selected");
 
-            // Manually provide itemName, description, and amount
-            var itemName = selectedItem.val();
-            var description = selectedItem.data("description");
-            var amount = selectedItem.data("amount");
-            var uom = selectedItem.data("uom");
+    // Manually provide itemName, description, and amount
+    var itemName = selectedItem.val();
+    var description = selectedItem.data("description");
+    var amount = selectedItem.data("amount");
+    var uom = selectedItem.data("uom");
 
-            // Call the function with the UOM options and maxItems
-            addNewItemRow(itemName, description, uom, amount, <?php echo json_encode($productItems); ?>, maxItems);
-        });
+    // Call the function with the UOM options and maxItems
+    addNewItemRow(itemName, description, uom, amount, <?php echo json_encode($productItems); ?>, maxItems);
+});
 
-        // Event listener for removing an item
-        $("#itemTableBody").on("click", ".removeItemBtn", function () {
-            $(this).closest("tr").remove();
+// Event listener for removing an item
+$("#itemTableBody").on("click", ".removeItemBtn", function () {
+    $(this).closest("tr").remove();
 
-            // Decrement itemCount when an item is removed
-            itemCount--;
+    // Decrement itemCount when an item is removed
+    itemCount--;
 
-            // Recalculate gross amount
-            calculateGrossAmount();
-            // Recalculate other percentages
-            calculatePercentages();
-        });
+    // Recalculate gross amount
+    calculateGrossAmount();
+    // Recalculate other percentages
+    calculatePercentages();
+});
 
         // Event listener for updating description and amount based on the selected item
-        $("#itemTableBody").on("change", ".item-dropdown", function () {
+        $("#itemTableBody").on("change", ".item-dropdown", function() {
             var row = $(this).closest("tr");
             var selectedOption = $(this).find("option:selected");
 
@@ -1027,7 +982,7 @@ $productItemsJSON = json_encode($productItems);
 
 
         // Event listener for updating amount based on quantity and rate
-        $("#itemTableBody").on("input", "input[name='quantity[]'], input[name='rate[]']", function () {
+        $("#itemTableBody").on("input", "input[name='quantity[]'], input[name='rate[]']", function() {
             var row = $(this).closest("tr");
             var quantity = parseFloat(row.find("input[name='quantity[]']").val()) || 0;
             var rate = parseFloat(row.find("input[name='rate[]']").val()) || 0;
@@ -1044,7 +999,7 @@ $productItemsJSON = json_encode($productItems);
         // Function to calculate the gross amount
         function calculateGrossAmount() {
             var grossAmount = 0;
-            $("input[name='amount[]']").each(function () {
+            $("input[name='amount[]']").each(function() {
                 grossAmount += parseFloat($(this).val()) || 0;
             });
             $("#grossAmount").val(grossAmount.toFixed(2));
@@ -1072,14 +1027,14 @@ $productItemsJSON = json_encode($productItems);
         }
 
         // Event listener for updating percentages
-        $("#discountPercentage, #vatPercentage, #taxWithheldPercentage").on("input", function () {
+        $("#discountPercentage, #vatPercentage, #taxWithheldPercentage").on("input", function() {
             calculatePercentages();
         });
 
     });
 </script>
 <script>
-    $(document).ready(function () {
-        $('.select2').select2();
-    });
+$(document).ready(function() {
+    $('.select2').select2();
+});
 </script>
