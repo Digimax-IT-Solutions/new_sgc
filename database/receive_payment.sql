@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 21, 2024 at 04:19 PM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- Generation Time: Mar 23, 2024 at 04:10 AM
+-- Server version: 10.4.28-MariaDB
+-- PHP Version: 8.2.4
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -36,16 +36,9 @@ CREATE TABLE `receive_payment` (
   `payment_amount` int(11) DEFAULT NULL,
   `receivedDate` date DEFAULT NULL,
   `paymentType` varchar(255) DEFAULT NULL,
-  `RefNo` int(11) DEFAULT NULL,
-  `discCredapplied` int(11) DEFAULT NULL
+  `RefNo` varchar(255) DEFAULT NULL,
+  `discCredapplied` decimal(10,2) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `receive_payment`
---
-
-INSERT INTO `receive_payment` (`ID`, `receivedID`, `ar_account`, `invoiceNo`, `customerName`, `payment_amount`, `receivedDate`, `paymentType`, `RefNo`, `discCredapplied`) VALUES
-(14, NULL, 'Accounts Receivable', '97', 'Theresa Cabigting', 100, '2024-10-10', 'cash', 0, 0);
 
 --
 -- Indexes for dumped tables
@@ -65,7 +58,7 @@ ALTER TABLE `receive_payment`
 -- AUTO_INCREMENT for table `receive_payment`
 --
 ALTER TABLE `receive_payment`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 21, 2024 at 04:18 PM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- Generation Time: Mar 23, 2024 at 04:10 AM
+-- Server version: 10.4.28-MariaDB
+-- PHP Version: 8.2.4
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -33,6 +33,7 @@ CREATE TABLE `credits` (
   `customerName` varchar(255) DEFAULT NULL,
   `memo` varchar(255) DEFAULT NULL,
   `creditAmount` decimal(10,2) DEFAULT NULL,
+  `creditBalance` decimal(10,2) DEFAULT NULL,
   `creditDate` date NOT NULL,
   `poID` varchar(255) DEFAULT NULL,
   `status` varchar(255) DEFAULT 'active'
@@ -56,7 +57,7 @@ ALTER TABLE `credits`
 -- AUTO_INCREMENT for table `credits`
 --
 ALTER TABLE `credits`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

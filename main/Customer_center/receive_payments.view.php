@@ -89,7 +89,7 @@ include __DIR__ . ('../../includes/header.php');
                                         </button>
                                         <div class="dropdown-menu" aria-labelledby="newTransactionDropdown">
                                             <a class="dropdown-item" href="create_receive_payments" style="background-color: white;">Receive Payment</a>
-                                            <a class="dropdown-item" href="credit" style="background-color: white;">Credit And Refunds</a>
+                                            <!-- <a class="dropdown-item" href="credit" style="background-color: white;">Credit And Refunds</a> -->
                                         </div>
                                     </div>
                                 </div>
