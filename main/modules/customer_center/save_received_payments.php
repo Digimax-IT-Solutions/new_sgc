@@ -33,7 +33,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     try {
         // Insert payment details into the receive_payment table
-        $query = "INSERT INTO receive_payment (ar_account, customerName, payment_amount, receivedDate, discCredapplied, paymentType, RefNo, invoiceNo) VALUES (:ar_account, :customerName, :payment_amount, :receivedDate, :discCredapplied, :paymentType, :referenceNumber, :invoiceNo)";
+        $query = "INSERT INTO receive_payment (ar_account, customerName, payment_amount, receivedDate, discCredapplied, paymentType, RefNo, invoiceNo) SELECT :ar_account, :customerName, :payment_amount, :receivedDate, :discCredapplied, :paymentType, :referenceNumber, sales_invoice.invoiceNo FROM sales_invoice WHERE sales_invoice.invoiceID = :invoiceNo";
         $stmt = $db->prepare($query);
         $stmt->bindParam(':ar_account', $ar_account);
         $stmt->bindParam(':customerName', $customerName);
@@ -42,14 +42,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $stmt->bindParam(':discCredapplied', $discCredapplied);
         $stmt->bindParam(':paymentType', $paymentType);
         $stmt->bindParam(':referenceNumber', $referenceNumber);
+        $stmt->bindParam(':invoiceNo', $invoiceNo);
 
         // Bind invoice numbers
         $stmt->bindParam(':invoiceNo', $invoiceNo);
 
-        // Loop through each checked invoice and insert into the database
+        // Loop through each checked invoice and execute the query for each invoice
         foreach ($checkedInvoices as $invoice) {
             $invoiceNo = $invoice; // Set the current invoice number
-            $stmt->execute(); // Execute the query for each invoice
+            $stmt->execute();
         }
 
         // Update customer balance
