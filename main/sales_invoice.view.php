@@ -68,10 +68,10 @@
                                         </button>
                                         <div class="dropdown-menu" aria-labelledby="newTransactionDropdown">
                                             <a class="dropdown-item" href="create_invoice" style="color: rgb(0, 149, 77); background-color: white;">Invoice</a>
-                                            <a class="dropdown-item" href="#" style="color: rgb(0, 149, 77); background-color: white;">Received
+                                            <!-- <a class="dropdown-item" href="#" style="color: rgb(0, 149, 77); background-color: white;">Received
                                                 Payment</a>
                                             <a class="dropdown-item" href="#" style="color: rgb(0, 149, 77); background-color: white;">Make
-                                                Deposit</a>
+                                                Deposit</a> -->
                                         </div>
                                     </div>
                                 </div>
