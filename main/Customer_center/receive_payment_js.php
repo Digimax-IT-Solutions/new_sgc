@@ -80,7 +80,7 @@
                     } else {
                         invoices.forEach(function(invoice) {
                             var row = '<tr>' +
-                                '<td><input type="checkbox" name="invoice[]" value="' + invoice.invoiceNo + '"></td>' +
+                                '<td><input type="checkbox" name="invoice[]" value="' + invoice.invoiceID + '"></td>' +
                                 '<td>' + invoice.invoiceDate + '</td>' +
                                 '<td>' + invoice.invoiceNo + '</td>' +
                                 '<td>' + invoice.totalAmountDue + '</td>' +
