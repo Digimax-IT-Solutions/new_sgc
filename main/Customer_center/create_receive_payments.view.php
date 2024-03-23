@@ -223,7 +223,7 @@ try {
                                                 $customers = $customerStmt->fetchAll(PDO::FETCH_ASSOC);
 
                                                 foreach ($customers as $customer) {
-                                                    echo "<option value='{$customer['customerName']}' data-balance='{$customer['customerBalance']}'>{$customer['customerName']}</option>";
+                                                    echo "<option value='" . htmlspecialchars($customer['customerName'], ENT_QUOTES) . "' data-balance='{$customer['customerBalance']}'>" . htmlspecialchars($customer['customerName'], ENT_QUOTES) . "</option>";
                                                 }
                                             } catch (PDOException $e) {
                                                 // Handle the exception, log the error or return an error message with MySQL error information
