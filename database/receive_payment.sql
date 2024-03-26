@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 23, 2024 at 04:10 AM
+-- Generation Time: Mar 26, 2024 at 06:41 AM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `sgc_db`
+-- Database: `sales`
 --
 
 -- --------------------------------------------------------
@@ -30,14 +30,15 @@ SET time_zone = "+00:00";
 CREATE TABLE `receive_payment` (
   `ID` int(11) NOT NULL,
   `receivedID` varchar(255) DEFAULT NULL,
-  `ar_account` varchar(255) NOT NULL,
-  `invoiceNo` varchar(255) NOT NULL,
+  `invoiceNo` varchar(255) DEFAULT NULL,
+  `ar_account` varchar(255) DEFAULT NULL,
   `customerName` varchar(255) DEFAULT NULL,
-  `payment_amount` int(11) DEFAULT NULL,
+  `payment_amount` decimal(10,2) DEFAULT NULL,
   `receivedDate` date DEFAULT NULL,
   `paymentType` varchar(255) DEFAULT NULL,
-  `RefNo` varchar(255) DEFAULT NULL,
-  `discCredapplied` decimal(10,2) DEFAULT NULL
+  `RefNo` varchar(250) DEFAULT NULL,
+  `discCredapplied` decimal(10,2) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -58,7 +59,7 @@ ALTER TABLE `receive_payment`
 -- AUTO_INCREMENT for table `receive_payment`
 --
 ALTER TABLE `receive_payment`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

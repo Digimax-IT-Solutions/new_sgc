@@ -28,23 +28,24 @@ include __DIR__ . ('../../includes/header.php');
         border-collapse: collapse;
         width: 100%;
         table-layout: fixed;
-        
+
     }
 
-    #receivePaymentsTable th
-    {
+    #receivePaymentsTable th {
         font-size: 10px;
         white-space: nowrap;
         border: none;
-   
+
     }
+
     #receivePaymentsTable td {
         font-size: 13px;
         padding: 5px;
-        overflow: hidden; /* Hides any overflowing content */
+        overflow: hidden;
+        /* Hides any overflowing content */
         border: none;
         border-bottom: 1px solid rgb(0, 149, 77);
-      
+
     }
 
     #receivePaymentsTable tbody tr:hover {
@@ -89,7 +90,7 @@ include __DIR__ . ('../../includes/header.php');
                                         </button>
                                         <div class="dropdown-menu" aria-labelledby="newTransactionDropdown">
                                             <a class="dropdown-item" href="create_receive_payments" style="background-color: white;">Receive Payment</a>
-                                            <!-- <a class="dropdown-item" href="credit" style="background-color: white;">Credit And Refunds</a> -->
+                                            <a class="dropdown-item" href="credit" style="background-color: white;">Credit And Refunds</a>
                                         </div>
                                     </div>
                                 </div>
@@ -104,7 +105,9 @@ include __DIR__ . ('../../includes/header.php');
                                         <th>RECEIVE DATE</th>
                                         <th>AR ACCOUNT</th>
                                         <th>CUSTOMER NAME</th>
+                                        <th>TOTAL AMOUNT DUE</th>
                                         <th>PAYMENT AMOUNT</th>
+                                        <th>DISC & CRED APPLIED</th>
                                         <th>PAYMENT TYPE</th>
 
                                     </tr>
@@ -113,7 +116,7 @@ include __DIR__ . ('../../includes/header.php');
                                     <!-- Your purchase order data will go here -->
                                 </tbody>
                             </table>
-                            
+
                         </div>
                     </div>
                 </div>
@@ -130,6 +133,21 @@ include __DIR__ . ('../../includes/header.php');
     // Variable to check if DataTables is already initialized
     var dataTableInitialized = false;
     // Function to fetch and populate purchase order data
+    // Function to format currency with commas
+    function formatCurrency(amount) {
+        // Convert amount to number
+        var num = parseFloat(amount);
+        // Check if the number is NaN
+        if (isNaN(num)) {
+            return amount; // Return the original value if it's not a valid number
+        }
+        // Use toLocaleString() to format the number with commas
+        return num.toLocaleString('en-PH', {
+            style: 'currency',
+            currency: 'PHP'
+        });
+    }
+
     function populateReceivePaymentsTable() {
         $.ajax({
             type: "GET",
@@ -141,15 +159,21 @@ include __DIR__ . ('../../includes/header.php');
                 $("#receivePaymentsTable tbody").empty();
 
                 receivePayments.forEach(function(payments) {
+                    // Format currency with commas
+                    var totalAmountDueFormatted = formatCurrency(payments.totalAmountDue);
+                    var paymentAmountFormatted = formatCurrency(payments.payment_amount);
+                    var discCredappliedFormatted = formatCurrency(payments.discCredapplied);
+
                     var row = `<tr>
                     <td>${payments.RefNo}</td>
                     <td>${payments.invoiceNo}</td>
                     <td>${payments.receivedDate}</td>
                     <td>${payments.ar_account}</td>
                     <td>${payments.customerName}</td>
-                    <td>${payments.payment_amount}</td>
+                    <td><strong>${totalAmountDueFormatted}</strong></td>
+                    <td><strong>${paymentAmountFormatted}</strong></td>
+                    <td><strong>${discCredappliedFormatted}</strong></td>
                     <td>${payments.paymentType}</td>
-                  
                 </tr>`;
 
                     $("#receivePaymentsTable tbody").append(row);
@@ -167,6 +191,7 @@ include __DIR__ . ('../../includes/header.php');
             }
         });
     }
+
 
     // Attach click event to table rows
     // $("#purchaseOrderTable tbody").on("click", "tr", function() {

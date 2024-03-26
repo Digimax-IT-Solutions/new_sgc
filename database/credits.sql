@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 23, 2024 at 04:10 AM
+-- Generation Time: Mar 26, 2024 at 06:40 AM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `sgc_db`
+-- Database: `sales`
 --
 
 -- --------------------------------------------------------
@@ -33,6 +33,7 @@ CREATE TABLE `credits` (
   `customerName` varchar(255) DEFAULT NULL,
   `memo` varchar(255) DEFAULT NULL,
   `creditAmount` decimal(10,2) DEFAULT NULL,
+  `creditUsed` decimal(10,2) NOT NULL,
   `creditBalance` decimal(10,2) DEFAULT NULL,
   `creditDate` date NOT NULL,
   `poID` varchar(255) DEFAULT NULL,
@@ -57,7 +58,7 @@ ALTER TABLE `credits`
 -- AUTO_INCREMENT for table `credits`
 --
 ALTER TABLE `credits`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
