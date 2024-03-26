@@ -28,6 +28,10 @@ try {
 ?>
 
 <style>
+    .discount_credit_button {
+        display: none;
+    }
+
     .invalid-border {
         border: 2px solid red;
         /* You can adjust the border properties as needed */
@@ -133,6 +137,7 @@ try {
 
     #invoice_table th,
     #invoice_table td {
+        text-align: center;
         padding: 1px;
         white-space: nowrap;
         overflow: hidden;
@@ -141,10 +146,31 @@ try {
     }
 
     #invoice_table tbody tr:hover {
-
         color: white;
         background-color: rgb(0, 149, 77);
         /* Set your desired background color here */
+    }
+
+    #invoice_table th:first-child,
+    #invoice_table td:first-child {
+        width: 20px;
+    }
+
+    .discount-label {
+        font-size: 20px;
+        width: 250px;
+        display: inline-block;
+    }
+
+    .discount-value {
+        color: black;
+        display: inline-block;
+        width: 200px;
+    }
+
+    .discount-input {
+        width: 200px;
+        display: inline-block;
     }
 </style>
 
@@ -201,9 +227,13 @@ try {
                                             ?>
                                         </select>
                                     </div>
-                                    <div class="form-group col-md-4">
+                                    <div class="form-group col-md-2">
                                         <label for="customer_balance">CUSTOMER BALANCE</label>
                                         <input type="text" class="form-control" id="customer_balance" name="customer_balance" readonly>
+                                    </div>
+                                    <div class="form-group col-md-2">
+                                        <label for="receivedDate">DATE</label>
+                                        <input type="date" class="form-control" id="receivedDate" name="receivedDate">
                                     </div>
                                 </div>
 
@@ -223,7 +253,7 @@ try {
                                                 $customers = $customerStmt->fetchAll(PDO::FETCH_ASSOC);
 
                                                 foreach ($customers as $customer) {
-                                                    echo "<option value='" . htmlspecialchars($customer['customerName'], ENT_QUOTES) . "' data-balance='{$customer['customerBalance']}'>" . htmlspecialchars($customer['customerName'], ENT_QUOTES) . "</option>";
+                                                    echo "<option value='{$customer['customerName']}' data-balance='{$customer['customerBalance']}'>{$customer['customerName']}</option>";
                                                 }
                                             } catch (PDOException $e) {
                                                 // Handle the exception, log the error or return an error message with MySQL error information
@@ -234,17 +264,13 @@ try {
                                             ?>
                                         </select>
                                     </div>
-                                    <div class="form-group col-md-4">
+                                    <div class="form-group col-md-2">
                                         <label for="payment_amount">PAYMENT AMOUNT</label>
                                         <input type="text" class="form-control" id="payment_amount" name="payment_amount" readonly>
                                     </div>
                                     <div class="form-group col-md-4" hidden>
                                         <label for="excessAmount">EXCESS CREDIT</label>
                                         <input type="text" class="form-control" id="excessAmount" name="excessAmount" readonly>
-                                    </div>
-                                    <div class="form-group col-md-4">
-                                        <label for="receivedDate">DATE</label>
-                                        <input type="date" class="form-control" id="receivedDate" name="receivedDate">
                                     </div>
                                 </div>
 
@@ -297,6 +323,7 @@ try {
                                                     <th>Number</th>
                                                     <th>Original Amount</th>
                                                     <th>Discount & Credit</th>
+                                                    <th>Discount</th>
                                                     <th>Credit</th>
                                                     <th>Amount Due</th>
                                                     <th>Payment</th>
@@ -421,24 +448,79 @@ try {
                             </div>
                         </div>
                     </form>
+                    <!-- Nav tabs -->
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="credits-tab" data-toggle="tab" href="#credits" role="tab">Credits</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="discount-tab" data-toggle="tab" href="#discount" role="tab">Discount</a>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane show active" id="credits" role="tabpanel">
+                            <table id="creditMemoTable">
+                                <thead>
+                                    <tr>
+                                        <th>✔</th>
+                                        <th>Credit No</th>
+                                        <th>Customer Name</th>
+                                        <th>Credit Amount</th>
+                                        <th>Amount</th>
+                                        <th>CreditBalance</th>
+                                    </tr>
+                                <tbody>
+                                </tbody>
+                                </thead>
+                            </table>
+                        </div>
+                        <div class="tab-pane" id="discount" role="tabpanel">
+                            <br>
+                            <div class="form-group">
+                                <label for="discount_date" style="font-size: 20px" class="discount-label">Discount Date:</label>
+                            </div>
+                            <div class="form-group">
+                                <label for="discount_terms" style="font-size: 20px" class="discount-label">Terms:</label>
+                            </div>
+                            <div class="form-group">
+                                <label for="" class="discount-label" style="font-size: 20px">Suggested Discount:</label>
+                                <p class="discount-value">0.00</p>
+                            </div>
+                            <div class="form-group">
+                                <label for="discount_amount" style="font-size: 20px" class="discount-label">Amount of Discount:</label>
+                                <input type="text" class="form-control discount-input" name="discount_amount" id="discount_amount">
+                            </div>
+                            <div class="form-group">
+                                <label for="disc_account" class="discount-label" style="font-size: 20px">Discount Account:</label>
+                                <select name="disc_account" id="disc_account" class="form-control discount-input">
+                                    <option value="" disabled selected>Select Account</option>
+                                    <?php
+                                    // Fetch chartsOfAccounts with purchase orders having poStatus = 'WAITING FOR DELIVERY' from the database and populate the dropdown in the modal
+                                    $chartsOfAccountQuery = "SELECT * FROM chart_of_accounts";
 
-                    <table id="creditMemoTable">
-                        <thead>
-                            <tr>
-                                <th>✔</th>
-                                <th>Credit No</th>
-                                <th>Customer Name</th>
-                                <th>Credit Amount</th>
-                                <th>Amount</th>
-                                <th>CreditBalance</th>
-                            </tr>
-                        <tbody>
-                        </tbody>
-                        </thead>
-                    </table>
+                                    try {
+                                        $chartsOfAccountStmt = $db->prepare($chartsOfAccountQuery);
+                                        $chartsOfAccountStmt->execute();
+
+                                        $chartsOfAccounts = $chartsOfAccountStmt->fetchAll(PDO::FETCH_ASSOC);
+
+                                        foreach ($chartsOfAccounts as $chartsOfAccount) {
+                                            echo "<option value='" . htmlspecialchars($chartsOfAccount['account_name'], ENT_QUOTES) . "' data-poid='{$chartsOfAccount['account_id']}'>" . htmlspecialchars($chartsOfAccount['account_code'] . ' ' . $chartsOfAccount['account_name'], ENT_QUOTES) . "</option>";
+                                        }
+                                    } catch (PDOException $e) {
+                                        // Handle the exception, log the error or return an error message with MySQL error information
+                                        $errorInfo = $chartsOfAccountStmt->errorInfo();
+                                        $errorMessage = "Error fetching chartsOfAccounts: " . $errorInfo[2]; // MySQL error message
+                                        echo "<option value=''>$errorMessage</option>";
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button id="saveModalDataBtn" type="button" class="btn btn-primary">Save</button>
+                        <button id="saveModalDataBtn" type="button" class="btn btn-success">Save</button>
                     </div>
                 </div>
             </div>

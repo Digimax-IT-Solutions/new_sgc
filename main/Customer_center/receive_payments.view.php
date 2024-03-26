@@ -44,14 +44,14 @@ include __DIR__ . ('../../includes/header.php');
         overflow: hidden;
         /* Hides any overflowing content */
         border: none;
-        border-bottom: 1px solid rgb(0, 149, 77);
+        border-bottom: 1px solid red;
 
     }
 
     #receivePaymentsTable tbody tr:hover {
 
         color: white;
-        background-color: rgb(0, 149, 77);
+        background-color: rgba(128,21,20,0.8);
         /* Set your desired background color here */
     }
 </style>
@@ -90,7 +90,7 @@ include __DIR__ . ('../../includes/header.php');
                                         </button>
                                         <div class="dropdown-menu" aria-labelledby="newTransactionDropdown">
                                             <a class="dropdown-item" href="create_receive_payments" style="background-color: white;">Receive Payment</a>
-                                            <a class="dropdown-item" href="credit" style="background-color: white;">Credit And Refunds</a>
+                                            <!-- <a class="dropdown-item" href="credit" style="background-color: white;">Credit And Refunds</a> -->
                                         </div>
                                     </div>
                                 </div>
