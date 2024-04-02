@@ -179,7 +179,6 @@ $productItemsJSON = json_encode($productItems);
                                                 <th>UOM</th>
                                                 <th>RATE</th>
                                                 <th>AMOUNT</th>
-                                                <th>TAX</th>
                                                 <th>ACTION</th>
                                             </tr>
                                         </thead>
@@ -194,13 +193,28 @@ $productItemsJSON = json_encode($productItems);
                                         <div class="container">
                                             <div class="row">
                                                 <div class="col-md-4 d-inline-block text-right">
+                                                    <label for="vatPercentage">CUSTOMER TAX CODE:</label>
+                                                </div>
+                                                <div class="col-md-3 d-inline-block">
+                                                    <select class="form-control" id="taxTypeSelect">
+                                                        <option value="tax" selected disabled>Choose Tax Code</option>
+                                                        <option value="tax">Taxable Sales</option>
+                                                        <option value="non-tax">Non-Taxable Sales</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <br>
+
+                                            <div class="row">
+                                                <div class="col-md-4 d-inline-block text-right">
                                                     <label for="vatPercentage">TAX:</label>
                                                 </div>
                                                 <div class="col-md-3 d-inline-block">
                                                     <?php
                                                     $query = "SELECT salesTaxID, salesTaxRate, salesTaxName FROM sales_tax";
                                                     $result = $db->query($query);
-                                                    echo "<select class='form-control' id='vatPercentage' name='vatPercentage' required>";
+                                                    echo "<select class='form-control' id='vatPercentage' name='vatPercentage'>";
+                                                    echo "<option value='' selected disabled>Choose Tax</option>";
 
                                                     if ($result) {
                                                         while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
@@ -297,12 +311,6 @@ $productItemsJSON = json_encode($productItems);
         <td><input type="text" class="form-control uom-field" name="uom[]" readonly></td>
         <td><input type="number" class="form-control rate-field" name="rate[]" required></td>
         <td><input type="number" class="form-control amount-field" name="amount[]" readonly></td>
-        <td>
-            <select class="form-control">
-                <option value="tax">Tax</option>
-                <option value="non-tax">Non-Tax</option>
-            </select>
-        </td>
         <td><button type="button" class="btn btn-danger btn-sm removeItemBtn">Remove</button></td>
     </tr>`;
 
@@ -403,15 +411,25 @@ $productItemsJSON = json_encode($productItems);
             $("input[name='amount[]']").each(function () {
                 grossAmount += parseFloat($(this).val()) || 0;
             });
-            var vatPercentage = parseFloat($("#vatPercentage").val()) || 0;
 
-            // FOOTER CALCULATION;
-            var vatPercentageAmount = grossAmount / 100 * vatPercentage;
-            $("#vatPercentageAmount").val((vatPercentageAmount.toFixed(2)));
+            // Check if the #vatPercentage select is enabled
+            if ($("#vatPercentage").prop("disabled")) {
+                // If disabled, set vatPercentageAmount and totalAmountDue to 0
+                var vatPercentageAmount = 0;
+                var totalAmountDue = grossAmount;
+            } else {
+                // If enabled, proceed with the calculations
+                var vatPercentage = parseFloat($("#vatPercentage").val()) || 0;
+
+                // Calculate vatPercentageAmount
+                var vatPercentageAmount = grossAmount / 100 * vatPercentage;
+            }
+
+            // Update the #vatPercentageAmount and #creditAmount fields
+            $("#vatPercentageAmount").val(vatPercentageAmount.toFixed(2));
             var totalAmountDue = grossAmount + vatPercentageAmount;
-            $("#creditAmount").val((totalAmountDue.toFixed(2)));
-            $("#creditBalance").val((totalAmountDue.toFixed(2)));
-
+            $("#creditAmount").val(totalAmountDue.toFixed(2));
+            $("#creditBalance").val(totalAmountDue.toFixed(2));
         }
 
         // Event listener for updating percentages
@@ -424,6 +442,20 @@ $productItemsJSON = json_encode($productItems);
 <script>
     $(document).ready(function () {
         $('.select2').select2();
+
+        $('#vatPercentage').prop('disabled', true);
+        // Change event for the taxTypeSelect
+        $('#taxTypeSelect').on('change', function () {
+            var selectedOption = $(this).val();
+
+            // If "Non-Taxable Sales" is selected, disable the vatPercentage select; otherwise, enable it
+            if (selectedOption === 'non-tax') {
+                $('#vatPercentage').prop('disabled', true);
+            } else {
+                $('#vatPercentage').prop('disabled', false);
+            }
+        });
+
     });
 </script>
 <script>
