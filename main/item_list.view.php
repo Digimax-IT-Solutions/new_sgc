@@ -123,6 +123,7 @@
                                     <option value=""></option>
                                     <option value="Inventory">Inventory</option>
                                     <option value="Non-inventory">Non-inventory</option>
+                                    <option value="Other Charges">Other Charges</option>
                                     <option value="Work in Process">Work in Process</option>
                                     <option value="Service">Service</option>
                                     <option value="Finished Goods">Finished Goods</option>
@@ -131,6 +132,7 @@
                                     <option value="Tax Type">Tax Type</option>
                                     <option value="Group">Group</option>
                                     <option value="Payment">Payment</option>
+                                   
                                 </select>
                             </div>
                         </div>
