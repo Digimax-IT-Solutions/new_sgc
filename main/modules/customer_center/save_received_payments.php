@@ -14,12 +14,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $receivedDate = $_POST['receivedDate'];
     $invoiceNo = $_POST['invoiceNo'];
     // Validate and sanitize input data
-    $discCredapplied = isset($_POST['discCredapplied']) ? $_POST['discCredapplied'] : '';
-
-    // Check if $discCredapplied is NaN
-    if ($discCredapplied = "NaN") {
-        $discCredapplied = 0; // Set it to zero
-    }
+    $discCredapplied = $_POST ['discCredapplied'];
     $paymentType = $_POST['paymentType'];
     $creditAmount = floatval($_POST['creditAmount']);
     $excessAmount = $_POST['excessAmount'];
@@ -63,10 +58,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         // Check if excess amount is greater than zero before inserting credit details
         if ($excessAmount > 0) {
             // Insert credit details into the credits table
-            $insertCreditQuery = "INSERT INTO credits (customerName, creditAmount) VALUES (:customerName, :creditAmount)";
+            $insertCreditQuery = "INSERT INTO credits (customerName, creditAmount, creditBalance) VALUES (:customerName, :creditAmount, :creditBalance)";
+            
+            // Calculate credit balance
+            $creditBalance = $excessAmount;
+        
+            // Prepare and execute the SQL statement
             $insertCreditStmt = $db->prepare($insertCreditQuery);
             $insertCreditStmt->bindParam(':customerName', $customerName);
             $insertCreditStmt->bindParam(':creditAmount', $excessAmount);
+            $insertCreditStmt->bindParam(':creditBalance', $creditBalance);
             $insertCreditStmt->execute();
         }
 

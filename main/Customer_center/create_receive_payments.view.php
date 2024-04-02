@@ -268,7 +268,7 @@ try {
                                         <label for="payment_amount">PAYMENT AMOUNT</label>
                                         <input type="text" class="form-control" id="payment_amount" name="payment_amount" readonly>
                                     </div>
-                                    <div class="form-group col-md-4" hidden>
+                                    <div class="form-group col-md-4">
                                         <label for="excessAmount">EXCESS CREDIT</label>
                                         <input type="text" class="form-control" id="excessAmount" name="excessAmount" readonly>
                                     </div>

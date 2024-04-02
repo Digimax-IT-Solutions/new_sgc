@@ -1,6 +1,24 @@
 <?php
 include __DIR__ . ('../../includes/header.php');
-include('connect.php');
+include ('connect.php');
+
+// Fetch product items
+$query = "SELECT itemName, itemSalesInfo, itemSrp, uom FROM items";
+
+// Execute the query
+$result = $db->query($query);
+
+// Initialize an array to store the product items
+$productItems = array();
+
+// Fetch rows one by one
+while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+    // Append each row to the product items array
+    $productItems[] = $row;
+}
+
+// Convert the result to JSON
+$productItemsJSON = json_encode($productItems);
 ?>
 <style>
     /* Add styles for active status */
@@ -44,6 +62,23 @@ include('connect.php');
 
     .form-group label {
         font-size: 70%;
+    }
+
+    #itemTable {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    #itemTable th,
+    #itemTable td {
+        text-align: center;
+        padding: 2px;
+        /* Adjust the padding as needed */
+    }
+
+    .select2 {
+        text-align: left;
+        padding-top: 3.1px;
     }
 </style>
 
@@ -103,8 +138,6 @@ include('connect.php');
 
                                         <label for="creditID">Credit No</label>
                                         <input type="text" class="form-control" id="creditID" name="creditID">
-                                        <label for="poID">PO No</label>
-                                        <input type="text" class="form-control" id="poID" name="poID">
                                     </div>
                                     <div class="form-group col-md-2 offset-md-2">
                                         <!-- Empty div with offset -->
@@ -113,15 +146,15 @@ include('connect.php');
                                     <div class="form-group col-md-2">
                                         <label for="creditDate">DATE</label>
                                         <div class="input-group">
-                                            <input type="date" class="form-control" id="creditDate" name="creditDate" required>
+                                            <input type="date" class="form-control" id="creditDate" name="creditDate"
+                                                required>
                                         </div>
-                                        <label for="creditAmount">Total Amount</label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" id="creditAmount" name="creditAmount" required>
-                                        </div>
+                                        <label for="poID">PO No</label>
+                                        <input type="text" class="form-control" id="poID" name="poID">
                                         <label for="creditBalance" hidden>Total Amount</label>
                                         <div class="input-group" hidden>
-                                            <input type="number" class="form-control" id="creditBalance" name="creditBalance" readonly>
+                                            <input type="number" class="form-control" id="creditBalance"
+                                                name="creditBalance" readonly>
                                         </div>
                                     </div>
 
@@ -130,7 +163,94 @@ include('connect.php');
                                         <textarea name="memo" id="memo" class="form-control" rows="3"></textarea>
                                     </div>
                                 </div>
-                                <center><button type="button" class="btn btn-primary" id="saveButton">Submit</button></center>
+                                <div class="form-row">
+                                    <div class="form-group col-md-12">
+                                        <button type="button" class="btn btn-success" id="addItemBtn">Add Item</button>
+                                    </div>
+                                </div>
+                                <!-- Select Product Item -->
+                                <div class="table-responsive">
+                                    <table class="table table-condensed" id="itemTable">
+                                        <thead>
+                                            <tr>
+                                                <th>ITEM</th>
+                                                <th>DESCRIPTION</th>
+                                                <th>QTY</th>
+                                                <th>UOM</th>
+                                                <th>RATE</th>
+                                                <th>AMOUNT</th>
+                                                <th>TAX</th>
+                                                <th>ACTION</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="itemTableBody">
+                                            <!-- Each row represents a separate item -->
+                                            <!-- You can dynamically add rows using JavaScript/jQuery -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="modal-footer">
+                                    <div class="summary-details">
+                                        <div class="container">
+                                            <div class="row">
+                                                <div class="col-md-4 d-inline-block text-right">
+                                                    <label for="vatPercentage">TAX:</label>
+                                                </div>
+                                                <div class="col-md-3 d-inline-block">
+                                                    <?php
+                                                    $query = "SELECT salesTaxID, salesTaxRate, salesTaxName FROM sales_tax";
+                                                    $result = $db->query($query);
+                                                    echo "<select class='form-control' id='vatPercentage' name='vatPercentage' required>";
+
+                                                    if ($result) {
+                                                        while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+                                                            // Construct option text with a unique identifier (salesTaxName)
+                                                            $optionText = "{$row['salesTaxName']}";
+
+                                                            // Check if salesTaxRate is 0.00 and salesTaxName is "Zero 0%", if so, mark it as selected
+                                                            $selected = ($row['salesTaxRate'] == 12 && $row['salesTaxName'] == "12%") ? 'selected' : '';
+
+                                                            echo "<option value='{$row['salesTaxRate']}' data-id='{$row['salesTaxID']}' $selected>{$optionText}</option>";
+                                                        }
+                                                    }
+
+                                                    echo "</select>";
+                                                    ?>
+                                                </div>
+                                                <div class="col-md-5 d-inline-block">
+                                                    <div class="input-group">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text">&#8369;</span>
+                                                        </div>
+                                                        <input type="text" class="form-control"
+                                                            name="vatPercentageAmount" id="vatPercentageAmount"
+                                                            readonly>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <br>
+
+                                            <div class="row" style="font-size: 30px">
+                                                <div class="col-md-6 d-inline-block text-right">
+                                                    <label>Total Amount Due:</label>
+                                                </div>
+                                                <div class="col-md-6 d-inline-block">
+                                                    <div class="input-group">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text">&#8369;</span>
+                                                        </div>
+                                                        <input type="text" class="form-control" name="creditAmount"
+                                                            id="creditAmount" readonly>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <center><button type="button" class="btn btn-primary" id="saveButton">Submit</button>
+                                </center>
                             </form>
                         </div>
                     </div>
@@ -142,7 +262,172 @@ include('connect.php');
     <?php include __DIR__ . ('../../includes/footer.php'); ?>
 </div>
 <script>
-    $(document).ready(function() {
+    // Use the fetched data in JavaScript
+    var productItems = <?php echo $productItemsJSON; ?>;
+</script>
+<script>
+    $(document).ready(function () {
+        var itemCount = 0; // Variable to keep track of the count of added items
+        var maxItems = 17; // Maximum number of items allowed
+
+        function addNewItemRow(itemName, description, uom, amount, items, maxItems) {
+            if (itemCount >= maxItems) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'You can only add up to ' + maxItems + ' items. Please create a new invoice for additional items.'
+                });
+                return; // Exit the function if the limit is reached
+            }
+
+            // Create a dropdown for selecting items
+            var itemOptions = items.map(item =>
+                `<option value="${item.itemName}" data-uom="${item.uom}" data-description="${item.itemSalesInfo}" data-amount="${item.itemCost}">${item.itemName}</option>`
+            ).join('');
+
+            var newRow = `<tr>
+        <td>
+            <select class="item-dropdown select2" style="width: 400px;" name="item[]" required>
+                <option value="" selected disabled>Select an Item</option>
+                ${itemOptions}
+            </select>
+        </td>
+        <td><input type="text" class="form-control description-field" name="description[]" required></td>
+        <td><input type="number" class="form-control" name="quantity[]" required></td>
+        <td><input type="text" class="form-control uom-field" name="uom[]" readonly></td>
+        <td><input type="number" class="form-control rate-field" name="rate[]" required></td>
+        <td><input type="number" class="form-control amount-field" name="amount[]" readonly></td>
+        <td>
+            <select class="form-control">
+                <option value="tax">Tax</option>
+                <option value="non-tax">Non-Tax</option>
+            </select>
+        </td>
+        <td><button type="button" class="btn btn-danger btn-sm removeItemBtn">Remove</button></td>
+    </tr>`;
+
+            $("#itemTableBody").append(newRow);
+            $('.item-dropdown').last().select2({
+                placeholder: "Search for an item",
+                minimumInputLength: 1 // Minimum characters to start searching
+            });
+
+            itemCount++; // Increment the count of added items
+        }
+
+        // Event listener for adding a new item
+        $("#addItemBtn").on("click", function () {
+            // Get the selected item
+            var selectedItem = $("#selectProduct option:selected");
+
+            // Manually provide itemName, description, and amount
+            var itemName = selectedItem.val();
+            var description = selectedItem.data("description");
+            var amount = selectedItem.data("amount");
+            var uom = selectedItem.data("uom");
+
+            // Call the function with the UOM options and maxItems
+            addNewItemRow(itemName, description, uom, amount, <?php echo json_encode($productItems); ?>, maxItems);
+        });
+
+        // Event listener for removing an item
+        $("#itemTableBody").on("click", ".removeItemBtn", function () {
+            $(this).closest("tr").remove();
+
+            // Decrement itemCount when an item is removed
+            itemCount--;
+
+            // Recalculate gross amount
+            calculateGrossAmount();
+            // Recalculate other percentages
+            calculatePercentages();
+        });
+
+        // Event listener for updating description and amount based on the selected item
+        $("#itemTableBody").on("change", ".item-dropdown", function () {
+            var row = $(this).closest("tr");
+            var selectedOption = $(this).find("option:selected");
+
+            // Update the description field based on the selected item
+            var description = selectedOption.data("description");
+            row.find(".description-field").val(description !== undefined ? description : '');
+
+            // Update the amount field based on the selected item
+            var amount = selectedOption.data("amount");
+            row.find(".rate-field").val(amount !== undefined ? amount : '');
+
+
+            // Update the amount field based on the selected item
+            var uom = selectedOption.data("uom");
+            row.find(".uom-field").val(uom !== undefined ? uom : '');
+
+            // Trigger the input event to recalculate the amount
+            row.find("input[name='quantity[]']").trigger("input");
+        });
+
+        // Function to format number as Philippine Peso (PHP)
+        function formatAsPHP(number) {
+            return new Intl.NumberFormat('en-PH', {
+                style: 'currency',
+                currency: 'PHP'
+            }).format(number);
+        }
+
+
+        // Event listener for updating amount based on quantity and rate
+        $("#itemTableBody").on("input", "input[name='quantity[]'], input[name='rate[]']", function () {
+            var row = $(this).closest("tr");
+            var quantity = parseFloat(row.find("input[name='quantity[]']").val()) || 0;
+            var rate = parseFloat(row.find("input[name='rate[]']").val()) || 0;
+
+            var amount = quantity * rate;
+            row.find("input[name='amount[]']").val(amount);
+
+            // Recalculate gross amount
+            calculateGrossAmount();
+            // Recalculate other percentages
+            calculatePercentages();
+        });
+
+        // Function to calculate the gross amount
+        function calculateGrossAmount() {
+            var grossAmount = 0;
+            $("input[name='amount[]']").each(function () {
+                grossAmount += parseFloat($(this).val()) || 0;
+            });
+            $("#grossAmount").val(grossAmount.toFixed(2));
+        }
+        // Function to calculate other percentages
+        function calculatePercentages() {
+            var grossAmount = 0;
+            $("input[name='amount[]']").each(function () {
+                grossAmount += parseFloat($(this).val()) || 0;
+            });
+            var vatPercentage = parseFloat($("#vatPercentage").val()) || 0;
+
+            // FOOTER CALCULATION;
+            var vatPercentageAmount = grossAmount / 100 * vatPercentage;
+            $("#vatPercentageAmount").val((vatPercentageAmount.toFixed(2)));
+            var totalAmountDue = grossAmount + vatPercentageAmount;
+            $("#creditAmount").val((totalAmountDue.toFixed(2)));
+            $("#creditBalance").val((totalAmountDue.toFixed(2)));
+
+        }
+
+        // Event listener for updating percentages
+        $("#vatPercentage").on("input", function () {
+            calculatePercentages();
+        });
+
+    });
+</script>
+<script>
+    $(document).ready(function () {
+        $('.select2').select2();
+    });
+</script>
+<script>
+    $(document).ready(function () {
         function isFormValid() {
             var isValid = true;
 
@@ -167,13 +452,6 @@ include('connect.php');
                 resetInvalidField($("#creditDate"));
             }
 
-            if ($("#creditAmount").val() === '') {
-                isValid = false;
-                highlightInvalidField($("#creditAmount"));
-            } else {
-                resetInvalidField($("#creditAmount"));
-            }
-
             var customerName = $('#customerName').val();
             if (customerName === null || customerName === '') {
                 isValid = false;
@@ -195,7 +473,8 @@ include('connect.php');
         }
 
         // Click event for the saveButton
-        $("#saveButton").click(function() {
+        $("#saveButton").click(function () {
+
             // Call isFormValid function
             if (!isFormValid()) {
                 // Show SweetAlert error if the form is not valid
@@ -207,20 +486,29 @@ include('connect.php');
                 return;
             }
 
+            if ($("#itemTableBody tr").length === 0) {
+                // Show SweetAlert error if no items are added
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: 'Please add at least one item.', // Customize the error message
+                });
+                return;
+            }
             // Proceed with AJAX call if form is valid
             $.ajax({
                 type: "POST",
                 url: "modules/credit/save_credit.php",
                 data: $("#addCreditForm").serialize(),
-                success: function(response) {
+                success: function (response) {
                     if (response === "success") {
                         Swal.fire({
                             icon: 'success',
                             title: 'New Credit Memo Added!',
                             showConfirmButton: false,
                             timer: 1500
-                        }).then(function() {
-                            location.reload();
+                        }).then(function () {
+                            window.location.href = 'receive_payments';
                         });
                     } else {
                         Swal.fire({
@@ -230,7 +518,7 @@ include('connect.php');
                         });
                     }
                 },
-                error: function() {
+                error: function () {
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
@@ -245,7 +533,7 @@ include('connect.php');
         });
 
         // Input event for the creditAmount field
-        $('#creditAmount').on('input', function() {
+        $('#creditAmount').on('input', function () {
             const creditAmount = parseFloat($(this).val());
             $('#creditBalance').val(creditAmount.toFixed(2)); // Update the creditBalance field
         });

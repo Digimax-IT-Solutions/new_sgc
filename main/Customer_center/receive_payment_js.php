@@ -417,7 +417,7 @@
             }
             // Calculate credit amount
             var customerName = $('#customerName').val();
-            var excessAmount = $('#excessAmount').val(); // Assuming you have a field with id="customer_name" in your form
+            var excessAmount = $('#excessAmount').val();
             var creditAmount = paymentAmount - totalAmountDue;
             // Check if payment amount exceeds total amount due
             if (paymentAmount !== totalAmountDue) {
@@ -621,7 +621,8 @@
             var paymentAmount = parseFloat($('#payment_amount').val());
             var totalAmountDue = parseFloat($('#amount_due').val());
             var excessAmount = paymentAmount - totalAmountDue;
-            $('#excessAmount').val(excessAmount.toFixed(2));
+            $('#excessAmount').val((excessAmount && !isNaN(excessAmount)) ? excessAmount.toFixed(2) : '0');
+
         }
 
         // Event listener for changes in payment amount

@@ -21,7 +21,8 @@ $pages = [
     'main/enter_bills' => 'main/Vendor/enter_bills.view.php',
     'main/bill_details_view' => 'main/bill_details_view.php',
     'main/bill' => 'main/Vendor/bill.view.php',
-    'main/credit' => 'main/Vendor/credit.view.php',
+    'main/credit' => 'main/Customer_center/credit.view.php',
+    'main/create_credit' => 'main/Customer_center/create_credit.view.php',
     'main/print_invoice' => 'main/modules/invoice/print_invoice.php',
     'main/sales_invoice_pastdue' => 'main/sales_invoice_pastdue.view.php',
     // BANKING
