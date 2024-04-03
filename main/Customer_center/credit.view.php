@@ -16,9 +16,9 @@
 
     /* Add a hover effect to the dropdown items */
     .dropdown-item:hover {
-        background-color: rgb(0, 149, 77) !important;
+        background-color: rgba(128,21,20,0.8) !important;
         /* Change the background color on hover */
-        color: white;
+        color: white !important;
         /* Change the text color on hover */
     }
 
@@ -80,12 +80,12 @@
                             <div class="row">
                                 <div class="col-md-3">
                                     <div class="dropdown">
-                                        <button class="btn btn-secondary dropdown-toggle" type="button" id="newTransactionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="background-color: rgb(0, 149, 77); color: white;">
+                                        <button class="btn btn-secondary dropdown-toggle" type="button" id="newTransactionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="background-color: rgb(128,21,20); color: white;">
                                             New Transactions
                                         </button>
                                         <div class="dropdown-menu" aria-labelledby="newTransactionDropdown">
-                                            <a class="dropdown-item" href="create_credit" style="color: rgb(0, 149, 77); background-color: white;">Create Credit</a>
-                                            <a class="dropdown-item" href="#" style="color: rgb(0, 149, 77); background-color: white;">Refund</a>
+                                            <a class="dropdown-item" href="create_credit" style="color: rgb(128,21,20); background-color: white;">Create Credit</a>
+                                            <a class="dropdown-item" href="#" style="color: rgb(128,21,20); background-color: white;">Refund</a>
                                         </div>
                                     </div>
                                 </div>
@@ -141,7 +141,7 @@
                     var statusBadgeClass = credit.status === 'active' ? 'badge-success' : 'badge-danger';
                     var statusBadgeText = credit.status === 'active' ? 'Active' : 'Inactive';
 
-                    var row = `<tr>
+                    var row = `<tr class="creditRow" data-credit-id="${credit.creditID}">
                     <td>${credit.creditID}</td>
                     <td>${credit.poID}</td>
                     <td>${credit.customerName}</td>
@@ -171,4 +171,10 @@
     $(document).ready(function() {
         populatecreditTable();
     });
+</script>
+<script>
+    $(document).on('click', '.creditRow', function() {
+    var creditID = $(this).data('credit-id');
+    window.location.href = 'view_credit?creditID=' + creditID;
+});
 </script>

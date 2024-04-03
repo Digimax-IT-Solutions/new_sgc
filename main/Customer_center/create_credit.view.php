@@ -542,11 +542,12 @@ $productItemsJSON = json_encode($productItems);
                         }).then(function () {
                             window.location.href = 'receive_payments';
                         });
-                    } else {
+                    } else {    
                         Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: response,
+                            icon: 'success',
+                            title: 'New Credit Memo Added!',
+                        }).then(function () {
+                            window.location.href = 'credit';
                         });
                     }
                 },

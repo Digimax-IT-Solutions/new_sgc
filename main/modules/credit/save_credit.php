@@ -4,6 +4,9 @@ include('../connect.php');
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     try {
+        // Begin a transaction
+        $db->beginTransaction();
+
         // Validate and sanitize input data
         $creditID = $_POST['creditID'];
         $customerName = $_POST['customerName'];
@@ -25,15 +28,62 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $stmt->bindParam(':poID', $poID);
 
         if ($stmt->execute()) {
-            echo "success";
+            $creditID = $db->lastInsertId();
+
+            // Iterate over each item and insert into the database
+            foreach ($_POST["item"] as $key => $item) {
+                $description = $_POST["description"][$key];
+                $quantity = $_POST["quantity"][$key];
+                $uom = $_POST["uom"][$key];
+                $rate = $_POST["rate"][$key];
+                $amount = $_POST["amount"][$key];
+
+                // Insert item data into the database
+                $itemQuery = "INSERT INTO credit_items (
+                    creditID, 
+                    item, 
+                    description, 
+                    quantity, 
+                    uom,
+                    rate, 
+                    amount
+                ) VALUES (
+                    :creditID, 
+                    :item, 
+                    :description, 
+                    :quantity, 
+                    :uom,
+                    :rate, 
+                    :amount
+                )";
+
+                $itemStmt = $db->prepare($itemQuery);
+                $itemStmt->bindParam(":creditID", $creditID);
+                $itemStmt->bindParam(":item", $item);
+                $itemStmt->bindParam(":description", $description);
+                $itemStmt->bindParam(":quantity", $quantity);
+                $itemStmt->bindParam(":uom", $uom);
+                $itemStmt->bindParam(":rate", $rate);
+                $itemStmt->bindParam(":amount", $amount);
+
+                if (!$itemStmt->execute()) {
+                    throw new Exception("Error inserting credit item data: " . implode(", ", $itemStmt->errorInfo()));
+                }
+            }
+
+            // Commit the transaction
+            $db->commit();
+            echo "Credit Saved!";
+            // Return a success response
         } else {
-            echo "Error saving credit.";
+            // Handle the case where the insertion into the credits table failed
+            throw new Exception("Error inserting credit data: " . implode(", ", $stmt->errorInfo()));
         }
-    } catch (PDOException $e) {
-        // Handle MySQL PDOException
+    } catch (Exception $e) {
+        // Rollback the transaction in case of an error
+        $db->rollBack();
+        // Handle exceptions
         echo "Error: " . $e->getMessage();
     }
-} else {
-    echo "Invalid request.";
 }
 ?>
