@@ -275,7 +275,7 @@ try {
                                 </div>
 
                                 <div class="form-row">
-                                    <div class="icon-select col-md-2">
+                                    <div class="icon-select col-md-4">
                                         <div class="form-group">
                                             <div class="icon-option" data-value="cash">
                                                 <i class="fas fa-money-bill-wave"></i>CASH
@@ -286,6 +286,16 @@ try {
                                                 <i class="fas fa-money-check"></i>CHECK
                                             </div>
                                         </div>
+                                        <div class="form-group">
+                                            <div class="icon-option" data-value="bank transfer">
+                                                <i class="fas fa-university"></i>BANK TRANSFER
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="icon-option" data-value="gift card">
+                                                <i class="fas fa-money-check-alt"></i>GIFT CARD
+                                            </div>
+                                        </div>                                        
                                     </div>
                                     <div class="form-group col-md-2" id="reference_number_group">
                                         <label for="RefNo">REFERENCE #</label>
@@ -301,7 +311,7 @@ try {
                                         <label for="memo">Memo</label>
                                         <textarea class="form-control" id="memo" name="memo"></textarea>
                                     </div>
-                                    <div id="creditCheckboxIDsContainer" hidden>
+                                    <div id="creditCheckboxIDsContainer">
                                         <?php
                                         // Loop through each credit checkbox and echo its ID if checked
                                         foreach ($credits as $credit) {

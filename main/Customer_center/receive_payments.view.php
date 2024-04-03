@@ -28,8 +28,14 @@ include __DIR__ . ('../../includes/header.php');
         border-collapse: collapse;
         width: 100%;
         table-layout: fixed;
+        text-align: right;
 
     }
+
+    #receivePaymentsTable td:first-child,
+#receivePaymentsTable td:nth-child(2) {
+    text-align: center;
+}
 
     #receivePaymentsTable th {
         font-size: 10px;
@@ -149,25 +155,36 @@ include __DIR__ . ('../../includes/header.php');
     }
 
     function populateReceivePaymentsTable() {
-        $.ajax({
-            type: "GET",
-            url: "modules/customer_center/get_receive_payments.php",
-            success: function(response) {
-                var receivePayments = JSON.parse(response);
+    $.ajax({
+        type: "GET",
+        url: "modules/customer_center/get_receive_payments.php",
+        success: function(response) {
+            var receivePayments = JSON.parse(response);
+            
+            // Clear existing table rows
+            $("#receivePaymentsTable tbody").empty();
 
-                // Clear existing table rows
-                $("#receivePaymentsTable tbody").empty();
+            receivePayments.forEach(function(payments) {
+                // Assuming payments.receivedDate is in the format yyyy-mm-dd
+                var receivedDate = new Date(payments.receivedDate);
 
-                receivePayments.forEach(function(payments) {
-                    // Format currency with commas
-                    var totalAmountDueFormatted = formatCurrency(payments.totalAmountDue);
-                    var paymentAmountFormatted = formatCurrency(payments.payment_amount);
-                    var discCredappliedFormatted = formatCurrency(payments.discCredapplied);
+                // Get the individual components of the date
+                var month = receivedDate.getMonth() + 1; // Months are zero-based, so add 1
+                var day = receivedDate.getDate();
+                var year = receivedDate.getFullYear();
 
-                    var row = `<tr>
+                // Format the date as m-d-y
+                var formattedDate = month + '-' + day + '-' + year;
+
+                // Format currency with commas
+                var totalAmountDueFormatted = formatCurrency(payments.totalAmountDue);
+                var paymentAmountFormatted = formatCurrency(payments.payment_amount);
+                var discCredappliedFormatted = formatCurrency(payments.discCredapplied);
+
+                var row = `<tr>
                     <td>${payments.RefNo}</td>
                     <td>${payments.invoiceNo}</td>
-                    <td>${payments.receivedDate}</td>
+                    <td>${formattedDate}</td>
                     <td>${payments.ar_account}</td>
                     <td>${payments.customerName}</td>
                     <td><strong>${totalAmountDueFormatted}</strong></td>
@@ -176,21 +193,23 @@ include __DIR__ . ('../../includes/header.php');
                     <td>${payments.paymentType}</td>
                 </tr>`;
 
-                    $("#receivePaymentsTable tbody").append(row);
-                });
+                $("#receivePaymentsTable tbody").append(row);
+            });
 
-                // Initialize DataTables only if it's not already initialized
-                if (!$.fn.DataTable.isDataTable("#receivePaymentsTable")) {
-                    $('#receivePaymentsTable').DataTable({
-                        // DataTable options
-                    });
-                }
-            },
-            error: function() {
-                console.error("Error fetching purchase order data.");
+            // Initialize DataTables only if it's not already initialized
+            if (!$.fn.DataTable.isDataTable("#receivePaymentsTable")) {
+                $('#receivePaymentsTable').DataTable({
+                    // DataTable options
+                    "order": [[1, "asc"]]
+                });
             }
-        });
-    }
+        },
+        error: function() {
+            console.error("Error fetching purchase order data.");
+        }
+    });
+}
+
 
 
     // Attach click event to table rows

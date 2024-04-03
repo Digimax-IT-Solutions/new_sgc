@@ -32,13 +32,15 @@
 
         // Function to calculate total amount due based on checked invoices
         function calculateAmountDue() {
-            var totalAmountDue = 0;
-            $('input[name="invoice[]"]:checked').each(function() {
-                totalAmountDue += parseFloat($(this).closest('tr').find('.total-amount-due').text());
-            });
-            $('#amount_due').val(totalAmountDue.toFixed(2));
-            $('#payment_amount').val(totalAmountDue.toFixed(2));
-        }
+    var totalAmountDue = 0;
+    $('input[name="invoice[]"]:checked').each(function() {
+        // Extract numeric characters and parse as float
+        var amountDueText = $(this).closest('tr').find('.total-amount-due').text().replace(/[^\d.-]/g, '');
+        totalAmountDue += parseFloat(amountDueText) || 0;
+    });
+    $('#amount_due').val(totalAmountDue.toFixed(2));
+    $('#payment_amount').val(totalAmountDue.toFixed(2));
+}
 
         function calculateDiscountAndCredits() {
             var Credits = 0;
@@ -65,45 +67,82 @@
             $('#discCredapplied').val(totalDiscountCredits.toFixed(2));
         }
 
+        function formatCurrency(amount) {
+    // Convert amount to number if it's not already
+    amount = Number(amount);
 
+    // Check if amount is a valid number
+    if (isNaN(amount)) {
+        return 'Invalid amount';
+    }
+
+    // Use toFixed to ensure two decimal places
+    var formattedAmount = amount.toFixed(2);
+
+    // Add commas for thousands separator
+    formattedAmount = formattedAmount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+    // Prepend peso sign
+    formattedAmount = '₱' + formattedAmount;
+
+    // Return the formatted amount
+    return formattedAmount;
+}
         function saveModalData() {
-            var invoiceID = $('#DiscCredID').text();
-            var creditInputValue = parseFloat($('#creditInput').val()) || 0;
-            var discountInputValue = parseFloat($('#discount_amount').val()) || 0;
+    var invoiceID = $('#DiscCredID').text();
+    var discountInputValue = parseFloat($('#discount_amount').val()) || 0;
+    var creditInputValue = 0; // Initialize the total credit input value
+    var newTotalAmountDue = 0; // Initialize the updated total amount due
 
-            var newTotalAmountDue = 0; // Initialize variable to hold the updated total amount due
-
-            $('#invoice_table tbody tr').each(function() {
-                var checkboxValue = $(this).find('input[type="checkbox"]').val();
-                if (checkboxValue == invoiceID) {
-                    $(this).find('.credit-column').text(creditInputValue);
-                    $(this).find('.discount-column').text(discountInputValue);
-                    var totalAmountDue = parseFloat($(this).find('.total-amount-due').text());
-                    newTotalAmountDue = totalAmountDue - creditInputValue - discountInputValue;
-                    $(this).find('.total-amount-due').text(newTotalAmountDue.toFixed(2));
-                    return false; // Exit the loop once the invoice is found
-                }
-            });
-
-            // Update the #amount_due text outside the loop
-            $('#amount_due').text(newTotalAmountDue.toFixed(2));
-
-            // Update other elements based on the new total amount due
-            $('#applied').val(newTotalAmountDue.toFixed(2));
-
-            // Update discCredapplied based on new credit and discount values
-            var totalDiscCredApplied = parseFloat($('#discCredapplied').val());
-            var newDiscCredApplied = totalDiscCredApplied + creditInputValue + discountInputValue;
-            $('#discCredapplied').val(newDiscCredApplied.toFixed(2));
-
-            calculateAmountDue()
+    // Iterate over each checked checkbox in the creditMemoTable
+    $('#creditMemoTable tbody tr').each(function() {
+        var checkbox = $(this).find('input[type="checkbox"]');
+        if (checkbox.is(':checked')) {
+            // Retrieve the credit input value for the checked checkbox
+            creditInputValue += parseFloat($(this).find('.credit-input').val()) || 0;
         }
+    });
 
+    // Iterate over each row in the invoice_table tbody
+    $('#invoice_table tbody tr').each(function() {
+        var checkboxValue = $(this).find('input[type="checkbox"]').val();
+        if (checkboxValue == invoiceID) {
+            // Update the credit, discount, and total amount due columns for the row
+            $(this).find('.credit-column').text(creditInputValue.toFixed(2));
+            $(this).find('.discount-column').text(discountInputValue.toFixed(2));
 
-        $('#saveModalDataBtn').click(function() {
-            saveModalData();
-            $('#addDiscCred').modal('hide');
-        });
+            // Calculate the new total amount due for the row
+            var totalAmountDue = parseFloat($(this).find('.total-amount-due').text().replace(/[^\d.]/g, '')) || 0;
+            newTotalAmountDue = totalAmountDue - creditInputValue - discountInputValue;
+
+            // Update the total amount due column for the row
+            $(this).find('.total-amount-due').html('<strong>' + formatCurrency(newTotalAmountDue) + '</strong>');
+
+            // Exit the loop once the invoice is found and processed
+            return false;
+        }
+    });
+
+    // Update the total amount due text outside the loop
+    $('#amount_due').text(newTotalAmountDue.toFixed(2));
+
+    // Update other elements based on the new total amount due
+    $('#applied').val(newTotalAmountDue.toFixed(2));
+
+    // Update discCredapplied based on new credit and discount values
+    var totalDiscCredApplied = parseFloat($('#discCredapplied').val());
+    var newDiscCredApplied = totalDiscCredApplied + creditInputValue + discountInputValue;
+    $('#discCredapplied').val(newDiscCredApplied.toFixed(2));
+
+    // Call the calculateAmountDue function to update the total amount due
+    calculateAmountDue();
+}
+
+$('#saveModalDataBtn').click(function() {
+    saveModalData();
+    $('#addDiscCred').modal('hide');
+});
+
         $('#customerName').change(function() {
             var customerName = $(this).val();
             console.log(customerName);
@@ -128,7 +167,7 @@
                                 '<td><input type="checkbox" class="first1-column" name="invoice[]" value="' + invoice.invoiceID + '"></td>' +
                                 '<td>' + invoice.invoiceDate + '</td>' +
                                 '<td>' + invoice.invoiceNo + '</td>' +
-                                '<td>' + invoice.totalAmountDue + '</td>' +
+                                '<td class="text-right"><strong>' + formatCurrency(invoice.totalAmountDue) + '</strong></td>' +
                                 '<td><button type="button" class="btn btn-success discount_credit_button"' +
                                 'data-customer="' + invoice.customer + '"' +
                                 'data-invoiceno="' + invoice.invoiceNo + '"' +
@@ -137,7 +176,7 @@
                                 'value="' + invoice.invoiceID + '" data-toggle="modal" data-target="#addDiscCred">Discount & Credit</button></td>' +
                                 '<td class="discount-column"></td>' +
                                 '<td class="credit-column"></td>' +
-                                '<td class="total-amount-due">' + (invoice.totalAmountDue - invoice.amountReceived) + '</td>' +
+                                '<td class="total-amount-due text-right"><strong>' + formatCurrency(invoice.totalAmountDue - invoice.amountReceived) + '</strong></td>' +
                                 '<td></td>' +
                                 '</tr>';
                             tableBody.append(row);
@@ -233,7 +272,7 @@
                                     '<td>' + credit.creditID + '</td>' +
                                     '<td>' + credit.customerName + '</td>' +
                                     '<td>' + credit.creditAmount + '</td>' + // Display original credit amount
-                                    '<td><input type="text" id="creditInput" class="form-control credit-input" data-original-amount="' + credit.creditBalance + '" value=""></td>' + // Input field
+                                    '<td><input type="text" id="creditInput" class="form-control credit-input" value="0.00" data-original-amount="' + credit.creditBalance + '" value=""></td>' + // Input field
                                     '<td class="updated-amount" data-credit-balance="' + credit.creditBalance + '">' + credit.creditBalance + '</td>'
                                     '</tr>';
                                 tableBody.append(row);
@@ -271,6 +310,8 @@
                                 var balanceDue = origAmt - totalCredits;
                                 $('#DiscCredBalanceDue').text(balanceDue.toFixed(2));
                                 $('#DiscCredCredUsed').text(totalCredits.toFixed(2));
+
+                                
                             });
 
 
@@ -352,33 +393,35 @@
             }
 
             var creditUpdates = [];
-            $('.credit-input').each(function() {
-                var creditID = $(this).closest('tr').find('input[type="checkbox"]').val();
-                var creditUsed = parseFloat($(this).val()) || 0; // Get the credit used value or default to 0
-                creditUpdates.push({
-                    id: creditID,
-                    used: creditUsed
-                });
-            });
+$('.credit-input').each(function() {
+    var creditID = $(this).closest('tr').find('input[type="checkbox"]').val();
+    var creditUsed = parseFloat($(this).val()) || 0; // Get the credit used value or default to 0
+    console.log('Credit ID:', creditID); // Log creditID value
+    console.log('Credit Used:', creditUsed); // Log creditUsed value
+    creditUpdates.push({
+        id: creditID,
+        used: creditUsed
+    });
+});
 
-            // Send the credit updates to the server
-            $.ajax({
-                url: 'modules/customer_center/update_credit_used.php', // Your PHP script to handle credit updates
-                type: 'POST',
-                data: {
-                    creditUpdates: JSON.stringify(creditUpdates)
-                },
-                success: function(response) {
-                    // Handle success response
-                    console.log('Credits updated successfully:', response);
-                    // Proceed with saving the payment...
-                },
-                error: function(xhr, status, error) {
-                    // Handle error
-                    console.error('Error updating credits:', error);
-                    // You may choose to display an error message to the user or take other actions
-                }
-            });
+// Send the credit updates to the server
+$.ajax({
+    url: 'modules/customer_center/update_credit_used.php', // Your PHP script to handle credit updates
+    type: 'POST',
+    data: {
+        creditUpdates: JSON.stringify(creditUpdates)
+    },
+    success: function(response) {
+        // Handle success response
+        console.log('Credits updated successfully:', response);
+        // Proceed with saving the payment...
+    },
+    error: function(xhr, status, error) {
+        // Handle error
+        console.error('Error updating credits:', error);
+        // You may choose to display an error message to the user or take other actions
+    }
+});
 
             // Check if at least one checkbox is checked
             if ($('input[name="invoice[]"]:checked').length === 0) {
