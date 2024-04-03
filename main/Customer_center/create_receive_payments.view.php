@@ -97,6 +97,18 @@ try {
         background-color: green;
     }
 
+    /* Media query for smaller screens */
+@media screen and (max-width: 768px) {
+    .icon-select {
+        padding: 5px; /* Reduce padding for smaller screens */
+    }
+
+    .icon-option {
+        margin: 3px; /* Adjust margin for smaller screens */
+        min-width: 80px; /* Adjust minimum width for smaller screens */
+    }
+}
+
     label {
         color: grey;
     }
@@ -268,6 +280,15 @@ try {
                                         <label for="payment_amount">PAYMENT AMOUNT</label>
                                         <input type="text" class="form-control" id="payment_amount" name="payment_amount" readonly>
                                     </div>
+                                    <div class="form-group col-md-2" id="reference_number_group">
+                                        <label for="RefNo">REFERENCE #</label>
+                                        <input type="text" class="form-control" id="RefNo" name="RefNo">
+                                    </div>
+                                    <div class="form-group col-md-2" id="check_number_group" style="display: none;">
+                                        <label for="checkNo">CHECK #</label>
+                                        <input type="text" class="form-control" id="checkNo" name="RefNo">
+                                        <!-- Same name as the reference number input -->
+                                    </div>
                                     <div class="form-group col-md-4" hidden>
                                         <label for="excessAmount" hidden>EXCESS CREDIT</label>
                                         <input type="text" class="form-control" id="excessAmount" name="excessAmount" readonly>
@@ -275,7 +296,7 @@ try {
                                 </div>
 
                                 <div class="form-row">
-                                    <div class="icon-select col-md-4">
+                                    <div class="icon-select col-md-6">
                                         <div class="form-group">
                                             <div class="icon-option" data-value="cash">
                                                 <i class="fas fa-money-bill-wave"></i>CASH
@@ -296,15 +317,6 @@ try {
                                                 <i class="fas fa-money-check-alt"></i>GIFT CARD
                                             </div>
                                         </div>                                        
-                                    </div>
-                                    <div class="form-group col-md-2" id="reference_number_group">
-                                        <label for="RefNo">REFERENCE #</label>
-                                        <input type="text" class="form-control" id="RefNo" name="RefNo">
-                                    </div>
-                                    <div class="form-group col-md-2" id="check_number_group" style="display: none;">
-                                        <label for="checkNo">CHECK #</label>
-                                        <input type="text" class="form-control" id="checkNo" name="RefNo">
-                                        <!-- Same name as the reference number input -->
                                     </div>
                                     <input type="hidden" id="paymentType" name="paymentType" value="">
                                     <div class="form-group">
