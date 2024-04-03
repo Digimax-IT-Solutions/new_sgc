@@ -163,9 +163,11 @@ $('#saveModalDataBtn').click(function() {
                         );
                     } else {
                         invoices.forEach(function(invoice) {
+                            var invoiceDate = new Date(invoice.invoiceDate);
+                            var formattedDate = (invoiceDate.getMonth() + 1) + '-' + invoiceDate.getDate() + '-' + invoiceDate.getFullYear();
                             var row = '<tr>' +
                                 '<td><input type="checkbox" class="first1-column" name="invoice[]" value="' + invoice.invoiceID + '"></td>' +
-                                '<td>' + invoice.invoiceDate + '</td>' +
+                                '<td>' + formattedDate + '</td>' + 
                                 '<td>' + invoice.invoiceNo + '</td>' +
                                 '<td class="text-right"><strong>' + formatCurrency(invoice.totalAmountDue) + '</strong></td>' +
                                 '<td><button type="button" class="btn btn-success discount_credit_button"' +
