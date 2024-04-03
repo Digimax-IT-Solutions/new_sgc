@@ -137,13 +137,13 @@
                     // Format credit amount and balance with comma separators
                     var creditAmountFormatted = '₱' + parseFloat(credit.creditAmount).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
                     var creditBalanceFormatted = '₱' + parseFloat(credit.creditBalance).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-
+                    var poIDCellContent = credit.poID !== null ? credit.poID : '';
                     var statusBadgeClass = credit.status === 'active' ? 'badge-success' : 'badge-danger';
                     var statusBadgeText = credit.status === 'active' ? 'Active' : 'Inactive';
 
                     var row = `<tr class="creditRow" data-credit-id="${credit.creditID}">
                     <td>${credit.creditID}</td>
-                    <td>${credit.poID}</td>
+                    <td>${poIDCellContent}</td>
                     <td>${credit.customerName}</td>
                     <td>${credit.creditDate}</td>
                     <td><strong>${creditAmountFormatted}</strong></td>

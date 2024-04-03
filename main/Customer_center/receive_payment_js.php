@@ -440,7 +440,7 @@ $.ajax({
             // Calculate total amount due from selected invoices
             var totalAmountDue = 0;
             $('input[name="invoice[]"]:checked').each(function() {
-                totalAmountDue += parseFloat($(this).closest('tr').find('td:nth-child(8)').text());
+                totalAmountDue += parseFloat($(this).closest('tr').find('td:nth-child(8)').text().replace(/[^\d.]/g, '')) || 0;
             });
 
             // Get payment amount entered by user
