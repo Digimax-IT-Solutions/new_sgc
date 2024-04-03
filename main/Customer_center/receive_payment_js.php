@@ -184,12 +184,18 @@ $('#saveModalDataBtn').click(function() {
                             tableBody.append(row);
                         });
                     }
-                },
-                error: function(xhr, status, error) {
-                    // Handle error
-                    console.log("Error:", error);
-                }
+                // Initialize DataTable for invoice_table
+        if (!$.fn.DataTable.isDataTable("#invoice_table")) {
+            $('#invoice_table').DataTable({
+                // DataTable options
             });
+        }
+    },
+    error: function(xhr, status, error) {
+        // Handle error
+        console.log("Error:", error);
+    }
+}); 
             var checkedCheckboxes = {}; // Object to store the state of checked checkboxes
             var inputFieldValues = {}; // Object to store the values of input fields
 
