@@ -268,8 +268,8 @@ try {
                                         <label for="payment_amount">PAYMENT AMOUNT</label>
                                         <input type="text" class="form-control" id="payment_amount" name="payment_amount" readonly>
                                     </div>
-                                    <div class="form-group col-md-4">
-                                        <label for="excessAmount">EXCESS CREDIT</label>
+                                    <div class="form-group col-md-4" hidden>
+                                        <label for="excessAmount" hidden>EXCESS CREDIT</label>
                                         <input type="text" class="form-control" id="excessAmount" name="excessAmount" readonly>
                                     </div>
                                 </div>
@@ -311,7 +311,7 @@ try {
                                         <label for="memo">Memo</label>
                                         <textarea class="form-control" id="memo" name="memo"></textarea>
                                     </div>
-                                    <div id="creditCheckboxIDsContainer">
+                                    <div id="creditCheckboxIDsContainer" hidden>
                                         <?php
                                         // Loop through each credit checkbox and echo its ID if checked
                                         foreach ($credits as $credit) {
