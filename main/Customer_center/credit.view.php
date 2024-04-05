@@ -29,6 +29,10 @@
         text-align: right;
     }
 
+    #creditTable td:nth-child(-n+3) {
+        text-align: left;
+    }
+
     #creditTable th {
         font-size: 10px;
         white-space: nowrap;
@@ -141,11 +145,14 @@
                     var statusBadgeClass = credit.status === 'active' ? 'badge-success' : 'badge-danger';
                     var statusBadgeText = credit.status === 'active' ? 'Active' : 'Inactive';
 
+                    var invoiceDateParts = credit.creditDate.split('-'); // Assuming date is in "YYYY-MM-DD" format
+                    var formattedInvoiceDate = `${invoiceDateParts[1]}-${invoiceDateParts[2]}-${invoiceDateParts[0]}`;
                     var row = `<tr class="creditRow" data-credit-id="${credit.creditID}">
+
                     <td>${credit.creditID}</td>
                     <td>${poIDCellContent}</td>
                     <td>${credit.customerName}</td>
-                    <td>${credit.creditDate}</td>
+                    <td>${formattedInvoiceDate}</td>
                     <td><strong>${creditAmountFormatted}</strong></td>
                     <td><strong>${creditBalanceFormatted}</strong></td>
                     <td><span class="badge ${statusBadgeClass}">${statusBadgeText}</span></td>

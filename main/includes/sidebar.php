@@ -221,7 +221,7 @@ $userPosition = $_SESSION['SESS_POSITION'];
                     </ul>
                 </li> -->
                 <!-- Accounting CENTER -->
-                <!-- <li class="nav-item has-treeview">
+                <li class="nav-item has-treeview">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-calculator"></i>
                         <p>
@@ -237,7 +237,7 @@ $userPosition = $_SESSION['SESS_POSITION'];
                                 <p>Create General Journal</p>
                             </a>
                         </li>
-                        <li class="nav-item">
+                        <!-- <li class="nav-item">
                             <a href="audit_trail" class="nav-link <?php echo ($page == 'main/audit_trail') ? 'active' : ''; ?>">
                                 <i class="nav-icon fas fa-history"></i>
                                 <p>Audit Trail</p>
@@ -254,13 +254,13 @@ $userPosition = $_SESSION['SESS_POSITION'];
                                 <i class="nav-icon fas fa-book-open"></i>
                                 <p>General Ledger</p>
                             </a>
-                        </li>
+                        </li> -->
                     </ul>
                 </li>
 
 
                 
-                <li class="nav-item has-treeview">
+                <!-- <li class="nav-item has-treeview">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-store"></i>
                         <p>
@@ -285,9 +285,9 @@ $userPosition = $_SESSION['SESS_POSITION'];
                         
                     </ul>
                     </ul>
-                </li> 
+                </li>  -->
 
-                 -->
+                
                 <?php if ($userPosition == 'admin' || $userPosition == 'staff') : ?>
                     <!-- MASTERLIST -->
                     <li class="nav-item has-treeview <?php echo ($page == 'main/chart_of_accounts' || $page == 'main/item_list' || $page == 'main/customer_list' || $page == 'main/vendor_list' || $page == 'main/other_names_list' || $page == 'main/location_list' || $page == 'main/category_list' || $page == 'main/terms_list' || $page == 'main/payment_method_list' || $page == 'main/vat_rate_list' || $page == 'main/sales_tax_list' || $page == 'main/wtax_list' || $page == 'main/uom_list') ? 'menu-open' : ''; ?>">

@@ -33,9 +33,13 @@ include __DIR__ . ('../../includes/header.php');
     }
 
     #receivePaymentsTable td:first-child,
-#receivePaymentsTable td:nth-child(2) {
-    text-align: center;
-}
+    #receivePaymentsTable td:nth-child(2), #receivePaymentsTable td:nth-child(3) {
+        text-align: center;
+    }
+
+    #receivePaymentsTable td:nth-child(4), #receivePaymentsTable td:nth-child(5) {
+        text-align: left;
+    }
 
     #receivePaymentsTable th {
         font-size: 10px;
@@ -173,8 +177,8 @@ include __DIR__ . ('../../includes/header.php');
                 var day = receivedDate.getDate();
                 var year = receivedDate.getFullYear();
 
-                // Format the date as m-d-y
-                var formattedDate = month + '-' + day + '-' + year;
+                // Format the date as 00-00-00 m/y/d
+                var formattedDate = (month < 10 ? '0' : '') + month + '-' + (day < 10 ? '0' : '') + day + '-' + year;
 
                 // Format currency with commas
                 var totalAmountDueFormatted = formatCurrency(payments.totalAmountDue);

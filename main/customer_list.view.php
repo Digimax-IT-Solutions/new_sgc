@@ -1,24 +1,26 @@
-<?php include('includes/header.php'); 
-include('connect.php');
+<?php include ('includes/header.php');
+include ('connect.php');
 ?>
 
 <style>
-#customerTable {
-    border-collapse: collapse;
-    width: 100%;
-}
+    #customerTable {
+        border-collapse: collapse;
+        width: 100%;
+    }
 
-#customerTable th,
-#customerTable td {
-    padding: 1px;
+    #customerTable th,
+    #customerTable td {
+        padding: 1px;
         width: 100px;
         border: 1px solid maroon;
-    /* Adjust the padding as needed */
-}
-#customerTable tbody tr:hover {
-    color: white;
-    background-color: maroon; /* Set your desired background color here */
-}
+        /* Adjust the padding as needed */
+    }
+
+    #customerTable tbody tr:hover {
+        color: white;
+        background-color: maroon;
+        /* Set your desired background color here */
+    }
 </style>
 <div class="content-wrapper">
     <!-- Content Header (Page header) -->
@@ -43,7 +45,8 @@ include('connect.php');
                             <div class="row mb-2">
                                 <div class="col-sm-6">
                                     <ol class="breadcrumb float-sm-left">
-                                        <li class="breadcrumb-item"><a style="color:maroon;" href="dashboard">Dashboard</a></li>
+                                        <li class="breadcrumb-item"><a style="color:maroon;"
+                                                href="dashboard">Dashboard</a></li>
                                         <li class="breadcrumb-item active">Master List</li>
                                         <li class="breadcrumb-item active">Customer List</li>
                                     </ol>
@@ -58,13 +61,14 @@ include('connect.php');
                                     </ol>
                                 </div><!-- /.col -->
                                 <div class="col-sm-15">
-                                        <ol class="breadcrumb float-sm-right">
-                                            <form action="modules/customers/import.php" method="post" enctype="multipart/form-data">
-                                                <input type="file" name="file" id="file" accept=".xls,.xlsx">
-                                                <button type="submit" name="import">Import </button>
-                                            </form>
-                                        </ol>
-                                    </div>
+                                    <ol class="breadcrumb float-sm-right">
+                                        <form action="modules/customers/import.php" method="post"
+                                            enctype="multipart/form-data">
+                                            <input type="file" name="file" id="file" accept=".xls,.xlsx">
+                                            <button type="submit" name="import">Import </button>
+                                        </form>
+                                    </ol>
+                                </div>
                             </div><!-- /.row -->
 
 
@@ -77,7 +81,9 @@ include('connect.php');
                                         <th>CONTACT NO.</th>
                                         <th>TIN NO.</th>
                                         <th>BILLING ADDRESS</th>
-                                        <th><center>BALANCE</center></th>
+                                        <th>
+                                            <center>BALANCE</center>
+                                        </th>
                                         <th>ACTION</th>
                                     </tr>
                                 </thead>
@@ -92,7 +98,7 @@ include('connect.php');
         </div>
     </section>
 
-    <?php include('includes/footer.php'); ?>
+    <?php include ('includes/footer.php'); ?>
 </div>
 <!-- Add Customer Modal -->
 <div class="modal" id="addCustomerModal" tabindex="-1" role="dialog" aria-labelledby="addCustomerModalLabel"
@@ -122,6 +128,7 @@ include('connect.php');
                                     placeholder="Enter Customer Code" required>
                             </div>
                         </div>
+
                         <div class="col-md-8">
                             <div class="form-group">
                                 <label for="customerBillingAddress">BILLING ADDRESS</label>
@@ -133,21 +140,33 @@ include('connect.php');
                                 <input type="text" class="form-control" id="customerShippingAddress"
                                     name="customerShippingAddress" placeholder="Enter Shipping Address" required>
                             </div> -->
-                            <div class="form-group">
-                            <label for="customerPaymentMethod">PAYMENT METHOD</label>
-                                        <select class="form-control" id="customerPaymentMethod" name="customerPaymentMethod" required>
-                                            <option value="">Select Payment Method</option>
-                                            <?php
-                                            $query = "SELECT payment_id, payment_name FROM payment_methods";
-                                            $result = $db->query($query);
+                        </div>
 
-                                            if ($result) {
-                                                while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
-                                                    echo "<option value='{$row['payment_name']}'>{$row['payment_name']}</option>";
-                                                }
-                                            }
-                                            ?>
-                                        </select>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="customerBalance">BALANCE</label>
+                                <input type="text" class="form-control" id="customerBalance" name="customerBalance"
+                                    placeholder="Enter Customer Code" required>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <label for="customerPaymentMethod">PAYMENT METHOD</label>
+                                <select class="form-control" id="customerPaymentMethod" name="customerPaymentMethod"
+                                    required>
+                                    <option value="">Select Payment Method</option>
+                                    <?php
+                                    $query = "SELECT payment_id, payment_name FROM payment_methods";
+                                    $result = $db->query($query);
+
+                                    if ($result) {
+                                        while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+                                            echo "<option value='{$row['payment_name']}'>{$row['payment_name']}</option>";
+                                        }
+                                    }
+                                    ?>
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -172,20 +191,20 @@ include('connect.php');
                             </div>
 
                             <div class="form-group">
-                            <label for="customerTerms">TERMS </label>
-                                        <select class="form-control" id="customerTerms" name="customerTerms" required>
-                                            <option value="">Select Term</option>
-                                            <?php
-                                            $query = "SELECT term_id, term_name, term_days_due FROM terms";
-                                            $result = $db->query($query);
+                                <label for="customerTerms">TERMS </label>
+                                <select class="form-control" id="customerTerms" name="customerTerms" required>
+                                    <option value="">Select Term</option>
+                                    <?php
+                                    $query = "SELECT term_id, term_name, term_days_due FROM terms";
+                                    $result = $db->query($query);
 
-                                            if ($result) {
-                                                while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
-                                                    echo "<option value='{$row['term_name']}' data-days-due='{$row['term_days_due']}'>{$row['term_name']}</option>";
-                                                }
-                                            }
-                                            ?>
-                                        </select>
+                                    if ($result) {
+                                        while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+                                            echo "<option value='{$row['term_name']}' data-days-due='{$row['term_days_due']}'>{$row['term_name']}</option>";
+                                        }
+                                    }
+                                    ?>
+                                </select>
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -196,8 +215,8 @@ include('connect.php');
                             </div> -->
                             <div class="form-group">
                                 <label for="customerBusinessStyle">BUSINESS STYLE</label>
-                                <input type="text" class="form-control" id="customerBusinessStyle" name="customerBusinessStyle"
-                                    placeholder="Enter Business Style" required>
+                                <input type="text" class="form-control" id="customerBusinessStyle"
+                                    name="customerBusinessStyle" placeholder="Enter Business Style" required>
                             </div>
                         </div>
                     </div>
@@ -241,8 +260,8 @@ include('connect.php');
                             </div>
                             <div class="form-group">
                                 <label for="editCustomerBalance">BALANCE</label>
-                                <input type="text" class="form-control" id="editCustomerBalance" name="editCustomerBalance"
-                                    placeholder="Enter Balance" required>
+                                <input type="text" class="form-control" id="editCustomerBalance"
+                                    name="editCustomerBalance" placeholder="Enter Balance" readonly>
                             </div>
 
                         </div>
@@ -259,19 +278,20 @@ include('connect.php');
                             </div> -->
                             <div class="form-group">
                                 <label for="editCustomerPaymentMethod">PAYMENT METHOD</label>
-                                <select class="form-control" id="editCustomerPaymentMethod" name="editCustomerPaymentMethod" required>
-                                            <option value="">Select Payment Method</option>
-                                            <?php
-                                            $query = "SELECT payment_id, payment_name FROM payment_methods";
-                                            $result = $db->query($query);
+                                <select class="form-control" id="editCustomerPaymentMethod"
+                                    name="editCustomerPaymentMethod" required>
+                                    <option value="">Select Payment Method</option>
+                                    <?php
+                                    $query = "SELECT payment_id, payment_name FROM payment_methods";
+                                    $result = $db->query($query);
 
-                                            if ($result) {
-                                                while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
-                                                    echo "<option value='{$row['payment_name']}'>{$row['payment_name']}</option>";
-                                                }
-                                            }
-                                            ?>
-                                        </select>
+                                    if ($result) {
+                                        while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+                                            echo "<option value='{$row['payment_name']}'>{$row['payment_name']}</option>";
+                                        }
+                                    }
+                                    ?>
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -296,20 +316,20 @@ include('connect.php');
                             </div>
 
                             <div class="form-group">
-                            <label for="editCustomerTerms">CUSTOMER TERMS </label>
-                                        <select class="form-control" id="editCustomerTerms" name="editCustomerTerms" required>
-                                            <option value="">Select Term</option>
-                                            <?php
-                                            $query = "SELECT term_id, term_name, term_days_due FROM terms";
-                                            $result = $db->query($query);
+                                <label for="editCustomerTerms">CUSTOMER TERMS </label>
+                                <select class="form-control" id="editCustomerTerms" name="editCustomerTerms" required>
+                                    <option value="">Select Term</option>
+                                    <?php
+                                    $query = "SELECT term_id, term_name, term_days_due FROM terms";
+                                    $result = $db->query($query);
 
-                                            if ($result) {
-                                                while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
-                                                    echo "<option value='{$row['term_name']}' data-days-due='{$row['term_days_due']}'>{$row['term_name']}</option>";
-                                                }
-                                            }
-                                            ?>
-                                        </select>
+                                    if ($result) {
+                                        while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+                                            echo "<option value='{$row['term_name']}' data-days-due='{$row['term_days_due']}'>{$row['term_name']}</option>";
+                                        }
+                                    }
+                                    ?>
+                                </select>
                             </div>
                         </div>
                         <!-- <div class="col-md-4">
@@ -318,52 +338,62 @@ include('connect.php');
                                 <input type="text" class="form-control" id="editCustomerEmail" name="editCustomerEmail"
                                     placeholder="Enter Email" required>
                             </div> -->
-                            <div class="form-group">
-                                <label for="editCustomerBusinessStyle">BUSINESS STYLE</label>
-                                <input type="text" class="form-control" id="editCustomerBusinessStyle" name="editCustomerBusinessStyle"
-                                    placeholder="Enter Business Style" required>
-                            </div>
+                        <div class="form-group">
+                            <label for="editCustomerBusinessStyle">BUSINESS STYLE</label>
+                            <input type="text" class="form-control" id="editCustomerBusinessStyle"
+                                name="editCustomerBusinessStyle" placeholder="Enter Business Style" required>
                         </div>
                     </div>
-                </form>
+            </div>
+            </form>
 
-          
+
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-success" id="saveEditCustomerButton">Save Changes</button>
             </div>
-            </div>
         </div>
     </div>
 </div>
+</div>
 <script>
-$(document).ready(function() {
-    $("#saveCustomerButton").click(function() {
-        // Get form data
-        var formData = $("#addCustomerForm").serialize();
+    $(document).ready(function () {
+        $("#saveCustomerButton").click(function () {
+            // Get form data
+            var formData = $("#addCustomerForm").serialize();
 
-        // AJAX request to store data
-        $.ajax({
-            type: "POST",
-            url: "modules/customers/save_customer.php",
-            data: formData,
-            success: function(response) {
-                // Use SweetAlert2 for displaying success or error message
-                if (response === "success") {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Customer saved successfully!',
-                        showConfirmButton: false,
-                        timer: 1500
-                    }).then(function() {
-                        // Reload the browser after SweetAlert2 is closed
-                        location.reload();
-                    });
-                    $("#addCustomerModal").modal("hide");
+            // AJAX request to store data
+            $.ajax({
+                type: "POST",
+                url: "modules/customers/save_customer.php",
+                data: formData,
+                success: function (response) {
+                    // Use SweetAlert2 for displaying success or error message
+                    if (response === "success") {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Customer saved successfully!',
+                            showConfirmButton: false,
+                            timer: 1500
+                        }).then(function () {
+                            // Reload the browser after SweetAlert2 is closed
+                            location.reload();
+                        });
+                        $("#addCustomerModal").modal("hide");
 
-                    // Update the table after successfully saving the customer
-                    populateCustomerTable();
-                } else {
+                        // Update the table after successfully saving the customer
+                        populateCustomerTable();
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error saving customer. Please try again.',
+                            text: response, // Display the MySQL error message
+                            showConfirmButton: false,
+                            timer: 5000 // Adjust the timer as needed
+                        });
+                    }
+                },
+                error: function () {
                     Swal.fire({
                         icon: 'error',
                         title: 'Error saving customer. Please try again.',
@@ -372,20 +402,10 @@ $(document).ready(function() {
                         timer: 5000 // Adjust the timer as needed
                     });
                 }
-            },
-            error: function() {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error saving customer. Please try again.',
-                    text: response, // Display the MySQL error message
-                    showConfirmButton: false,
-                    timer: 5000 // Adjust the timer as needed
-                });
-            }
+            });
         });
-    });
 
-    function formatCurrency(amount) {
+        function formatCurrency(amount) {
             // Convert amount to number if it's not already
             amount = parseFloat(amount);
 
@@ -410,29 +430,29 @@ $(document).ready(function() {
                 return '';
             }
         }
-    // Variable to check if DataTables is already initialized
-    var dataTableInitialized = false;
+        // Variable to check if DataTables is already initialized
+        var dataTableInitialized = false;
 
-    // Function to fetch and populate customer data
-    function populateCustomerTable() {
-        $.ajax({
-            type: "GET",
-            url: "modules/customers/get_customers.php", // Adjust the URL to the server-side script
-            processing: true,
-            serverSide: true,
-            success: function(response) {
-                // Parse the JSON response
-                var customers = JSON.parse(response);
+        // Function to fetch and populate customer data
+        function populateCustomerTable() {
+            $.ajax({
+                type: "GET",
+                url: "modules/customers/get_customers.php", // Adjust the URL to the server-side script
+                processing: true,
+                serverSide: true,
+                success: function (response) {
+                    // Parse the JSON response
+                    var customers = JSON.parse(response);
 
-                customers.sort((a, b) => {
-                    return a.customerName.localeCompare(b.customerName);
-                });
-                // Clear existing table rows
-                $("#customerTable tbody").empty();
+                    customers.sort((a, b) => {
+                        return a.customerName.localeCompare(b.customerName);
+                    });
+                    // Clear existing table rows
+                    $("#customerTable tbody").empty();
 
-                // Populate the table with data
-                customers.forEach(function(customer) {
-                    var row = `<tr>
+                    // Populate the table with data
+                    customers.forEach(function (customer) {
+                        var row = `<tr>
                     <td>${customer.customerCode || ''}</td>
                             <td>${customer.customerName || ''}</td>
                             <td>${customer.contactNumber || ''}</td>
@@ -444,22 +464,22 @@ $(document).ready(function() {
                             <button type="button" class="btn btn-danger btn-sm deleteCustomerButton" data-id="${customer.customerID}">Delete</button></td>
                             </td>
                         </tr>`;
-                    $("#customerTable tbody").append(row);
-                });
+                        $("#customerTable tbody").append(row);
+                    });
 
-                // Initialize DataTables only if it's not already initialized
-                if (!dataTableInitialized) {
-                    $('#customerTable').DataTable({
-                        "paging": true,
-                        "processing": true,
-                        "lengthChange": true,
-                        "searching": true,
-                        "info": true,
-                        "autoWidth": true,
-                        "lengthMenu": [10, 25, 50, 100],
-                        "ordering": false, // Disable sorting for all columns
-                        "dom": 'lBfrtip',
-                        "buttons": [{
+                    // Initialize DataTables only if it's not already initialized
+                    if (!dataTableInitialized) {
+                        $('#customerTable').DataTable({
+                            "paging": true,
+                            "processing": true,
+                            "lengthChange": true,
+                            "searching": true,
+                            "info": true,
+                            "autoWidth": true,
+                            "lengthMenu": [10, 25, 50, 100],
+                            "ordering": false, // Disable sorting for all columns
+                            "dom": 'lBfrtip',
+                            "buttons": [{
                                 extend: 'copy',
                                 exportOptions: {
                                     columns: ':not(:last-child)' // Exclude the last column (ACTION)
@@ -489,40 +509,166 @@ $(document).ready(function() {
                                     columns: ':not(:last-child)' // Exclude the last column (ACTION)
                                 }
                             },
-                        ],
-                        "oLanguage": {
-                            "sSearch": "Search:",
-                            "sLengthMenu": "Show _MENU_ entries",
-                            "sInfo": "Showing _START_ to _END_ of _TOTAL_ entries",
-                            "sInfoEmpty": "Showing 0 to 0 of 0 entries",
-                            "sInfoFiltered": "(filtered from _MAX_ total entries)",
-                            "oPaginate": {
-                                "sFirst": "First",
-                                "sLast": "Last",
-                                "sNext": "Next",
-                                "sPrevious": "Previous"
+                            ],
+                            "oLanguage": {
+                                "sSearch": "Search:",
+                                "sLengthMenu": "Show _MENU_ entries",
+                                "sInfo": "Showing _START_ to _END_ of _TOTAL_ entries",
+                                "sInfoEmpty": "Showing 0 to 0 of 0 entries",
+                                "sInfoFiltered": "(filtered from _MAX_ total entries)",
+                                "oPaginate": {
+                                    "sFirst": "First",
+                                    "sLast": "Last",
+                                    "sNext": "Next",
+                                    "sPrevious": "Previous"
+                                }
                             }
-                        }
-                    });
+                        });
 
-                    // Set the flag to indicate DataTables is now initialized
-                    dataTableInitialized = true;
-                } else {
-                    // If DataTables is already initialized, destroy and recreate it
-                    $('#customerTable').DataTable().destroy();
-                    $('#customerTable').DataTable({
-                        // Your DataTables options here
-                    });
+                        // Set the flag to indicate DataTables is now initialized
+                        dataTableInitialized = true;
+                    } else {
+                        // If DataTables is already initialized, destroy and recreate it
+                        $('#customerTable').DataTable().destroy();
+                        $('#customerTable').DataTable({
+                            // Your DataTables options here
+                        });
+                    }
+                },
+                error: function () {
+                    console.log("Error fetching data.");
                 }
+            });
+        }
+        // Initial population when the page loads
+        populateCustomerTable();
+
+        // Function to display an error using SweetAlert2
+        function displayError(errorMessage) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: errorMessage,
+                showConfirmButton: false,
+                timer: 5000
+            });
+        }
+    });
+    // Edit Location functionality
+    $("#customerTable").on("click", ".editCustomerButton", function () {
+        var customerID = $(this).data("id");
+
+        // Populate the edit modal with location data
+        $.ajax({
+            type: "GET",
+            url: "modules/customers/get_customer_details.php", // Replace with your server-side script
+            data: {
+                customerID: customerID
             },
-            error: function() {
-                console.log("Error fetching data.");
+            success: function (response) {
+                var customerDetails = JSON.parse(response);
+
+                // Populate the edit modal with location details
+                $("#editCustomerID").val(customerDetails.customerID);
+                $("#editCustomerName").val(customerDetails.customerName);
+                $("#editCustomerCode").val(customerDetails.customerCode);
+                $("#editCustomerBalance").val(customerDetails.customerBalance);
+                $("#editCustomerPaymentMethod").val(customerDetails.customerPaymentMethod);
+                $("#editCustomerBillingAddress").val(customerDetails.customerBillingAddress);
+                $("#editCustomerShippingAddress").val(customerDetails.customerShippingAddress);
+                $("#editCustomerTin").val(customerDetails.customerTin);
+                $("#editContactNumber").val(customerDetails.contactNumber);
+                $("#editCustomerDeliveryType").val(customerDetails.customerDeliveryType);
+                $("#editCustomerTerms").val(customerDetails.customerTerms);
+                $("#editCustomerEmail").val(customerDetails.customerEmail);
+                $("#editCustomerBusinessStyle").val(customerDetails.customerBusinessStyle);
+                // Show the edit modal
+                $("#editCustomerModal").modal("show");
+            },
+            error: function () {
+                console.log("Error fetching Customer details for edit.");
             }
         });
-    }
-    // Initial population when the page loads
-    populateCustomerTable();
+    });
+    // Save Edit Location Changes functionality
+    $("#saveEditCustomerButton").click(function () {
+        // Retrieve the customerID from the form data
+        var customerID = $("#editCustomerForm").data("customerID");
+        // Add customerID to the form data
+        var formData = $("#editCustomerForm").serialize();
 
+        $.ajax({
+            type: "POST",
+            url: "modules/customers/update_customer.php", // Replace with your server-side script
+            data: formData,
+            success: function (response) {
+                if (response === "success") {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Customer updated successfully!',
+                        showConfirmButton: false,
+                        timer: 1500
+                    }).then(function () {
+                        // Reload the browser after SweetAlert2 is closed
+                        location.reload();
+                    });
+                } else {
+                    // Display the error message in SweetAlert2
+                    displayError(response);
+                }
+            },
+            error: function () {
+                displayError("An unexpected error occurred. Please try again.");
+            }
+        });
+    });
+    // Delete Location functionality
+    $("#customerTable").on("click", ".deleteCustomerButton", function () {
+        var customerID = $(this).data("id");
+
+        // Display a confirmation dialog before deleting
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'You won\'t be able to revert this!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Delete the location via AJAX
+                $.ajax({
+                    type: "POST",
+                    url: "modules/customers/delete_customer.php",
+                    data: {
+                        deleteCustomerID: customerID
+                    },
+                    success: function (response) {
+                        if (response === "success") {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Customer deleted successfully!',
+                                showConfirmButton: false,
+                                timer: 1500
+                            }).then(function () {
+                                // Reload the browser after SweetAlert2 is closed
+                                location.reload();
+                            });
+                            // Update the table after successfully deleting the location
+                            populateCustomerTable();
+                        } else {
+                            // Display the error message in SweetAlert2
+                            displayError(response);
+                        }
+                    },
+                    error: function () {
+                        displayError("An unexpected error occurred. Please try again.");
+                    }
+                });
+            }
+        });
+    });
     // Function to display an error using SweetAlert2
     function displayError(errorMessage) {
         Swal.fire({
@@ -533,130 +679,4 @@ $(document).ready(function() {
             timer: 5000
         });
     }
-});
-// Edit Location functionality
-$("#customerTable").on("click", ".editCustomerButton", function() {
-    var customerID = $(this).data("id");
-
-    // Populate the edit modal with location data
-    $.ajax({
-        type: "GET",
-        url: "modules/customers/get_customer_details.php", // Replace with your server-side script
-        data: {
-            customerID: customerID
-        },
-        success: function(response) {
-            var customerDetails = JSON.parse(response);
-
-            // Populate the edit modal with location details
-            $("#editCustomerID").val(customerDetails.customerID);
-            $("#editCustomerName").val(customerDetails.customerName);
-            $("#editCustomerCode").val(customerDetails.customerCode);
-            $("#editCustomerBalance").val(customerDetails.customerBalance);
-            $("#editCustomerPaymentMethod").val(customerDetails.customerPaymentMethod);
-            $("#editCustomerBillingAddress").val(customerDetails.customerBillingAddress);
-            $("#editCustomerShippingAddress").val(customerDetails.customerShippingAddress);
-            $("#editCustomerTin").val(customerDetails.customerTin);
-            $("#editContactNumber").val(customerDetails.contactNumber);
-            $("#editCustomerDeliveryType").val(customerDetails.customerDeliveryType);
-            $("#editCustomerTerms").val(customerDetails.customerTerms);
-            $("#editCustomerEmail").val(customerDetails.customerEmail);
-            $("#editCustomerBusinessStyle").val(customerDetails.customerBusinessStyle);
-            // Show the edit modal
-            $("#editCustomerModal").modal("show");
-        },
-        error: function() {
-            console.log("Error fetching Customer details for edit.");
-        }
-    });
-});
-// Save Edit Location Changes functionality
-$("#saveEditCustomerButton").click(function() {
-    // Retrieve the customerID from the form data
-    var customerID = $("#editCustomerForm").data("customerID");
-    // Add customerID to the form data
-    var formData = $("#editCustomerForm").serialize();
-
-    $.ajax({
-        type: "POST",
-        url: "modules/customers/update_customer.php", // Replace with your server-side script
-        data: formData,
-        success: function(response) {
-            if (response === "success") {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Customer updated successfully!',
-                    showConfirmButton: false,
-                    timer: 1500
-                }).then(function() {
-                    // Reload the browser after SweetAlert2 is closed
-                    location.reload();
-                });
-            } else {
-                // Display the error message in SweetAlert2
-                displayError(response);
-            }
-        },
-        error: function() {
-            displayError("An unexpected error occurred. Please try again.");
-        }
-    });
-});
-// Delete Location functionality
-$("#customerTable").on("click", ".deleteCustomerButton", function() {
-    var customerID = $(this).data("id");
-
-    // Display a confirmation dialog before deleting
-    Swal.fire({
-        title: 'Are you sure?',
-        text: 'You won\'t be able to revert this!',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, delete it!'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Delete the location via AJAX
-            $.ajax({
-                type: "POST",
-                url: "modules/customers/delete_customer.php",
-                data: {
-                    deleteCustomerID: customerID
-                },
-                success: function(response) {
-                    if (response === "success") {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Customer deleted successfully!',
-                            showConfirmButton: false,
-                            timer: 1500
-                        }).then(function() {
-                            // Reload the browser after SweetAlert2 is closed
-                            location.reload();
-                        });
-                        // Update the table after successfully deleting the location
-                        populateCustomerTable();
-                    } else {
-                        // Display the error message in SweetAlert2
-                        displayError(response);
-                    }
-                },
-                error: function() {
-                    displayError("An unexpected error occurred. Please try again.");
-                }
-            });
-        }
-    });
-});
-// Function to display an error using SweetAlert2
-function displayError(errorMessage) {
-    Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: errorMessage,
-        showConfirmButton: false,
-        timer: 5000
-    });
-}
 </script>

@@ -35,14 +35,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $generalJournalId = $db->lastInsertId();
 
         // Insert data into journal_entries table
-        $stmt = $db->prepare("INSERT INTO journal_entries (general_journal_id, account, debit, credit, memo) VALUES (?, ?, ?, ?, ?)");
+        $stmt = $db->prepare("INSERT INTO journal_entries (general_journal_id, account, debit, credit, name, memo) VALUES (?, ?, ?, ?, ?, ?)");
 
         foreach ($accounts as $key => $account) {
             $debit = $debits[$key];
             $credit = $credits[$key];
+            $name = $_POST['name'][$key];
             $memo = $memos[$key];
+            $stmt->execute([$generalJournalId, $account, $debit, $credit, $name, $memo]);
 
-            $stmt->execute([$generalJournalId, $account, $debit, $credit, $memo]);
+            if ($debit > 0) {
+                $updateStmt = $db->prepare("UPDATE chart_of_accounts SET account_balance = account_balance + ? WHERE account_name = ?");
+                $updateStmt->execute([$debit, $account]);
+            }
+
+            if ($credit > 0) {
+                $updateStmt = $db->prepare("UPDATE chart_of_accounts SET account_balance = account_balance - ? WHERE account_name = ?");
+                $updateStmt->execute([$credit, $account]);
+            }
+
+            if ($debit > 0) {
+                $updateStmt = $db->prepare("UPDATE customers SET customerBalance = customerBalance + ? WHERE customerName = ?");
+                $updateStmt->execute([$credit, $name]);
+            }
+
+            if ($credit > 0) {
+                $updateStmt = $db->prepare("UPDATE customers SET customerBalance = customerBalance - ? WHERE customerName = ?");
+                $updateStmt->execute([$credit, $name]);
+            }
         }
 
         // Commit the transaction

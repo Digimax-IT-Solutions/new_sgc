@@ -3,7 +3,7 @@ include __DIR__ . ('../../includes/header.php');
 
 ?>
 <?php
-include('connect.php');
+include ('connect.php');
 $query = "SELECT account_id, account_type, account_name FROM chart_of_accounts";
 $result = $db->query($query);
 
@@ -12,6 +12,22 @@ $chartOfAccount = array();
 while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
     $chartOfAccount[] = $row;
 }
+
+$query = "SELECT 'Vendor' as source, vendorName as account_name FROM vendors
+          UNION 
+          SELECT 'Customer' as source, customerName as account_name FROM customers
+          UNION 
+          SELECT 'Other Names' as source, otherName as account_name FROM other_names";
+$result = $db->query($query);
+
+$otherNames = array();
+
+while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+    $otherNames[] = $row;
+}
+
+$chartOfAccountJSON = json_encode($chartOfAccount);
+$otherNamesJSON = json_encode($otherNames);
 ?>
 <style>
     /* Add styles for active status */
@@ -85,7 +101,8 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
                                                 $currentDate = new DateTime('now', new DateTimeZone('Asia/Manila'));
                                                 $formattedDate = $currentDate->format('Y-m-d');
                                                 ?>
-                                                <input type="date" class="form-control" id="entry_date" name="entry_date" value="<?php echo $formattedDate; ?>" required>
+                                                <input type="date" class="form-control" id="entry_date"
+                                                    name="entry_date" value="<?php echo $formattedDate; ?>" required>
                                             </div>
                                         </div>
 
@@ -96,7 +113,8 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
                                         <div class="form-group col-md-2">
                                             <label for="entry_no">ENTRY NO.</label>
                                             <div class="input-group">
-                                                <input type="text" class="form-control" id="entry_no" name="entry_no" placeholder="Entry No" required>
+                                                <input type="text" class="form-control" id="entry_no" name="entry_no"
+                                                    placeholder="Entry No" required>
                                             </div>
                                         </div>
 
@@ -106,6 +124,7 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
                                                     <th>Account</th>
                                                     <th>Debit</th>
                                                     <th>Credit</th>
+                                                    <th>Name</th>
                                                     <th>Memo</th>
                                                     <th>ACTION</th>
                                                 </tr>
@@ -120,6 +139,7 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
                                                     <th>TOTAL</th>
                                                     <th id="totalDebit">0.00</th>
                                                     <th id="totalCredit">0.00</th>
+                                                    <th></th>
                                                     <th></th>
                                                     <th></th>
                                                 </tr>
@@ -158,9 +178,18 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
 
 
 <script>
+    $("#clearButton").on("click", function () {
+    // Clear all input fields in the form
+    $("#enterBillsForm")[0].reset();
+
+    // Remove all rows from the table body except the first one
+    $("#generalJournalTableBody tr:not(:first)").remove();
+
+    // Update totals to reset them
+    updateTotals();
+    });
     // Save button event listener
-    // Save button event listener
-    $("#saveButton").on("click", function() {
+    $("#saveButton").on("click", function () {
         if (validateImbalance()) {
             // Prepare form data
             var formData = $("#enterBillsForm").serialize();
@@ -171,7 +200,7 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
                 url: "modules/accounting/save_general_journal.php",
                 data: formData,
                 dataType: "json",
-                success: function(response) {
+                success: function (response) {
                     // Display success/error message
                     Swal.fire({
                         icon: response.status === 'success' ? 'success' : 'error',
@@ -184,7 +213,7 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
                         }
                     });
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     // Display error message
                     Swal.fire({
                         icon: 'error',
@@ -202,35 +231,44 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
     addJournalEntry();
 
     // Add expense row when the "Add Expense" button is clicked
-    $("#addAccountButton").on("click", function() {
+    $("#addAccountButton").on("click", function () {
         addJournalEntry();
     });
 
     // Event listener for removing an item
-    $("#generalJournalTableBody").on("click", ".removeItemBtn", function() {
+    $("#generalJournalTableBody").on("click", ".removeItemBtn", function () {
         $(this).closest("tr").remove();
         updateTotals();
     });
 
     // Event listener for input changes
-    $("#generalJournalTableBody").on("input", "input[name^='debit'], input[name^='credit']", function() {
+    $("#generalJournalTableBody").on("input", "input[name^='debit'], input[name^='credit']", function () {
         updateTotals();
         validateDebitCreditConsistency();
     });
 
 
     function addJournalEntry() {
-        // Build options for the select dropdown
+        // Parse JSON data for chartOfAccount
+        var chartOfAccount = <?php echo $chartOfAccountJSON; ?>;
         var options = "";
-        <?php foreach ($chartOfAccount as $account) : ?>
-            options += '<option value="<?= $account["account_name"] ?>"><?= $account["account_name"] ?></option>';
-        <?php endforeach; ?>
+        chartOfAccount.forEach(function (account) {
+            options += '<option value="' + account["account_name"] + '">' + account["account_name"] + '</option>';
+        });
+
+        // Parse JSON data for otherNames
+        var otherNames = <?php echo $otherNamesJSON; ?>;
+        var optionss = "";
+        otherNames.forEach(function (account) {
+            optionss += '<option value="' + account["account_name"] + '">' + account["account_name"] + ' | ' + account["source"] + '</option>';
+        });
 
         // Create a new row with the select dropdown
         var newRow = '<tr>' +
             '<td><select name="account[]" class="form-control">' + options + '</select></td>' +
             '<td><input type="number" name="debit[]" class="form-control" placeholder="Debit"></td>' +
             '<td><input type="number" name="credit[]" class="form-control" placeholder="Credit"></td>' +
+            '<td><select name="name[]" class="form-control">' + optionss + '</select></td>' +
             '<td><input type="text" name="memo[]" class="form-control" placeholder="Memo"></td>' +
             '<td><button type="button" class="btn btn-danger btn-sm removeItemBtn">Remove</button></td>'
         '</tr>';
@@ -242,12 +280,13 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
         updateTotals();
     }
 
+
     function updateTotals() {
         // For example:
         var totalDebit = 0;
         var totalCredit = 0;
 
-        $('#generalJournalTableBody tr').each(function() {
+        $('#generalJournalTableBody tr').each(function () {
             var debit = parseFloat($(this).find('td:eq(1) input').val()) || 0;
             var credit = parseFloat($(this).find('td:eq(2) input').val()) || 0;
 
@@ -284,7 +323,7 @@ while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
     function validateDebitCreditConsistency() {
         var inconsistentEntries = [];
 
-        $('#generalJournalTableBody tr').each(function() {
+        $('#generalJournalTableBody tr').each(function () {
             var account = $(this).find('td:eq(0) select').val();
             var debit = parseFloat($(this).find('td:eq(1) input').val()) || 0;
             var credit = parseFloat($(this).find('td:eq(2) input').val()) || 0;

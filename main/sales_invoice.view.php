@@ -128,11 +128,13 @@
                     style: 'currency',
                     currency: 'PHP'
                 }).format(transaction.totalAmountDue);
-
+                
+                var invoiceDateParts = transaction.invoiceDate.split('-'); // Assuming date is in "YYYY-MM-DD" format
+                var formattedInvoiceDate = `${invoiceDateParts[1]}-${invoiceDateParts[2]}-${invoiceDateParts[0]}`; // Rearrange date parts
                 var row = `<tr class="salesRow" data-invoice-id="${transaction.invoiceID}">
                     <td>${transaction.invoiceNo}</td>
                     <td>${transaction.customer}</td>
-                    <td>${transaction.invoiceDate}</td>
+                    <td>${formattedInvoiceDate}</td>
                     <td>${transaction.address}</td>
                     <td>${transaction.account}</td>
                     <td><span class="badge ${statusColorClass}">${transaction.invoiceStatus}</span></td>
