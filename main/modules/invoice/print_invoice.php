@@ -141,7 +141,7 @@ body {
         top: 145px;
         font-size: 15px;
     }
-    table {
+    #printInvoice {
         position: absolute;
         top: 270px;
         left: 35px;
@@ -149,10 +149,16 @@ body {
         font-size: 15px;
         table-layout: fixed;
     }
-    th, td {
-        white-space: nowrap;
-        overflow: hidden; /* Hides any overflowing content */
-        text-overflow: ellipsis;
+    #printInvoice td {
+        overflow: hidden;
+        padding-bottom: 5px;
+        
+    }
+    #printInvoice td:first-child {
+        width: 50%;
+    }
+    #printInvoice td:nth-child(4), #printInvoice td:nth-child(5) {
+        text-align: right !important;
     }
     .totalamount {
         position: absolute;
@@ -226,7 +232,7 @@ body {
     <div class="date"><?php echo date('m/d/Y', strtotime($salesInvoice['invoiceDate'])); ?></div> 
     <div class="bstyle"><?php echo $salesInvoice['invoiceBusinessStyle']; ?></div>  
     <div class="po"><?php echo $salesInvoice['invoicePo']; ?></div>  
-    <table class="table">
+    <table id="printInvoice">
     <tbody>
         <?php
         // Connect to your database
@@ -262,11 +268,11 @@ body {
                 $amountFormatted = number_format($row['amount'], 2, '.', ',');
                 $rateFormatted = number_format($row['rate'], 2, '.', ',');
                 echo "<tr>
-                    <td style='text-align: left; padding-bottom: 4.5px; white-space: nowrap;'>" . $row["description"] . "</td>
-                    <td style='text-align: left; padding-left: 240px; padding-bottom: 4.5px; white-space: nowrap;'>" . $row["quantity"] . "</td>
-                    <td style='text-align: left; padding-bottom: 4.5px; padding-left: 150px; white-space: nowrap;'>" . $uom . "</td>
-                    <td style='text-align: right; width: 100px; padding-left: 40px; padding-bottom: 4.5px; white-space: nowrap;'>" . $rateFormatted . "</td>
-                    <td style='text-align: right; padding-right: 40px; padding-bottom: 4.5px;'>" . $amountFormatted . "</td>
+                    <td style='text-align: left;'>" . $row["description"] . "</td>
+                    <td style='text-align: left; width: 40px; padding-left: 5px;'>" . $row["quantity"] . "</td>
+                    <td style='text-align: left; padding-left: 30px;'>" . $uom . "</td>
+                    <td style='padding-right: 45px;'>" . $rateFormatted . "</td>
+                    <td style='padding-right: 40px;'>" . $amountFormatted . "</td>
                 </tr>";
             }
         } else {
