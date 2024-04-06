@@ -19,17 +19,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $invoiceNo = $_POST["invoiceNo"];
         
         // Add a validation check to ensure that the invoiceNo doesn't already exist
-        if ($invoiceID !== null) {
-            $checkInvoiceNoQuery = "SELECT COUNT(*) FROM sales_invoice WHERE invoiceNo = :invoiceNo AND invoiceID != :invoiceID";
-            $checkInvoiceNoStmt = $db->prepare($checkInvoiceNoQuery);
-            $checkInvoiceNoStmt->bindParam(":invoiceNo", $invoiceNo);
-            $checkInvoiceNoStmt->bindParam(":invoiceID", $invoiceID);
-            $checkInvoiceNoStmt->execute();
+        // if ($invoiceID !== null) {
+        //     $checkInvoiceNoQuery = "SELECT COUNT(*) FROM sales_invoice WHERE invoiceNo = :invoiceNo AND invoiceID != :invoiceID";
+        //     $checkInvoiceNoStmt = $db->prepare($checkInvoiceNoQuery);
+        //     $checkInvoiceNoStmt->bindParam(":invoiceNo", $invoiceNo);
+        //     $checkInvoiceNoStmt->bindParam(":invoiceID", $invoiceID);
+        //     $checkInvoiceNoStmt->execute();
 
-            if ($checkInvoiceNoStmt->fetchColumn() > 0) {
-                throw new Exception("Invoice with the same invoiceNo already exists.");
-            }
-        }
+        //     if ($checkInvoiceNoStmt->fetchColumn() > 0) {
+        //         throw new Exception("Invoice with the same invoiceNo already exists.");
+        //     }
+        // }
 
         $invoiceDate = $_POST["invoiceDate"];
         $invoiceDueDate = $_POST["invoiceDueDate"];
