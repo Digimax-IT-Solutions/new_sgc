@@ -149,6 +149,11 @@ body {
         font-size: 15px;
         table-layout: fixed;
     }
+    th, td {
+        white-space: nowrap;
+        overflow: hidden; /* Hides any overflowing content */
+        text-overflow: ellipsis;
+    }
     .totalamount {
         position: absolute;
         right: 40px;
