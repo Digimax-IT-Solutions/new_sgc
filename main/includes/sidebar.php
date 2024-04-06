@@ -234,7 +234,7 @@ $userPosition = $_SESSION['SESS_POSITION'];
                         <li class="nav-item">
                             <a href="create_general_journal" class="nav-link <?php echo ($page == 'main/create_general_journal') ? 'active' : ''; ?>">
                                 <i class="nav-icon fas fa-book"></i>
-                                <p>Create General Journal</p>
+                                <p><s>Create General Journal</s></p>
                             </a>
                         </li>
                         <!-- <li class="nav-item">
