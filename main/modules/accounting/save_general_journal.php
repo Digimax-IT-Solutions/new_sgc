@@ -44,6 +44,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $memo = $memos[$key];
             $stmt->execute([$generalJournalId, $account, $debit, $credit, $name, $memo]);
 
+            if ($debit < 0) {
+                $updateStmt = $db->prepare("UPDATE chart_of_accounts SET account_balance = account_balance + ? WHERE account_name = ? AND account_type IN (?, ?, ?)");
+                $updateStmt->execute([$debit, $account, 'Other Current Liability', 'Equity', 'Revenue']);
+            }
+
+            if ($credit > 0) {
+                $updateStmt = $db->prepare("UPDATE chart_of_accounts SET account_balance = account_balance + ? WHERE account_name = ? AND account_type IN (?, ?, ?)");
+                $updateStmt->execute([$credit, $account, 'Other Current Liability', 'Equity', 'Revenue']);
+            }
+
             if ($debit > 0) {
                 $updateStmt = $db->prepare("UPDATE chart_of_accounts SET account_balance = account_balance + ? WHERE account_name = ?");
                 $updateStmt->execute([$debit, $account]);
@@ -56,6 +66,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             if ($debit > 0) {
                 $updateStmt = $db->prepare("UPDATE customers SET customerBalance = customerBalance + ? WHERE customerName = ?");
+                $updateStmt->execute([$credit, $name]);
+            }
+
+            if ($credit > 0) {
+                $updateStmt = $db->prepare("UPDATE customers SET customerBalance = customerBalance - ? WHERE customerName = ?");
                 $updateStmt->execute([$credit, $name]);
             }
 
