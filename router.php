@@ -11,6 +11,7 @@ $pages = [
     'main/sales_return' => 'main/sales_return.php',
     'main/receive_payments' => 'main/Customer_center/receive_payments.view.php',
     'main/create_receive_payments' => 'main/Customer_center/create_receive_payments.view.php',
+    'main/view_receive_payment' => 'main/Customer_center/view_receive_payment.view.php',
     'main/view_credit' => 'main/Customer_center/view_credit.view.php',
     // VENDOR CENTER
     'main/purchase_order' => 'main/purchase_order.view.php',

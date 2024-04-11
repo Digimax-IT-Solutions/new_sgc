@@ -185,7 +185,7 @@ include __DIR__ . ('../../includes/header.php');
                 var paymentAmountFormatted = formatCurrency(payments.payment_amount);
                 var discCredappliedFormatted = formatCurrency(payments.discCredapplied);
 
-                var row = `<tr>
+                var row = `<tr class='revRow' data-rev-id='${payments.ID}'>
                     <td>${payments.RefNo}</td>
                     <td>${payments.invoiceNo}</td>
                     <td>${formattedDate}</td>
@@ -229,4 +229,11 @@ include __DIR__ . ('../../includes/header.php');
     $(document).ready(function() {
         populateReceivePaymentsTable();
     });
+    
+</script>
+<script>
+    $(document).on('click', '.revRow', function() {
+    var ID = $(this).data('rev-id');
+    window.location.href = 'view_receive_payment?ID=' + ID;
+});
 </script>
