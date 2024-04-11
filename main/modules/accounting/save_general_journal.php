@@ -64,19 +64,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $updateStmt->execute([$credit, $account]);
             }
 
-            if ($debit > 0) {
+            if ($debit > 0 && $account == 'Undeposited Fund') {
+                $updateStmt = $db->prepare("UPDATE customers SET customerBalance = customerBalance - ? WHERE customerName = ?");
+                $updateStmt->execute([$debit, $name]);
+            }
+            
+            if ($debit > 0 && $account == 'Accounts Receivable') {
                 $updateStmt = $db->prepare("UPDATE customers SET customerBalance = customerBalance + ? WHERE customerName = ?");
-                $updateStmt->execute([$credit, $name]);
-            }
-
-            if ($credit > 0) {
-                $updateStmt = $db->prepare("UPDATE customers SET customerBalance = customerBalance - ? WHERE customerName = ?");
-                $updateStmt->execute([$credit, $name]);
-            }
-
-            if ($credit > 0) {
-                $updateStmt = $db->prepare("UPDATE customers SET customerBalance = customerBalance - ? WHERE customerName = ?");
-                $updateStmt->execute([$credit, $name]);
+                $updateStmt->execute([$debit, $name]);
             }
         }
 
