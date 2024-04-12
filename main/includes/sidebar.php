@@ -23,10 +23,7 @@ $userPosition = $_SESSION['SESS_POSITION'];
     display: inline-block;
 }
 
-/* Style for the submenu items */
-.submenu li {
-     
-}
+
 
 /* Optional: Adjust the position of the submenu items */
 .submenu li a {
@@ -232,7 +229,7 @@ $userPosition = $_SESSION['SESS_POSITION'];
 
                     <ul class="nav nav-treeview" style="margin-left: 20px;">
                         <li class="nav-item">
-                            <a href="create_general_journal" class="nav-link <?php echo ($page == 'main/create_general_journal') ? 'active' : ''; ?>">
+                            <a href="general_journal" class="nav-link <?php echo ($page == 'main/create_general_journal') ? 'active' : ''; ?>">
                                 <i class="nav-icon fas fa-book"></i>
                                 <p><s>Create General Journal</s></p>
                             </a>

@@ -34,6 +34,8 @@ $pages = [
     // ACCOUNTING
     'main/audit_trail' => 'main/Accounting/audit_trail.view.php',
     'main/create_general_journal' => 'main/Accounting/create_general_journal.view.php',
+    'main/general_journal' => 'main/Accounting/general_journal.view.php',
+    'main/view_general_journal' => 'main/Accounting/view_general_journal.view.php',
     // MASTERLIST
     'main/chart_of_accounts' => 'main/chart_of_accounts.view.php',
     'main/item_list' => 'main/item_list.view.php',
