@@ -31,6 +31,7 @@ $pages = [
     'main/write_check' => 'main/Banking/write_check.view.php',
     'main/expenses' => 'main/Banking/expenses.view.php',
     'main/expenses_details_view' => 'main/expenses_details_view.php',
+    'main/make_deposit' => 'main/Banking/make_deposit.view.php',
     // ACCOUNTING
     'main/audit_trail' => 'main/Accounting/audit_trail.view.php',
     'main/create_general_journal' => 'main/Accounting/create_general_journal.view.php',

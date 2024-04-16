@@ -159,13 +159,13 @@ $userPosition = $_SESSION['SESS_POSITION'];
                                 <p>Write Check</p>
                             </a>
                         </li>
-                        <!-- <li class="nav-item">
+                        <li class="nav-item">
                             <a href="make_deposit" class="nav-link <?php echo ($page == 'main/make_deposit') ? 'active' : ''; ?>">
                                 <i class="nav-icon fas fa-coins"></i>
                                 <p>Make Deposit</p>
                             </a>
                         </li>
-                        <li class="nav-item">
+                        <!-- <li class="nav-item">
                             <a href="fund_transfer" class="nav-link <?php echo ($page == 'main/fund_transfer') ? 'active' : ''; ?>">
                                 <i class="nav-icon fas fa-exchange-alt"></i>
                                 <p>Fund Transfer</p>
@@ -231,7 +231,7 @@ $userPosition = $_SESSION['SESS_POSITION'];
                         <li class="nav-item">
                             <a href="general_journal" class="nav-link <?php echo ($page == 'main/create_general_journal') ? 'active' : ''; ?>">
                                 <i class="nav-icon fas fa-book"></i>
-                                <p><s>Create General Journal</s></p>
+                                <p>Create General Journal</p>
                             </a>
                         </li>
                         <!-- <li class="nav-item">

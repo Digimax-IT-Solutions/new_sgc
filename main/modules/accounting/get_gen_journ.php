@@ -3,7 +3,7 @@ require_once('../connect.php');
 
 try {
     // Fetch data from the database
-    $query = "SELECT * FROM general_journal";
+    $query = "SELECT * FROM general_journal where status = 'active'";
               
     $stmt = $db->prepare($query);
     $stmt->execute();

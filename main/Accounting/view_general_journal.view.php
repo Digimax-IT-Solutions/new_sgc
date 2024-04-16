@@ -25,7 +25,7 @@ if (isset($_GET['ID']) && is_numeric($_GET['ID'])) {
             $stmtJournalDetails = $db->prepare($queryJournalDetails);
             $stmtJournalDetails->bindParam(':ID', $ID);
             $stmtJournalDetails->execute();
-    
+
             $journalDetails = $stmtJournalDetails->fetchAll(PDO::FETCH_ASSOC);
         } else {
 
@@ -136,6 +136,7 @@ $otherNamesJSON = json_encode($otherNames);
                                         <div class="form-group col-md-3">
                                             <label for="entry_date">ENTRY DATE</label>
                                             <div class="input-group">
+                                                <input type="hidden" name="ID" value="<?php echo $ID; ?>">
                                                 <input type="date" class="form-control" id="entry_date"
                                                     name="entry_date" value="<?= $journal['journal_date']; ?>" required>
                                             </div>
@@ -191,11 +192,11 @@ $otherNamesJSON = json_encode($otherNames);
                                 <!-- Submit Button -->
                                 <div class="row">
                                     <div class="col-md-10 d-inline-block">
-                                        <button type="button" class="btn btn-success" id="saveButtond">
+                                        <button type="button" class="btn btn-success" id="saveButton">
                                             <i class="fas fa-save"></i> Save General Journal
                                         </button>
-                                        <button type="button" class="btn btn-secondary" id="clearButton">
-                                            <i class="fas fa-times-circle"></i> Clear
+                                        <button type="button" class="btn btn-danger" id="deleteButton">
+                                            <i class="fas fa-trash-alt"></i> Delete
                                         </button>
                                     </div>
                                 </div>
@@ -213,16 +214,58 @@ $otherNamesJSON = json_encode($otherNames);
 
 
 <script>
-    $("#clearButton").on("click", function () {
-    // Clear all input fields in the form
-    $("#enterBillsForm")[0].reset();
+    $("#deleteButton").on("click", function () {
+        // Show a confirmation dialog before proceeding with deletion
+        Swal.fire({
+            icon: 'warning',
+            title: 'Are you sure?',
+            text: 'You are about to delete this entry. This action cannot be undone.',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete it',
+            cancelButtonText: 'No, cancel',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // User confirmed, proceed with deletion
+                if (validateImbalance()) {
+                    // Prepare form data
+                    var formData = $("#enterBillsForm").serialize();
 
-    // Remove all rows from the table body except the first one
-    $("#generalJournalTableBody tr:not(:first)").remove();
+                    // Perform the AJAX request to delete data
+                    $.ajax({
+                        type: "POST",
+                        url: "modules/accounting/delete_general_journal.php",
+                        data: formData,
+                        dataType: "json",
+                        success: function (response) {
+                            // Display success/error message
+                            Swal.fire({
+                                icon: response.status === 'success' ? 'success' : 'error',
+                                title: response.message,
+                                confirmButtonText: 'OK'
+                            }).then((result) => {
+                                // Redirect to the general_journal page after clicking OK if the response is successful
+                                if (response.status === 'success') {
+                                    window.location.href = 'general_journal';
+                                }
+                            });
+                        },
+                        error: function (xhr, status, error) {
+                            // Display error message
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'An error occurred while deleting data.',
+                                confirmButtonText: 'OK'
+                            });
 
-    // Update totals to reset them
-    updateTotals();
+                            console.log(xhr.responseText); // Log the error response to the console
+                        }
+                    });
+                }
+            }
+        });
     });
+
     // Save button event listener
     $("#saveButton").on("click", function () {
         if (validateImbalance()) {
@@ -232,7 +275,7 @@ $otherNamesJSON = json_encode($otherNames);
             // Perform the AJAX request to save data
             $.ajax({
                 type: "POST",
-                url: "modules/accounting/save_general_journal.php",
+                url: "modules/accounting/update_general_journal.php",
                 data: formData,
                 dataType: "json",
                 success: function (response) {
@@ -244,7 +287,7 @@ $otherNamesJSON = json_encode($otherNames);
                     }).then((result) => {
                         // Redirect to the sales_invoice page after clicking OK if the response is successful
                         if (response.status === 'success') {
-                            window.location.href = 'create_general_journal';
+                            window.location.href = 'general_journal';
                         }
                     });
                 },
@@ -299,20 +342,20 @@ $otherNamesJSON = json_encode($otherNames);
         });
 
         <?php foreach ($journalDetails as $details): ?>
-        var newRow = '<tr>' +
-            '<td><select name="account[]" class="form-control">' +
-            '<option value="<?php echo htmlspecialchars($details['account'], ENT_QUOTES); ?>" selected><?php echo htmlspecialchars($details['account'], ENT_QUOTES); ?></option>' +
-            options + '</select></td>' +
-            '<td><input type="number" name="debit[]" class="form-control" value="<?php echo $details['debit']; ?>"></td>' +
-            '<td><input type="number" name="credit[]" class="form-control" value="<?php echo $details['credit']; ?>"></td>' +
-            '<td><select name="name[]" class="form-control">' +
-            '<option value="<?php echo htmlspecialchars($details['names'], ENT_QUOTES); ?>" selected><?php echo htmlspecialchars($details['names'], ENT_QUOTES); ?></option>' +
-            optionss + '</select></td>' +
-            '<td><input type="text" name="memo[]" class="form-control" placeholder="Memo" value="<?php echo $details['memo']; ?>"></td>' +
-            '<td><button type="button" class="btn btn-danger btn-sm removeItemBtn">Remove</button></td>'
-        '</tr>';
-        // Append the new row to the table
-        $("#generalJournalTableBody").append(newRow);
+            var newRow = '<tr>' +
+                '<td><select name="account[]" class="form-control">' +
+                '<option value="<?php echo htmlspecialchars($details['account'], ENT_QUOTES); ?>" selected><?php echo htmlspecialchars($details['account'], ENT_QUOTES); ?></option>' +
+                '</select></td>' +
+                '<td><input type="number" name="debit[]" class="form-control" value="<?php echo $details['debit']; ?>"></td>' +
+                '<td><input type="number" name="credit[]" class="form-control" value="<?php echo $details['credit']; ?>"></td>' +
+                '<td><select name="name[]" class="form-control">' +
+                '<option value="<?php echo htmlspecialchars($details['names'], ENT_QUOTES); ?>" selected><?php echo htmlspecialchars($details['names'], ENT_QUOTES); ?></option>' +
+                '</select></td>' +
+                '<td><input type="text" name="memo[]" class="form-control" placeholder="Memo" value="<?php echo $details['memo']; ?>"></td>' +
+                '<td><button type="button" class="btn btn-danger btn-sm removeItemBtn">Remove</button></td>'
+            '</tr>';
+            // Append the new row to the table
+            $("#generalJournalTableBody").append(newRow);
         <?php endforeach; ?>
         // Show the remove button for the new row
         $("#generalJournalTableBody tr:last-child .removeItemBtn").show();
