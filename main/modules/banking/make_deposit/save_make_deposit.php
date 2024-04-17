@@ -10,6 +10,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $memo = $_POST['memos'];
     $receivedFrom = $_POST['received_from'];
     $fromAccount = $_POST['from_account'];
+    $total_deposit = $_POST['total_deposit'];
     $memoArray = $_POST['memo'];
     $checkNoArray = $_POST['check_no'];
     $paymentMethodArray = $_POST['payment_method'];
@@ -17,8 +18,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $checkedIds = isset($_POST['checkedIds']) ? $_POST['checkedIds'] : []; // Array of checked IDs from the modal, default to empty array if not set
 
     // Example SQL statement to insert deposit record into a database table
-    $sql = "INSERT INTO make_deposit (bank_account, deposit_date, deposit_id, memo) 
-            VALUES (:bankAccountName, :depositDate, :depositID, :memo)";
+    $sql = "INSERT INTO make_deposit (bank_account, deposit_date, deposit_id, total_deposit, memo) 
+            VALUES (:bankAccountName, :depositDate, :depositID, :total_deposit, :memo)";
     
     // Prepare the SQL statement
     $stmt = $db->prepare($sql);
@@ -27,7 +28,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->bindParam(':bankAccountName', $bankAccountName);
     $stmt->bindParam(':depositDate', $depositDate);
     $stmt->bindParam(':depositID', $depositID);
+    $stmt->bindParam(':total_deposit', $total_deposit);
     $stmt->bindParam(':memo', $memo);
+
 
     // Execute the prepared statement
     if ($stmt->execute()) {

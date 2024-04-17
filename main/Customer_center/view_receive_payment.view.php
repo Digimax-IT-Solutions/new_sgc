@@ -46,6 +46,27 @@ try {
     echo "Error fetching credits: " . $e->getMessage();
     exit(); // Exit after encountering an error
 }
+
+function getCustomerBalance($customerName) {
+    include 'connect.php'; // Include the connection script
+
+    try {
+        // Query to retrieve customer balance
+        $query = "SELECT customerBalance FROM customers WHERE customerName = :customerName";
+        $statement = $db->prepare($query);
+        $statement->bindParam(':customerName', $customerName, PDO::PARAM_STR);
+        $statement->execute();
+        $result = $statement->fetch(PDO::FETCH_ASSOC);
+
+        if ($result) {
+            return $result['customerBalance']; // Return balance
+        } else {
+            return "Customer balance not found";
+        }
+    } catch (PDOException $e) {
+        return "Error: " . $e->getMessage();
+    }
+}
 ?>
 
 <style>
@@ -184,10 +205,6 @@ try {
         /* Set your desired background color here */
     }
 
-    #invoice_table th:first-child,
-    #invoice_table td:first-child {
-        width: 20px;
-    }
 
     .discount-label {
         font-size: 20px;
@@ -260,9 +277,10 @@ try {
                                             ?>
                                         </select>
                                     </div>
+                                    
                                     <div class="form-group col-md-2">
                                         <label for="customer_balance">CUSTOMER BALANCE</label>
-                                        <input type="text" class="form-control" id="customer_balance" name="customer_balance" readonly>
+                                        <input type="text" class="form-control" id="customer_balance" name="customer_balance" value="<?php echo getCustomerBalance($salesInvoice['customerName']); ?>" readonly>
                                     </div>
                                     <div class="form-group col-md-2">
                                         <label for="receivedDate">DATE</label>
@@ -275,33 +293,12 @@ try {
                                     <div class="form-group col-md-4">
                                         <label for="customerName">RECEIVED FROM</label>
                                         <select class="form-control" id="customerName" name="customerName">
-                                            <option <?php echo $salesInvoice['customerName']; ?>>
-                                                    <?php echo $salesInvoice['customerName']; ?></option>
-                                            <?php
-                                            // Fetch customers with purchase orders having poStatus = 'WAITING FOR DELIVERY' from the database and populate the dropdown in the modal
-                                            $customerQuery = "SELECT * FROM customers";
-
-                                            try {
-                                                $customerStmt = $db->prepare($customerQuery);
-                                                $customerStmt->execute();
-
-                                                $customers = $customerStmt->fetchAll(PDO::FETCH_ASSOC);
-
-                                                foreach ($customers as $customer) {
-                                                    echo "<option value='{$customer['customerName']}' data-balance='{$customer['customerBalance']}'>{$customer['customerName']}</option>";
-                                                }
-                                            } catch (PDOException $e) {
-                                                // Handle the exception, log the error or return an error message with MySQL error information
-                                                $errorInfo = $customerStmt->errorInfo();
-                                                $errorMessage = "Error fetching customers: " . $errorInfo[2]; // MySQL error message
-                                                echo "<option value=''>$errorMessage</option>";
-                                            }
-                                            ?>
+                                            <option value="<?php echo $salesInvoice['customerName']; ?>"><?php echo $salesInvoice['customerName']; ?></option>
                                         </select>
                                     </div>
                                     <div class="form-group col-md-2">
                                         <label for="payment_amount">PAYMENT AMOUNT</label>
-                                        <input type="text" class="form-control" id="payment_amount" name="payment_amount" value="<?php echo $salesInvoice['payment_amount']; ?>" readonly>
+                                        <input type="text" class="form-control" id="payment_amount" name="payment_amount" value="<?php echo $salesInvoice['payment_amount']; ?>">
                                     </div>
                                     <div class="form-group col-md-2" id="reference_number_group">
                                         <label for="RefNo">REFERENCE #</label>
@@ -363,7 +360,6 @@ try {
                                         <table id="invoice_table" class="table">
                                             <thead>
                                                 <tr>
-                                                    <th>✔</th>
                                                     <th>Date</th>
                                                     <th>Number</th>
                                                     <th>Original Amount</th>
@@ -594,4 +590,4 @@ $(document).ready(function() {
         $(this).addClass('active'); // Add active class to the clicked option
     });
 </script>
-<?php include('receive_payment_js.php'); ?>
+<?php include('view_receive_payment.js.php'); ?>
