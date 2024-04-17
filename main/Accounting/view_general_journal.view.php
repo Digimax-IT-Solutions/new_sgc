@@ -1,6 +1,6 @@
 <?php
 include __DIR__ . ('../../includes/header.php');
-include ('connect.php');
+include('connect.php');
 
 $journal = null;
 $journalDetails = [];
@@ -37,7 +37,6 @@ if (isset($_GET['ID']) && is_numeric($_GET['ID'])) {
         echo "Error fetching invoice: " . $e->getMessage();
         exit(); // Exit after encountering an error
     }
-
 } else {
     // Output JavaScript alert for an invalid invoice ID
     echo "<script>alert('Invalid Invoice ID');</script>";
@@ -92,7 +91,7 @@ $otherNamesJSON = json_encode($otherNames);
     #generalJournalTable {
         border-collapse: collapse;
         width: 100%;
-
+        table-layout: fixed;
     }
 
     #generalJournalTable th,
@@ -100,6 +99,18 @@ $otherNamesJSON = json_encode($otherNames);
         text-align: center;
         padding: 1px;
         /* Adjust the padding as needed */
+    }
+
+    /* Set the width of the first th and td */
+    #generalJournalTable th:first-child,
+    #generalJournalTable td:first-child {
+        width: 500px;
+    }
+
+    /* Set the width of the fourth th and td */
+    #generalJournalTable th:nth-child(4),
+    #generalJournalTable td:nth-child(4) {
+        width: 500px;
     }
 </style>
 
@@ -137,8 +148,7 @@ $otherNamesJSON = json_encode($otherNames);
                                             <label for="entry_date">ENTRY DATE</label>
                                             <div class="input-group">
                                                 <input type="hidden" name="ID" value="<?php echo $ID; ?>">
-                                                <input type="date" class="form-control" id="entry_date"
-                                                    name="entry_date" value="<?= $journal['journal_date']; ?>" required>
+                                                <input type="date" class="form-control" id="entry_date" name="entry_date" value="<?= $journal['journal_date']; ?>" required>
                                             </div>
                                         </div>
 
@@ -149,8 +159,7 @@ $otherNamesJSON = json_encode($otherNames);
                                         <div class="form-group col-md-2">
                                             <label for="entry_no">ENTRY NO.</label>
                                             <div class="input-group">
-                                                <input type="text" class="form-control" id="entry_no" name="entry_no"
-                                                    value="<?= $journal['entry_no']; ?>" required>
+                                                <input type="text" class="form-control" id="entry_no" name="entry_no" value="<?= $journal['entry_no']; ?>" required>
                                             </div>
                                         </div>
 
@@ -214,7 +223,7 @@ $otherNamesJSON = json_encode($otherNames);
 
 
 <script>
-    $("#deleteButton").on("click", function () {
+    $("#deleteButton").on("click", function() {
         // Show a confirmation dialog before proceeding with deletion
         Swal.fire({
             icon: 'warning',
@@ -236,7 +245,7 @@ $otherNamesJSON = json_encode($otherNames);
                         url: "modules/accounting/delete_general_journal.php",
                         data: formData,
                         dataType: "json",
-                        success: function (response) {
+                        success: function(response) {
                             // Display success/error message
                             Swal.fire({
                                 icon: response.status === 'success' ? 'success' : 'error',
@@ -249,7 +258,7 @@ $otherNamesJSON = json_encode($otherNames);
                                 }
                             });
                         },
-                        error: function (xhr, status, error) {
+                        error: function(xhr, status, error) {
                             // Display error message
                             Swal.fire({
                                 icon: 'error',
@@ -267,7 +276,7 @@ $otherNamesJSON = json_encode($otherNames);
     });
 
     // Save button event listener
-    $("#saveButton").on("click", function () {
+    $("#saveButton").on("click", function() {
         if (validateImbalance()) {
             // Prepare form data
             var formData = $("#enterBillsForm").serialize();
@@ -278,7 +287,7 @@ $otherNamesJSON = json_encode($otherNames);
                 url: "modules/accounting/update_general_journal.php",
                 data: formData,
                 dataType: "json",
-                success: function (response) {
+                success: function(response) {
                     // Display success/error message
                     Swal.fire({
                         icon: response.status === 'success' ? 'success' : 'error',
@@ -291,7 +300,7 @@ $otherNamesJSON = json_encode($otherNames);
                         }
                     });
                 },
-                error: function (xhr, status, error) {
+                error: function(xhr, status, error) {
                     // Display error message
                     Swal.fire({
                         icon: 'error',
@@ -309,18 +318,18 @@ $otherNamesJSON = json_encode($otherNames);
     addJournalEntry();
 
     // Add expense row when the "Add Expense" button is clicked
-    $("#addAccountButton").on("click", function () {
+    $("#addAccountButton").on("click", function() {
         addJournalEntry();
     });
 
     // Event listener for removing an item
-    $("#generalJournalTableBody").on("click", ".removeItemBtn", function () {
+    $("#generalJournalTableBody").on("click", ".removeItemBtn", function() {
         $(this).closest("tr").remove();
         updateTotals();
     });
 
     // Event listener for input changes
-    $("#generalJournalTableBody").on("input", "input[name^='debit'], input[name^='credit']", function () {
+    $("#generalJournalTableBody").on("input", "input[name^='debit'], input[name^='credit']", function() {
         updateTotals();
         validateDebitCreditConsistency();
     });
@@ -330,18 +339,18 @@ $otherNamesJSON = json_encode($otherNames);
         // Parse JSON data for chartOfAccount
         var chartOfAccount = <?php echo $chartOfAccountJSON; ?>;
         var options = "";
-        chartOfAccount.forEach(function (account) {
+        chartOfAccount.forEach(function(account) {
             options += '<option value="' + account["account_name"] + '">' + account["account_name"] + '</option>';
         });
 
         // Parse JSON data for otherNames
         var otherNames = <?php echo $otherNamesJSON; ?>;
         var optionss = "";
-        otherNames.forEach(function (account) {
+        otherNames.forEach(function(account) {
             optionss += '<option value="' + account["account_name"] + '">' + account["account_name"] + ' | ' + account["source"] + '</option>';
         });
 
-        <?php foreach ($journalDetails as $details): ?>
+        <?php foreach ($journalDetails as $details) : ?>
             var newRow = '<tr>' +
                 '<td><select name="account[]" class="form-control">' +
                 '<option value="<?php echo htmlspecialchars($details['account'], ENT_QUOTES); ?>" selected><?php echo htmlspecialchars($details['account'], ENT_QUOTES); ?></option>' +
@@ -369,7 +378,7 @@ $otherNamesJSON = json_encode($otherNames);
         var totalDebit = 0;
         var totalCredit = 0;
 
-        $('#generalJournalTableBody tr').each(function () {
+        $('#generalJournalTableBody tr').each(function() {
             var debit = parseFloat($(this).find('td:eq(1) input').val()) || 0;
             var credit = parseFloat($(this).find('td:eq(2) input').val()) || 0;
 
@@ -406,7 +415,7 @@ $otherNamesJSON = json_encode($otherNames);
     function validateDebitCreditConsistency() {
         var inconsistentEntries = [];
 
-        $('#generalJournalTableBody tr').each(function () {
+        $('#generalJournalTableBody tr').each(function() {
             var account = $(this).find('td:eq(0) select').val();
             var debit = parseFloat($(this).find('td:eq(1) input').val()) || 0;
             var credit = parseFloat($(this).find('td:eq(2) input').val()) || 0;

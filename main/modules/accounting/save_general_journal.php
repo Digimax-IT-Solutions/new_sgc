@@ -44,10 +44,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $memo = $memos[$key];
             $stmt->execute([$generalJournalId, $account, $debit, $credit, $name, $memo]);
 
-            if ($debit < 0) {
-                $updateStmt = $db->prepare("UPDATE chart_of_accounts SET account_balance = account_balance + ? WHERE account_name = ? AND account_type IN (?, ?, ?)");
-                $updateStmt->execute([$debit, $account, 'Other Current Liability', 'Equity', 'Revenue']);
-            }
+            // if ($debit < 0) {
+            //     $updateStmt = $db->prepare("UPDATE chart_of_accounts SET account_balance = account_balance + ? WHERE account_name = ? AND account_type IN (?, ?, ?)");
+            //     $updateStmt->execute([$debit, $account, 'Other Current Liability', 'Equity', 'Revenue']);
+            // }
 
             if ($credit > 0) {
                 $updateStmt = $db->prepare("UPDATE chart_of_accounts SET account_balance = account_balance + ? WHERE account_name = ? AND account_type IN (?, ?, ?)");
@@ -59,16 +59,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $updateStmt->execute([$debit, $account]);
             }
 
-            if ($credit > 0) {
-                $updateStmt = $db->prepare("UPDATE chart_of_accounts SET account_balance = account_balance - ? WHERE account_name = ?");
-                $updateStmt->execute([$credit, $account]);
-            }
+            // if ($credit > 0) {
+            //     $updateStmt = $db->prepare("UPDATE chart_of_accounts SET account_balance = account_balance - ? WHERE account_name = ?");
+            //     $updateStmt->execute([$credit, $account]);
+            // }
 
             if ($debit > 0 && $account == 'Undeposited Fund') {
                 $updateStmt = $db->prepare("UPDATE customers SET customerBalance = customerBalance - ? WHERE customerName = ?");
                 $updateStmt->execute([$debit, $name]);
             }
-            
+                
             if ($debit > 0 && $account == 'Accounts Receivable') {
                 $updateStmt = $db->prepare("UPDATE customers SET customerBalance = customerBalance + ? WHERE customerName = ?");
                 $updateStmt->execute([$debit, $name]);

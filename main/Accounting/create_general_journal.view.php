@@ -209,7 +209,7 @@ $otherNamesJSON = json_encode($otherNames);
                     }).then((result) => {
                         // Redirect to the sales_invoice page after clicking OK if the response is successful
                         if (response.status === 'success') {
-                            window.location.href = 'create_general_journal';
+                            window.location.href = 'general_journal';
                         }
                     });
                 },

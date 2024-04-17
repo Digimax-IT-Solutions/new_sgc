@@ -18,14 +18,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 
-    // Validate that either debit or credit is provided for each entry
-    foreach ($accounts as $key => $account) {
-        if (empty($debits[$key]) && empty($credits[$key])) {
-            echo json_encode(['status' => 'error', 'message' => 'Please provide either Debit or Credit for each account.']);
-            exit();
-        }
-    }
-
     // Start a transaction
     try {
         $db->beginTransaction();
@@ -34,19 +26,48 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt = $db->prepare("UPDATE general_journal SET entry_no = ?, journal_date = ?, total_debit = ?, total_credit = ? WHERE ID = ?");
         $stmt->execute([$entryNo, $entryDate, array_sum($debits), array_sum($credits), $ID]);
 
-        // Delete existing journal entries for this general journal ID
-        $deleteStmt = $db->prepare("DELETE FROM journal_entries WHERE general_journal_id = ?");
-        $deleteStmt->execute([$ID]);
-
-        // Insert updated data into journal_entries table
-        $stmt = $db->prepare("INSERT INTO journal_entries (general_journal_id, account, debit, credit, name, memo) VALUES (?, ?, ?, ?, ?, ?)");
-
         foreach ($accounts as $key => $account) {
             $debit = $debits[$key];
             $credit = $credits[$key];
             $name = $_POST['name'][$key];
             $memo = $memos[$key];
-            $stmt->execute([$ID, $account, $debit, $credit, $name, $memo]);
+
+            // Update the chart_of_accounts if debit is greater than 0
+            if ($debit > 0) {
+                // Get the previous debit amount for this account
+                $previousDebitStmt = $db->prepare("SELECT debit FROM journal_entries WHERE general_journal_id = ? AND account = ?");
+                $previousDebitStmt->execute([$ID, $account]);
+                $previousDebit = $previousDebitStmt->fetchColumn();
+            
+                // Update the chart_of_accounts with the difference between the new and previous debit
+                $debitDifference = $debit - $previousDebit;
+                $updateChartOfAccountsStmt = $db->prepare("UPDATE chart_of_accounts SET account_balance = account_balance + ? WHERE account_name = ?");
+                $updateChartOfAccountsStmt->execute([$debitDifference, $account]);
+            
+                // Update the journal entry with the new debit value
+                $updateStmt = $db->prepare("UPDATE journal_entries SET debit = ? WHERE general_journal_id = ? AND account = ?");
+                $updateStmt->execute([$debit, $ID, $account]);
+            }
+
+            if ($credit > 0) {
+                // Get the previous credit amount for this account
+                $previousCreditStmt = $db->prepare("SELECT credit FROM journal_entries WHERE general_journal_id = ? AND account = ?");
+                $previousCreditStmt->execute([$ID, $account]);
+                $previousCredit = $previousCreditStmt->fetchColumn();
+                
+                // Update the chart_of_accounts with the difference between the new and previous credit
+                $creditDifference = $credit - $previousCredit;
+                $updateChartOfAccountsStmt = $db->prepare("UPDATE chart_of_accounts SET account_balance = account_balance + ? WHERE account_name = ? AND account_type IN (?, ?, ?)");
+                $updateChartOfAccountsStmt->execute([$creditDifference, $account, 'Other Current Liability', 'Equity', 'Revenue']);
+                
+                // Update the journal entry with the new credit value
+                $updateStmt = $db->prepare("UPDATE journal_entries SET credit = ? WHERE general_journal_id = ? AND account = ?");
+                $updateStmt->execute([$credit, $ID, $account]);
+            }            
+
+            // Insert data into journal_entries table
+            $stmt = $db->prepare("UPDATE journal_entries SET debit = ?, credit = ?, name = ?, memo = ? WHERE general_journal_id = ? AND account = ?");
+            $stmt->execute([$debit, $credit, $name, $memo, $ID, $account]);
         }
 
         // Commit the transaction
