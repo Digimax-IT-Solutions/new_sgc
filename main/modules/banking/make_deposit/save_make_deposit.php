@@ -69,9 +69,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Update the depo column in the received_payment table
         foreach ($checkedIds as $id) {
             // Example SQL statement to update depo column
-            $sqlUpdate = "UPDATE receive_payment SET depo = 'deactivated' WHERE ID = :id";
+            $sqlUpdate = "UPDATE receive_payment SET depo = 'deactivated' WHERE RefNo = :checkNo";
             $stmtUpdate = $db->prepare($sqlUpdate);
-            $stmtUpdate->bindParam(':id', $id);
+            $stmtUpdate->bindParam(':checkNo', $id); // Assuming $id contains the checkNo value
             $stmtUpdate->execute();
         }
 

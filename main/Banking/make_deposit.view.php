@@ -24,31 +24,20 @@ include __DIR__ . ('../../includes/header.php');
         /* Change the text color on hover */
     }
 
-    #receivePaymentsTable {
+    #makeDepositTable {
         border-collapse: collapse;
         width: 100%;
         table-layout: fixed;
-        text-align: right;
-
     }
 
-    #receivePaymentsTable td:first-child,
-    #receivePaymentsTable td:nth-child(2), #receivePaymentsTable td:nth-child(3) {
-        text-align: center;
-    }
-
-    #receivePaymentsTable td:nth-child(4), #receivePaymentsTable td:nth-child(5) {
-        text-align: left;
-    }
-
-    #receivePaymentsTable th {
+    #makeDepositTable th {
         font-size: 10px;
         white-space: nowrap;
         border: none;
 
     }
 
-    #receivePaymentsTable td {
+    #makeDepositTable td {
         font-size: 13px;
         padding: 5px;
         overflow: hidden;
@@ -58,7 +47,7 @@ include __DIR__ . ('../../includes/header.php');
 
     }
 
-    #receivePaymentsTable tbody tr:hover {
+    #makeDepositTable tbody tr:hover {
 
         color: white;
         background-color: rgba(128,21,20,0.8);
@@ -72,12 +61,12 @@ include __DIR__ . ('../../includes/header.php');
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1 class="m-0" style="font-weight: bold; font-size:40px;">Received Payments</h1>
+                    <h1 class="m-0" style="font-weight: bold; font-size:40px;">Deposits</h1>
                 </div><!-- /.col -->
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Received Payments</li>
+                        <li class="breadcrumb-item active">Make Deposit</li>
                     </ol>
                 </div><!-- /.col -->
             </div><!-- /.row -->
@@ -96,30 +85,23 @@ include __DIR__ . ('../../includes/header.php');
                                 <div class="col-md-3">
                                     <div class="dropdown">
                                         <button class="btn btn-secondary dropdown-toggle" type="button" id="newTransactionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="background-color: rgb(0, 149, 77); color: white;">
-                                            Receive Payment
+                                            Make New Deposit
                                         </button>
                                         <div class="dropdown-menu" aria-labelledby="newTransactionDropdown">
-                                            <a class="dropdown-item" href="create_receive_payments" style="background-color: white;">Receive Payment</a>
-                                            <a class="dropdown-item" href="credit" style="background-color: white;">Credit And Refunds</a>
+                                            <a class="dropdown-item" href="create_deposit" style="background-color: white;">Make Deposit</a>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <br><br>
-                            <table id="receivePaymentsTable" class="table table-hover table-bordered">
+                            <table id="makeDepositTable" class="table table-hover table-bordered">
                                 <thead>
 
                                     <tr>
-                                        <th>REF NO</th>
-                                        <th>INVOICE NO</th>
-                                        <th>RECEIVE DATE</th>
-                                        <th>AR ACCOUNT</th>
-                                        <th>CUSTOMER NAME</th>
-                                        <th>TOTAL AMOUNT DUE</th>
-                                        <th>PAYMENT AMOUNT</th>
-                                        <th>DISC & CRED APPLIED</th>
-                                        <th>PAYMENT TYPE</th>
-
+                                        <th>DEPOSIT ID</th>
+                                        <th>DEPOSIT DATE</th>
+                                        <th>BANK ACCOUNT</th>
+                                        <th>TOTAL AMOUNT</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -158,51 +140,44 @@ include __DIR__ . ('../../includes/header.php');
         });
     }
 
-    function populateReceivePaymentsTable() {
+    function populatemakeDepositTable() {
     $.ajax({
         type: "GET",
-        url: "modules/customer_center/get_receive_payments.php",
+        url: "modules/banking/make_deposit/get_deposit.php",
         success: function(response) {
-            var receivePayments = JSON.parse(response);
+            var makeDeposit = JSON.parse(response);
             
             // Clear existing table rows
-            $("#receivePaymentsTable tbody").empty();
+            $("#makeDepositTable tbody").empty();
 
-            receivePayments.forEach(function(payments) {
-                // Assuming payments.receivedDate is in the format yyyy-mm-dd
-                var receivedDate = new Date(payments.receivedDate);
+            makeDeposit.forEach(function(deposits) {
+                // Assuming deposits.deposit_date is in the format yyyy-mm-dd
+                var deposit_date = new Date(deposits.deposit_date);
 
                 // Get the individual components of the date
-                var month = receivedDate.getMonth() + 1; // Months are zero-based, so add 1
-                var day = receivedDate.getDate();
-                var year = receivedDate.getFullYear();
+                var month = deposit_date.getMonth() + 1; // Months are zero-based, so add 1
+                var day = deposit_date.getDate();
+                var year = deposit_date.getFullYear();
 
                 // Format the date as 00-00-00 m/y/d
                 var formattedDate = (month < 10 ? '0' : '') + month + '-' + (day < 10 ? '0' : '') + day + '-' + year;
 
                 // Format currency with commas
-                var totalAmountDueFormatted = formatCurrency(payments.totalAmountDue);
-                var paymentAmountFormatted = formatCurrency(payments.payment_amount);
-                var discCredappliedFormatted = formatCurrency(payments.discCredapplied);
+                var totalDepoAmount = formatCurrency(deposits.total_deposit);
 
-                var row = `<tr class='revRow' data-rev-id='${payments.ID}'>
-                    <td>${payments.RefNo}</td>
-                    <td>${payments.invoiceNo}</td>
+                var row = `<tr class='depoRow' data-depo-id='${deposits.ID}'>
+                    <td>${deposits.deposit_id}</td>
                     <td>${formattedDate}</td>
-                    <td>${payments.ar_account}</td>
-                    <td>${payments.customerName}</td>
-                    <td><strong>${totalAmountDueFormatted}</strong></td>
-                    <td><strong>${paymentAmountFormatted}</strong></td>
-                    <td><strong>${discCredappliedFormatted}</strong></td>
-                    <td>${payments.paymentType}</td>
+                    <td>${deposits.bank_account}</td>
+                    <td><strong>${totalDepoAmount}</strong></td>
                 </tr>`;
 
-                $("#receivePaymentsTable tbody").append(row);
+                $("#makeDepositTable tbody").append(row);
             });
 
             // Initialize DataTables only if it's not already initialized
-            if (!$.fn.DataTable.isDataTable("#receivePaymentsTable")) {
-                $('#receivePaymentsTable').DataTable({
+            if (!$.fn.DataTable.isDataTable("#makeDepositTable")) {
+                $('#makeDepositTable').DataTable({
                     // DataTable options
                     "order": [[1, "asc"]]
                 });
@@ -227,13 +202,13 @@ include __DIR__ . ('../../includes/header.php');
 
     // Initial population when the page loads
     $(document).ready(function() {
-        populateReceivePaymentsTable();
+        populatemakeDepositTable();
     });
     
 </script>
 <script>
-    $(document).on('click', '.revRow', function() {
-    var ID = $(this).data('rev-id');
-    window.location.href = 'view_receive_payment?ID=' + ID;
+    $(document).on('click', '.depoRow', function() {
+    var ID = $(this).data('depo-id');
+    window.location.href = 'view_deposit?ID=' + ID;
 });
 </script>

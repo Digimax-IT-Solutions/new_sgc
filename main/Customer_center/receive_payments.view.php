@@ -33,11 +33,13 @@ include __DIR__ . ('../../includes/header.php');
     }
 
     #receivePaymentsTable td:first-child,
-    #receivePaymentsTable td:nth-child(2), #receivePaymentsTable td:nth-child(3) {
+    #receivePaymentsTable td:nth-child(2),
+    #receivePaymentsTable td:nth-child(3) {
         text-align: center;
     }
 
-    #receivePaymentsTable td:nth-child(4), #receivePaymentsTable td:nth-child(5) {
+    #receivePaymentsTable td:nth-child(4),
+    #receivePaymentsTable td:nth-child(5) {
         text-align: left;
     }
 
@@ -61,7 +63,7 @@ include __DIR__ . ('../../includes/header.php');
     #receivePaymentsTable tbody tr:hover {
 
         color: white;
-        background-color: rgba(128,21,20,0.8);
+        background-color: rgba(128, 21, 20, 0.8);
         /* Set your desired background color here */
     }
 </style>
@@ -137,12 +139,7 @@ include __DIR__ . ('../../includes/header.php');
 
     <?php include __DIR__ . ('../../includes/footer.php'); ?>
 </div>
-
-
 <script>
-    // Variable to check if DataTables is already initialized
-    var dataTableInitialized = false;
-    // Function to fetch and populate purchase order data
     // Function to format currency with commas
     function formatCurrency(amount) {
         // Convert amount to number
@@ -158,82 +155,109 @@ include __DIR__ . ('../../includes/header.php');
         });
     }
 
+    // Function to fetch and populate purchase order data
     function populateReceivePaymentsTable() {
-    $.ajax({
-        type: "GET",
-        url: "modules/customer_center/get_receive_payments.php",
-        success: function(response) {
-            var receivePayments = JSON.parse(response);
-            
-            // Clear existing table rows
-            $("#receivePaymentsTable tbody").empty();
+        $.ajax({
+            type: "GET",
+            url: "modules/customer_center/get_receive_payments.php",
+            success: function(response) {
+                var receivePayments = JSON.parse(response);
 
-            receivePayments.forEach(function(payments) {
-                // Assuming payments.receivedDate is in the format yyyy-mm-dd
-                var receivedDate = new Date(payments.receivedDate);
+                // Clear existing table rows
+                $("#receivePaymentsTable tbody").empty();
 
-                // Get the individual components of the date
-                var month = receivedDate.getMonth() + 1; // Months are zero-based, so add 1
-                var day = receivedDate.getDate();
-                var year = receivedDate.getFullYear();
+                // Define an object to store merged rows by RefNo
+                var mergedRows = {};
 
-                // Format the date as 00-00-00 m/y/d
-                var formattedDate = (month < 10 ? '0' : '') + month + '-' + (day < 10 ? '0' : '') + day + '-' + year;
+                receivePayments.forEach(function(payments) {
+                    // Assuming payments.receivedDate is in the format yyyy-mm-dd
+                    var receivedDate = new Date(payments.receivedDate);
 
-                // Format currency with commas
-                var totalAmountDueFormatted = formatCurrency(payments.totalAmountDue);
-                var paymentAmountFormatted = formatCurrency(payments.payment_amount);
-                var discCredappliedFormatted = formatCurrency(payments.discCredapplied);
+                    // Get the individual components of the date
+                    var month = receivedDate.getMonth() + 1; // Months are zero-based, so add 1
+                    var day = receivedDate.getDate();
+                    var year = receivedDate.getFullYear();
 
-                var row = `<tr class='revRow' data-rev-id='${payments.ID}'>
-                    <td>${payments.RefNo}</td>
-                    <td>${payments.invoiceNo}</td>
-                    <td>${formattedDate}</td>
-                    <td>${payments.ar_account}</td>
-                    <td>${payments.customerName}</td>
-                    <td><strong>${totalAmountDueFormatted}</strong></td>
-                    <td><strong>${paymentAmountFormatted}</strong></td>
-                    <td><strong>${discCredappliedFormatted}</strong></td>
-                    <td>${payments.paymentType}</td>
-                </tr>`;
+                    // Format the date as 00-00-00 m/y/d
+                    var formattedDate = (month < 10 ? '0' : '') + month + '-' + (day < 10 ? '0' : '') + day + '-' + year;
 
-                $("#receivePaymentsTable tbody").append(row);
-            });
+                    // Format currency with commas
+                    var totalAmountDueFormatted = formatCurrency(payments.totalAmountDue);
+                    var paymentAmount = parseFloat(payments.payment_amount);
+                    var discCredapplied = parseFloat(payments.discCredapplied);
+                    var paymentAmountFormatted = paymentAmount === 0 ? '0.00' : formatCurrency(paymentAmount);
+                    var discCredappliedFormatted = discCredapplied === 0 ? '0.00' : formatCurrency(discCredapplied);
 
-            // Initialize DataTables only if it's not already initialized
-            if (!$.fn.DataTable.isDataTable("#receivePaymentsTable")) {
-                $('#receivePaymentsTable').DataTable({
-                    // DataTable options
-                    "order": [[1, "asc"]]
+                    // Check if a row with the same RefNo already exists
+                    if (mergedRows.hasOwnProperty(payments.RefNo)) {
+                        // Append invoiceNo to the existing row's invoiceNo
+                        mergedRows[payments.RefNo].invoiceNo += ',' + payments.invoiceNo;
+                        // Update payment amount
+                        mergedRows[payments.RefNo].paymentAmount = paymentAmount;
+                        // Update discCredapplied
+                        mergedRows[payments.RefNo].discCredapplied = discCredapplied;
+                        // Update totalAmountDue
+                        mergedRows[payments.RefNo].totalAmountDue += parseFloat(payments.totalAmountDue); // Accumulate totalAmountDue
+                    } else {
+                        // Create a new merged row object
+                        mergedRows[payments.RefNo] = {
+                            RefNo: payments.RefNo,
+                            invoiceNo: payments.invoiceNo,
+                            receivedDate: formattedDate,
+                            ar_account: payments.ar_account,
+                            customerName: payments.customerName,
+                            totalAmountDue: parseFloat(payments.totalAmountDue), // Convert to number
+                            paymentAmount: paymentAmount,
+                            discCredapplied: discCredapplied,
+                            paymentType: payments.paymentType
+                        };
+                    }
                 });
+
+                // Populate the table with merged rows
+                Object.values(mergedRows).forEach(function(rowData) {
+                    var paymentAmountFormatted = rowData.paymentAmount === 0 ? '0.00' : formatCurrency(rowData.paymentAmount);
+                    var discCredappliedFormatted = rowData.discCredapplied === 0 ? '0.00' : formatCurrency(rowData.discCredapplied);
+                    var totalAmountDueFormatted = formatCurrency(rowData.totalAmountDue); // Format the totalAmountDue
+                    var row = `<tr class='revRow' data-rev-id='${rowData.RefNo}'>
+                        <td>${rowData.RefNo}</td>
+                        <td>${rowData.invoiceNo}</td>
+                        <td>${rowData.receivedDate}</td>
+                        <td>${rowData.ar_account}</td>
+                        <td>${rowData.customerName}</td>
+                        <td><strong>${totalAmountDueFormatted}</strong></td>
+                        <td><strong>${paymentAmountFormatted}</strong></td>
+                        <td><strong>${discCredappliedFormatted}</strong></td>
+                        <td>${rowData.paymentType}</td>
+                    </tr>`;
+                    $("#receivePaymentsTable tbody").append(row);
+                });
+
+                // Initialize DataTables only if it's not already initialized
+                if (!$.fn.DataTable.isDataTable("#receivePaymentsTable")) {
+                    $('#receivePaymentsTable').DataTable({
+                        // DataTable options
+                        "order": [
+                            [1, "desc"]
+                        ]
+                    });
+                }
+            },
+            error: function() {
+                console.error("Error fetching purchase order data.");
             }
-        },
-        error: function() {
-            console.error("Error fetching purchase order data.");
-        }
-    });
-}
-
-
-
-    // Attach click event to table rows
-    // $("#purchaseOrderTable tbody").on("click", "tr", function() {
-    //     // Get the Purchase Order ID (poID) from the first cell of the clicked row
-    //     var poID = $(this).find("td:first").text();
-    //     // Redirect to the view_purchase_order.php with the poID parameter
-    //     window.location.href = "view_purchase_order?poID=" + poID;
-    // });
-
+        });
+    }
 
     // Initial population when the page loads
     $(document).ready(function() {
         populateReceivePaymentsTable();
     });
-    
 </script>
+
 <script>
     $(document).on('click', '.revRow', function() {
-    var ID = $(this).data('rev-id');
-    window.location.href = 'view_receive_payment?ID=' + ID;
-});
+        var RefNo = $(this).data('rev-id');
+        window.location.href = 'view_receive_payment?RefNo=' + RefNo;
+    });
 </script>

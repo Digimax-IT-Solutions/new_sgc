@@ -296,75 +296,75 @@ $allAccounts = $stmt->fetchAll(PDO::FETCH_ASSOC);
         });
 
         function checkForBills() {
-    console.log('Sending AJAX request to check for bills...');
-    $.ajax({
-        url: 'modules/banking/make_deposit/check_for_bills.php',
-        method: 'GET',
-        dataType: 'json',
-        success: function(paymentData) {
-            var tableHtml = '<table id="makeDepoTable" class="table">' +
-                '<thead><tr>' +
-                '<th></th>' +
-                '<th>Date</th>' +
-                '<th>NO.</th>' +
-                '<th>Payment Method</th>' +
-                '<th>Customer Name</th>' +
-                '<th style="text-align: right">Payment Amount</th>' +
-                '</tr></thead><tbody>';
+            console.log('Sending AJAX request to check for bills...');
+            $.ajax({
+                url: 'modules/banking/make_deposit/check_for_bills.php',
+                method: 'GET',
+                dataType: 'json',
+                success: function(paymentData) {
+                    var tableHtml = '<table id="makeDepoTable" class="table">' +
+                        '<thead><tr>' +
+                        '<th></th>' +
+                        '<th>Date</th>' +
+                        '<th>NO.</th>' +
+                        '<th>Payment Method</th>' +
+                        '<th>Customer Name</th>' +
+                        '<th style="text-align: right">Payment Amount</th>' +
+                        '</tr></thead><tbody>';
 
-                paymentData.forEach(function(row) {
-    // Parse payment_amount as float
-    var paymentAmount = parseFloat(row.payment_amount);
-    
-    tableHtml += '<tr>' +
-        '<td><input type="checkbox" id="' + row.RefNo + '" class="payment-checkbox" ' +
-        'data-customername="' + row.customerName + '" ' +
-        'data-ar_account="' + row.ar_account + '" ' +
-        'data-refno="' + row.RefNo + '" ' +
-        'data-paymenttype="' + row.paymentType + '" ' +
-        'data-paymentamount="' + paymentAmount + '" ' + // Use parsed paymentAmount here
-        '></td>' +
-        '<td>' + row.receivedDate + '</td>' +
-        '<td>' + row.RefNo + '</td>' +
-        '<td>' + row.paymentType + '</td>' +
-        '<td>' + row.customerName + '</td>' +
-        '<td style="text-align: right">' + paymentAmount.toFixed(2) + '</td>' + // Use parsed paymentAmount here
-        '<td hidden>' + row.ar_account + '</td>' +
-        '</tr>';
-});
+                    paymentData.forEach(function(row) {
+                        // Parse payment_amount as float
+                        var paymentAmount = parseFloat(row.payment_amount);
+
+                        tableHtml += '<tr>' +
+                            '<td><input type="checkbox" id="' + row.RefNo + '" class="payment-checkbox" ' +
+                            'data-customername="' + row.customerName + '" ' +
+                            'data-ar_account="' + row.ar_account + '" ' +
+                            'data-refno="' + row.RefNo + '" ' +
+                            'data-paymenttype="' + row.paymentType + '" ' +
+                            'data-paymentamount="' + paymentAmount + '" ' + // Use parsed paymentAmount here
+                            '></td>' +
+                            '<td>' + row.receivedDate + '</td>' +
+                            '<td>' + row.RefNo + '</td>' +
+                            '<td>' + row.paymentType + '</td>' +
+                            '<td>' + row.customerName + '</td>' +
+                            '<td style="text-align: right">' + paymentAmount.toFixed(2) + '</td>' + // Use parsed paymentAmount here
+                            '<td hidden>' + row.ar_account + '</td>' +
+                            '</tr>';
+                    });
 
 
-            tableHtml += '</tbody></table>';
+                    tableHtml += '</tbody></table>';
 
-            $('#makeDepositModal .modal-body').html(tableHtml);
-            $('#makeDepositModal').modal('show');
+                    $('#makeDepositModal .modal-body').html(tableHtml);
+                    $('#makeDepositModal').modal('show');
 
-            // Add event listener for checkbox change
-            $('.payment-checkbox').change(function() {
-                if ($(this).is(':checked')) {
-                    var ID = $(this).data('id');
-                    var customerName = $(this).data('customername');
-                    var arAccount = $(this).data('ar_account');
-                    var RefNo = $(this).data('refno');
-                    var paymentType = $(this).data('paymenttype');
-                    var paymentAmount = $(this).data('paymentamount');
+                    // Add event listener for checkbox change
+                    $('.payment-checkbox').change(function() {
+                        if ($(this).is(':checked')) {
+                            var ID = $(this).data('id');
+                            var customerName = $(this).data('customername');
+                            var arAccount = $(this).data('ar_account');
+                            var RefNo = $(this).data('refno');
+                            var paymentType = $(this).data('paymenttype');
+                            var paymentAmount = $(this).data('paymentamount');
 
-                    console.log('Customer Name:', customerName);
-                    console.log('AR Account:', arAccount);
-                    console.log('Ref No:', RefNo);
+                            console.log('Customer Name:', customerName);
+                            console.log('AR Account:', arAccount);
+                            console.log('Ref No:', RefNo);
 
-                    // Now you have access to the associated data, do whatever you need with it
+                            // Now you have access to the associated data, do whatever you need with it
+                        }
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error checking for bills:', error);
                 }
             });
-        },
-        error: function(xhr, status, error) {
-            console.error('Error checking for bills:', error);
         }
-    });
-}
 
-// Call the function to check for bills when the page is loaded
-checkForBills();
+        // Call the function to check for bills when the page is loaded
+        checkForBills();
 
 
         // Call the function to check for bills when the page is loaded

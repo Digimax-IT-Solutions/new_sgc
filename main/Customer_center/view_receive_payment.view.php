@@ -5,12 +5,12 @@ include 'connect.php'; // Include the connection script
 $salesInvoice = null;
 
 // Validate and sanitize the 'ID' parameter from the URL
-if (isset($_GET['ID']) && is_numeric($_GET['ID'])) {
-    $ID = $_GET['ID'];
+if (isset($_GET['RefNo']) && is_numeric($_GET['RefNo'])) {
+    $ID = $_GET['RefNo'];
 
     try {
         // Query to retrieve sales invoice details
-        $queryInvoice = "SELECT * FROM receive_payment WHERE ID = :ID";
+        $queryInvoice = "SELECT * FROM receive_payment WHERE RefNo = :ID";
         $stmtInvoice = $db->prepare($queryInvoice);
         $stmtInvoice->bindParam(':ID', $ID, PDO::PARAM_INT); // Bind parameter as integer
         $stmtInvoice->execute();
@@ -22,7 +22,6 @@ if (isset($_GET['ID']) && is_numeric($_GET['ID'])) {
         echo "Error fetching invoice: " . $e->getMessage();
         exit(); // Exit after encountering an error
     }
-
 } else {
     // Output JavaScript alert for an invalid invoice ID
     echo "<script>alert('Invalid Invoice ID');</script>";
@@ -40,14 +39,14 @@ try {
 
     // Create an array to store customer names with credit balances
     $customersWithCredit = array_column($credits, 'customerName');
-
 } catch (PDOException $e) {
     // Handle the exception, log the error, or return an error message
     echo "Error fetching credits: " . $e->getMessage();
     exit(); // Exit after encountering an error
 }
 
-function getCustomerBalance($customerName) {
+function getCustomerBalance($customerName)
+{
     include 'connect.php'; // Include the connection script
 
     try {
@@ -140,16 +139,19 @@ function getCustomerBalance($customerName) {
     }
 
     /* Media query for smaller screens */
-@media screen and (max-width: 768px) {
-    .icon-select {
-        padding: 5px; /* Reduce padding for smaller screens */
-    }
+    @media screen and (max-width: 768px) {
+        .icon-select {
+            padding: 5px;
+            /* Reduce padding for smaller screens */
+        }
 
-    .icon-option {
-        margin: 3px; /* Adjust margin for smaller screens */
-        min-width: 80px; /* Adjust minimum width for smaller screens */
+        .icon-option {
+            margin: 3px;
+            /* Adjust margin for smaller screens */
+            min-width: 80px;
+            /* Adjust minimum width for smaller screens */
+        }
     }
-}
 
     label {
         color: grey;
@@ -277,15 +279,14 @@ function getCustomerBalance($customerName) {
                                             ?>
                                         </select>
                                     </div>
-                                    
+
                                     <div class="form-group col-md-2">
                                         <label for="customer_balance">CUSTOMER BALANCE</label>
                                         <input type="text" class="form-control" id="customer_balance" name="customer_balance" value="<?php echo getCustomerBalance($salesInvoice['customerName']); ?>" readonly>
                                     </div>
                                     <div class="form-group col-md-2">
                                         <label for="receivedDate">DATE</label>
-                                        <input type="date" class="form-control" id="receivedDate" name="receivedDate"
-                                        value="<?php echo $salesInvoice['receivedDate']; ?>">
+                                        <input type="date" class="form-control" id="receivedDate" name="receivedDate" value="<?php echo $salesInvoice['receivedDate']; ?>">
                                     </div>
                                 </div>
 
@@ -336,7 +337,7 @@ function getCustomerBalance($customerName) {
                                             <div class="icon-option" data-value="gift card">
                                                 <i class="fas fa-money-check-alt"></i>GIFT CARD
                                             </div>
-                                        </div>                                        
+                                        </div>
                                     </div>
                                     <input type="hidden" id="paymentType" name="paymentType" value="<?php echo $salesInvoice['paymentType']; ?>">
                                     <div class="form-group">
@@ -371,9 +372,38 @@ function getCustomerBalance($customerName) {
                                                 </tr>
                                             </thead>
                                             <tbody>
+                                                <?php
+                                                try {
+                                                    $query = "SELECT si.invoiceDate, si.invoiceNo, si.totalAmountDue, si.totalAmountDue, si.amountReceived 
+                                                    FROM sales_invoice si 
+                                                    INNER JOIN receive_payment rp ON si.invoiceNo = rp.invoiceNo
+                                                    WHERE rp.RefNo = :RefNo";
+                                                    $statement = $db->prepare($query);
+                                                    $statement->bindParam(':RefNo', $salesInvoice['RefNo'], PDO::PARAM_INT);
+                                                    $statement->execute();
+                                                    $invoices = $statement->fetchAll(PDO::FETCH_ASSOC);
+                                                } catch (PDOException $e) {
+                                                    echo "Error fetching data: " . $e->getMessage();
+                                                    exit();
+                                                }
+                                                // Assuming you have already fetched the data from the database into $invoices variable
+                                                foreach ($invoices as $invoice) {
+                                                    echo "<tr>";
+                                                    echo "<td>" . $invoice['invoiceDate'] . "</td>"; // Adjust column names as per your database schema
+                                                    echo "<td>" . $invoice['invoiceNo'] . "</td>";
+                                                    echo "<td>" . $invoice['totalAmountDue'] . "</td>";
+                                                    echo "<td></td>";
+                                                    echo "<td></td>";
+                                                    echo "<td></td>";
+                                                    echo "<td>" . $invoice['totalAmountDue'] . "</td>";
+                                                    echo "<td>" . $invoice['amountReceived'] . "</td>";
+                                                    echo "</tr>";
+                                                }
+                                                ?>
                                             </tbody>
                                         </table>
                                     </div>
+
                                 </div>
                                 <div class="modal-footer">
                                     <div class="summary-details">
@@ -574,16 +604,16 @@ function getCustomerBalance($customerName) {
 </div>
 
 <script>
-$(document).ready(function() {
-    // Get the paymentType value
-    var paymentType = $('#paymentType').val();
-    
-    // Remove 'selected' class from all icon-options
-    $('.icon-option').removeClass('selected');
-    
-    // Add 'selected' class to the icon-option corresponding to the paymentType
-    $('.icon-option[data-value="' + paymentType + '"]').addClass('selected');
-});
+    $(document).ready(function() {
+        // Get the paymentType value
+        var paymentType = $('#paymentType').val();
+
+        // Remove 'selected' class from all icon-options
+        $('.icon-option').removeClass('selected');
+
+        // Add 'selected' class to the icon-option corresponding to the paymentType
+        $('.icon-option[data-value="' + paymentType + '"]').addClass('selected');
+    });
 
     $('.icon-option').click(function() {
         $('.icon-option').removeClass('active'); // Remove active class from all options
