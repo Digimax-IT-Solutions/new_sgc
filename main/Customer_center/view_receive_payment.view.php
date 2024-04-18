@@ -130,12 +130,12 @@ function getCustomerBalance($customerName)
 
     .icon-option:hover {
         color: white;
-        background-color: green;
+        background-color: rgb(128,0,0);
     }
 
     .icon-option.selected {
         color: white;
-        background-color: green;
+        background-color: rgb(128,0,0);
     }
 
     /* Media query for smaller screens */
@@ -203,7 +203,7 @@ function getCustomerBalance($customerName)
 
     #invoice_table tbody tr:hover {
         color: white;
-        background-color: rgb(0, 149, 77);
+        background-color: rgb(128,0,0);
         /* Set your desired background color here */
     }
 

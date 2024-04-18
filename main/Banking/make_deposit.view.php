@@ -17,12 +17,7 @@ include __DIR__ . ('../../includes/header.php');
     }
 
     /* Add a hover effect to the dropdown items */
-    .dropdown-item:hover {
-        background-color: rgb(0, 149, 77) !important;
-        /* Change the background color on hover */
-        color: white;
-        /* Change the text color on hover */
-    }
+
 
     #makeDepositTable {
         border-collapse: collapse;
@@ -84,11 +79,11 @@ include __DIR__ . ('../../includes/header.php');
                             <div class="row">
                                 <div class="col-md-3">
                                     <div class="dropdown">
-                                        <button class="btn btn-secondary dropdown-toggle" type="button" id="newTransactionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="background-color: rgb(0, 149, 77); color: white;">
+                                        <button class="btn btn-secondary dropdown-toggle" type="button" id="newTransactionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="background-color: rgb(128,0,0); color: white;">
                                             Make New Deposit
                                         </button>
                                         <div class="dropdown-menu" aria-labelledby="newTransactionDropdown">
-                                            <a class="dropdown-item" href="create_deposit" style="background-color: white;">Make Deposit</a>
+                                            <a class="dropdown-item" href="create_deposit" style="color: rgb(128,0,0)">Make Deposit</a>
                                         </div>
                                     </div>
                                 </div>

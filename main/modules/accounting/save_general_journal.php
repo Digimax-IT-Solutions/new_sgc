@@ -59,10 +59,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $updateStmt->execute([$debit, $account]);
             }
 
-            // if ($credit > 0) {
-            //     $updateStmt = $db->prepare("UPDATE chart_of_accounts SET account_balance = account_balance - ? WHERE account_name = ?");
-            //     $updateStmt->execute([$credit, $account]);
-            // }
+            if ($credit > 0) {
+                $updateStmt = $db->prepare("UPDATE chart_of_accounts SET account_balance = account_balance - ? WHERE account_name = ?");
+                $updateStmt->execute([$credit, $account]);
+            }
 
             if ($debit > 0 && $account == 'Undeposited Fund') {
                 $updateStmt = $db->prepare("UPDATE customers SET customerBalance = customerBalance - ? WHERE customerName = ?");

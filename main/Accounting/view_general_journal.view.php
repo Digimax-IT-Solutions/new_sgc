@@ -104,13 +104,13 @@ $otherNamesJSON = json_encode($otherNames);
     /* Set the width of the first th and td */
     #generalJournalTable th:first-child,
     #generalJournalTable td:first-child {
-        width: 500px;
+        width: 300px;
     }
 
     /* Set the width of the fourth th and td */
     #generalJournalTable th:nth-child(4),
     #generalJournalTable td:nth-child(4) {
-        width: 500px;
+        width: 200px;
     }
 </style>
 

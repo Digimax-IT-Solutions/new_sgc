@@ -63,11 +63,11 @@
                             <div class="row">
                                 <div class="col-md-3">
                                     <div class="dropdown">
-                                        <button class="btn btn-secondary dropdown-toggle" type="button" id="newTransactionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="background-color: rgb(0, 149, 77); color: white;">
+                                        <button class="btn btn-secondary dropdown-toggle" type="button" id="newTransactionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="background-color: rgb(128,0,0); color: white;">
                                             New Transactions
                                         </button>
                                         <div class="dropdown-menu" aria-labelledby="newTransactionDropdown">
-                                            <a class="dropdown-item" href="create_invoice" style="color: rgb(0, 149, 77); background-color: white;">Invoice</a>
+                                            <a class="dropdown-item" href="create_invoice" style="color: rgb(128,0,0); background-color: white;">Invoice</a>
                                             <!-- <a class="dropdown-item" href="#" style="color: rgb(0, 149, 77); background-color: white;">Received
                                                 Payment</a>
                                             <a class="dropdown-item" href="#" style="color: rgb(0, 149, 77); background-color: white;">Make

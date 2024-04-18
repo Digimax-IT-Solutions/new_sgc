@@ -143,7 +143,7 @@ $userPosition = $_SESSION['SESS_POSITION'];
                     </ul>
                 </li>
                 <!-- BANKING -->
-                <li class="nav-item has-treeview <?php echo ($page == 'main/write_check' || $page == 'main/expenses') ? 'menu-open' : ''; ?>">
+                <li class="nav-item has-treeview <?php echo ($page == 'main/write_check' || $page == 'main/make_deposit' || $page == 'main/expenses') ? 'menu-open' : ''; ?>">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-university"></i>
                         <p>

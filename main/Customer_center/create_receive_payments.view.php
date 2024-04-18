@@ -89,12 +89,12 @@ try {
 
     .icon-option:hover {
         color: white;
-        background-color: green;
+        background-color: rgb(128,0,0);
     }
 
     .icon-option.selected {
         color: white;
-        background-color: green;
+        background-color: rgb(128,0,0);
     }
 
     /* Media query for smaller screens */

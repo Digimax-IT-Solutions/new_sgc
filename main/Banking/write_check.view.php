@@ -16,14 +16,6 @@ include __DIR__ . ('../../includes/header.php');
         /* Change the text color for inactive status */
     }
 
-    /* Add a hover effect to the dropdown items */
-    .dropdown-item:hover {
-        background-color: rgb(0, 149, 77) !important;
-        /* Change the background color on hover */
-        color: white;
-        /* Change the text color on hover */
-    }
-
     #writeCheckTable {
         border-collapse: collapse;
         width: 100%;
@@ -38,7 +30,7 @@ include __DIR__ . ('../../includes/header.php');
     #writeCheckTable tbody tr:hover {
 
         color: white;
-        background-color: rgb(0, 149, 77);
+        background-color: rgb(128,0,0);
         /* Set your desired background color here */
     }
 </style>
@@ -72,7 +64,7 @@ include __DIR__ . ('../../includes/header.php');
                             <div class="row">
                                 <div class="col-md-3">
                                     <div class="dropdown">
-                                        <button class="btn btn-secondary dropdown-toggle" type="button" id="newTransactionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="background-color: rgb(0, 149, 77); color: white;">
+                                        <button class="btn btn-secondary dropdown-toggle" type="button" id="newTransactionDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="background-color: rgb(128,0,0); color: white;">
                                             Write Check
                                         </button>
                                         <div class="dropdown-menu" aria-labelledby="newTransactionDropdown">

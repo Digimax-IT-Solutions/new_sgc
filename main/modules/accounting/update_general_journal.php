@@ -48,6 +48,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $updateStmt = $db->prepare("UPDATE journal_entries SET debit = ? WHERE general_journal_id = ? AND account = ?");
                 $updateStmt->execute([$debit, $ID, $account]);
             }
+            
 
             if ($credit > 0) {
                 // Get the previous credit amount for this account
@@ -63,7 +64,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 // Update the journal entry with the new credit value
                 $updateStmt = $db->prepare("UPDATE journal_entries SET credit = ? WHERE general_journal_id = ? AND account = ?");
                 $updateStmt->execute([$credit, $ID, $account]);
-            }            
+            }   
+            
+            if ($credit > 0) {
+                // Get the previous credit amount for this account
+                $previousCreditStmt = $db->prepare("SELECT credit FROM journal_entries WHERE general_journal_id = ? AND account = ?");
+                $previousCreditStmt->execute([$ID, $account]);
+                $previousCredit = $previousCreditStmt->fetchColumn();
+                
+                // Update the chart_of_accounts with the difference between the new and previous credit
+                $debitDifference = $credit - $previousDebit;
+                $updateChartOfAccountsStmt = $db->prepare("UPDATE chart_of_accounts SET account_balance = account_balance - ? WHERE account_name = ?");
+                $updateChartOfAccountsStmt->execute([$debitDifference, $account]);
+                
+                // Update the journal entry with the new credit value
+                $updateStmt = $db->prepare("UPDATE journal_entries SET credit = ? WHERE general_journal_id = ? AND account = ?");
+                $updateStmt->execute([$credit, $ID, $account]);
+            }   
 
             // Insert data into journal_entries table
             $stmt = $db->prepare("UPDATE journal_entries SET debit = ?, credit = ?, name = ?, memo = ? WHERE general_journal_id = ? AND account = ?");
