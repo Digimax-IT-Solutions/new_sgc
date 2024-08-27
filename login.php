@@ -252,7 +252,7 @@ Guard::guestOnly();
         </div>
         <div class="form-container sign-in">
             <form method="POST" action="api/login_controller.php">
-                <img class="image-fluid" src="photos/banner.png" style="height: 250px; width: 270px;" alt="">
+                <img class="image-fluid" src="photos/banner.png" style="height: 270px; width: 270px;" alt="">
 
                 <input type="text" name="username" placeholder="Username" required="true" />
                 <input type="password" name="password" placeholder="Password" required="true" />
