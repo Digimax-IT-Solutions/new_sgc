@@ -8,7 +8,7 @@ function shouldSidebarBeCollapsed()
 <style>
     .sidebar-item.active {
 
-        background: linear-gradient(to right, rgb(13, 128, 64) 100%, rgb(13, 128, 64) 0%);
+        background: linear-gradient(to right, rgb(255, 102, 102) 100%, rgb(255, 102, 102) 0%);
     }
 
     /* Sidebar CSS */
@@ -39,7 +39,7 @@ function shouldSidebarBeCollapsed()
 <nav id="sidebar" class="sidebar js-sidebar <?php echo shouldSidebarBeCollapsed() ? 'collapsed' : ''; ?>">
     <div class="sidebar-content js-simplebar" id="sidebar-content">
         <a class="sidebar-brand" href="dashboard">
-            <span class="align-middle">HISUMCO CAS</span>
+            <span class="align-middle">NEW SGC CAS</span>
         </a>
         <!-- Sidebar user panel -->
         <div class="user-panel text-center">

@@ -17,7 +17,7 @@ $page = 'home';
 
             </li>
 
-            <h1 class="h3 mb-3"><strong>HISUMCO</strong> Accounting System</h1>
+            <h1 class="h3 mb-3"><strong>NEW SGC</strong> Accounting System</h1>
 
             <div class="row">
                 <div class="col-xl-12 col-xxl- d-flex" style=" table-layout: fixed; ">
@@ -509,4 +509,3 @@ $page = 'home';
         });
     });
 </script>
-
