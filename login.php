@@ -12,7 +12,7 @@ Guard::guestOnly();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DIGIMAX</title>
+    <title>NEW SGC</title>
     <link rel="shortcut icon" href="photos/banner.png">
     <!-- Add Bootstrap CSS link -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
@@ -29,8 +29,9 @@ Guard::guestOnly();
         }
 
         body {
-            background-color: #0D8040;
-            background: linear-gradient(to right, #0D8040, #0D8040);
+            background-color: rgb(231, 0, 2);
+            background: linear-gradient(to right, rgb(231, 0, 2), rgb(255, 102, 102));
+            /* Light Red */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -68,7 +69,7 @@ Guard::guestOnly();
         }
 
         .container button {
-            background-color: #0D8040;
+            background-color: rgb(231, 0, 2);
             color: #fff;
             font-size: 12px;
             padding: 10px 45px;
@@ -189,7 +190,7 @@ Guard::guestOnly();
         .toggle {
             background-color: #0D8040;
             height: 100%;
-            background: linear-gradient(to right, #0D8040, #0D8040);
+            background: linear-gradient(to right, rgb(231, 0, 2), rgb(255, 102, 102));
             color: #fff;
             position: relative;
             left: -100%;
@@ -251,8 +252,8 @@ Guard::guestOnly();
         </div>
         <div class="form-container sign-in">
             <form method="POST" action="api/login_controller.php">
-                <img class="image-fluid" src="photos/banner.png" style="height: 90px; width: 350px;" alt="">
-                <br>
+                <img class="image-fluid" src="photos/banner.png" style="height: 250px; width: 270px;" alt="">
+
                 <input type="text" name="username" placeholder="Username" required="true" />
                 <input type="password" name="password" placeholder="Password" required="true" />
 
@@ -267,7 +268,7 @@ Guard::guestOnly();
                     <button class="hidden" id="login">Sign In</button>
                 </div>
                 <div class="toggle-panel toggle-right">
-                    <p>POWERED BY DIGIMAX</p>
+                    <p>NEW SGC ACCOUNTING SYSTEM</p>
                     <button class="hidden" id="register" disabled>PRODUCTION</button>
                 </div>
             </div>
