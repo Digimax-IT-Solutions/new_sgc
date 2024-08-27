@@ -3,7 +3,7 @@
 define('DB_HOST', 'localhost');
 define('DB_USERNAME', 'root');
 define('DB_PASSWORD', 'digimax2023');
-define('DB_DATABASE', 'sgc_db');
+define('DB_DATABASE', 'new_sgc');
 
 define('ROLE_CASHIER', 'CASHIER');
 define('ROLE_ADMIN', 'ADMIN');
