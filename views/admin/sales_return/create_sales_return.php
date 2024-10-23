@@ -1,7 +1,12 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('sales_return');
 $accounts = ChartOfAccount::all();
 $customers = Customer::all();
 $products = Product::all();
@@ -189,7 +194,7 @@ $page = 'sales_sales_return'; // Set the variable corresponding to the current p
                                             required>
                                             <option value="">Select Location</option>
                                             <?php foreach ($locations as $location): ?>
-                                                <option value="<?= $location->name ?>"><?= $location->name ?>
+                                                <option value="<?= $location->id ?>"><?= $location->name ?>
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
@@ -462,13 +467,19 @@ $page = 'sales_sales_return'; // Set the variable corresponding to the current p
 
             // Add options based on account type condition
             accounts.forEach(function (account) {
-                if (account.account_type === selectedAccountType) {
-                    // For "Other Current Assets", only include accounts with "Undeposited" in the name
-                    if (selectedAccountType !== "Other Current Assets" || account.account_description.toLowerCase().includes("undeposited")) {
-                        var option = document.createElement('option');
-                        option.value = account.id;
-                        option.setAttribute('data-account-type', account.account_type);
-                        option.textContent = account.account_description;
+                var option = document.createElement('option');
+                option.value = account.id;
+                option.setAttribute('data-account-type', account.account_type);
+                option.textContent = account.account_description;
+
+                if (isCashSales) {
+                    // Show 'Bank' and 'Undeposited Funds' when cash sales is selected
+                    if (account.account_type === "Bank" || account.account_description.toLowerCase().includes("undeposited")) {
+                        sales_returnAccountSelect.appendChild(option);
+                    }
+                } else {
+                    // Show 'Accounts Receivable' when cash sales is not selected
+                    if (account.account_type === "Accounts Receivable") {
                         sales_returnAccountSelect.appendChild(option);
                     }
                 }
@@ -541,12 +552,13 @@ $page = 'sales_sales_return'; // Set the variable corresponding to the current p
         function saveDraft() {
             const items = gatherTableItems();
 
-            // Check if there are any items
-            if (items.length === 0) {
+          // Check if there are any items
+          if (items === false || items.length === 0) {
+                if (items === false) return;
                 Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Please add items before saving as draft'
+                    icon: 'warning',
+                    title: 'Warning',
+                    text: 'Please add items first'
                 });
                 return;
             }
@@ -801,26 +813,47 @@ $page = 'sales_sales_return'; // Set the variable corresponding to the current p
 
         function calculateTotalAmount() {
             const totals = {
-                totalAmount: 0, totalDiscountAmount: 0, totalNetAmountBeforeTax: 0, totalInputVatAmount: 0,
-                vatableAmount: 0, zeroRatedAmount: 0, vatExemptAmount: 0
+                totalAmount: 0,
+                totalDiscountAmount: 0,
+                totalNetAmountBeforeTax: 0,
+                totalInputVatAmount: 0,
+                vatableAmount: 0,
+                zeroRatedAmount: 0,
+                vatExemptAmount: 0,
+                nonVatableAmount: 0 // Added for NV amount tracking
             };
 
-            $('.amount, .discount_amount, .net_amount_before_sales_tax, .sales_tax_amount, .net_amount').each(function () {
-                const value = parseFloat($(this).val()) || 0;
+            // Loop through each row to calculate totals
+            $('.amount, .discount_amount, .net_amount_before_sales_tax, .sales_tax_amount, .net_amount').each(function() {
+                const value = parseFloat($(this).val().replace(/,/g, '')) || 0;
                 const inputVatName = $(this).closest('tr').find('.sales_tax_percentage option:selected').text();
 
-                if ($(this).hasClass('amount')) totals.totalAmount += value;
-                else if ($(this).hasClass('discount_amount')) totals.totalDiscountAmount += value;
-                else if ($(this).hasClass('net_amount_before_sales_tax')) totals.totalNetAmountBeforeTax += value;
-                else if ($(this).hasClass('sales_tax_amount')) totals.totalInputVatAmount += value;
-                else if ($(this).hasClass('net_amount')) {
-                    if (inputVatName === '12%') totals.vatableAmount += value;
-                    else if (inputVatName === 'E') totals.vatExemptAmount += value;
-                    else if (inputVatName === 'Z') totals.zeroRatedAmount += value;
+                if ($(this).hasClass('amount')) {
+                    totals.totalAmount += value;
+                } else if ($(this).hasClass('discount_amount')) {
+                    totals.totalDiscountAmount += value;
+                } else if ($(this).hasClass('net_amount_before_sales_tax')) {
+                    totals.totalNetAmountBeforeTax += value;
+                } else if ($(this).hasClass('sales_tax_amount')) {
+                    totals.totalInputVatAmount += value;
+                } else if ($(this).hasClass('net_amount')) {
+                    // Calculate amounts based on the selected VAT type
+                    if (inputVatName.includes('12%')) {
+                        totals.vatableAmount += value;
+                    } else if (inputVatName.includes('E')) {
+                        totals.vatExemptAmount += value;
+                    } else if (inputVatName.includes('Z')) {
+                        totals.zeroRatedAmount += value;
+                    } else if (inputVatName.includes('NA') || inputVatName.includes('NV')) {
+                        totals.nonVatableAmount += value; // Track NV/NA separately
+                    } else {
+                        // Fallback: if no valid VAT type is selected, add to vatable by default
+                        totals.vatableAmount += value;
+                    }
                 }
             });
 
-            // Update form fields
+            // Update form fields with formatted numbers
             $("#gross_amount").val(totals.totalAmount.toFixed(2));
             $("#total_discount_amount").val(totals.totalDiscountAmount.toFixed(2));
             $("#net_amount_due").val(totals.totalNetAmountBeforeTax.toFixed(2));
@@ -831,11 +864,11 @@ $page = 'sales_sales_return'; // Set the variable corresponding to the current p
 
             // Get the selected tax withheld option
             const selectedTaxWithheld = $("#tax_withheld_percentage option:selected");
-            const taxWithheldPercentage = parseFloat(selectedTaxWithheld.val()) || 0;
-            const taxWithheldName = selectedTaxWithheld.text();
+            const taxWithheldPercentage = parseFloat(selectedTaxWithheld.data('rate')) || 0;
+            const taxWithheldId = selectedTaxWithheld.val();
 
-            // Calculate tax withheld amount based on the sum of vatable, zero-rated, and vat-exempt amounts
-            const taxableBase = totals.vatableAmount + totals.zeroRatedAmount + totals.vatExemptAmount;
+            // Calculate tax withheld amount based on the sum of vatable, zero-rated, vat-exempt, and non-vatable amounts
+            const taxableBase = totals.vatableAmount + totals.zeroRatedAmount + totals.vatExemptAmount + totals.nonVatableAmount;
             const taxWithheldAmount = (taxWithheldPercentage / 100) * taxableBase;
 
             $("#tax_withheld_amount").val(taxWithheldAmount.toFixed(2));
@@ -846,6 +879,7 @@ $page = 'sales_sales_return'; // Set the variable corresponding to the current p
 
             $("#total_amount_due").val(totalAmountDue.toFixed(2));
         }
+
         // REMOVE ITEM
         $(document).on('click', '.removeRow', function () {
             $(this).closest('tr').remove();
@@ -885,12 +919,49 @@ $page = 'sales_sales_return'; // Set the variable corresponding to the current p
         // Gather table items function (unchanged)
         function gatherTableItems() {
             const items = [];
+            let hasEmptyItem = false;
+            let hasEmptyQuantity = false;
+            let hasEmptySellingPrice = false;
+            let firstEmptyItemRow;
+            let firstEmptyQuantityRow;
+            let firstEmptySellingPriceRow;
+
             $('#itemTableBody tr').each(function (index) {
+
+                const item_id = $(this).find('select[name="item_id[]"]').val();
+                const quantity =  $(this).find('input[name="quantity[]"]').val();
+                const cost =  $(this).find('input[name="cost[]"]').val();
+
+                // Check if item_id or quantity is empty
+                if (!item_id) {
+                    hasEmptyItem = true;
+                    if (!firstEmptyItemRow) {
+                        firstEmptyItemRow = $(this); // Store the first row with empty item_id
+                    }
+                    return true; // Continue to the next row
+                }
+
+                if (!quantity) {
+                    hasEmptyQuantity = true;
+                    if (!firstEmptyQuantityRow) {
+                        firstEmptyQuantityRow = $(this); // Store the first row with empty quantity
+                    }
+                    return true; // Continue to the next row
+                }
+
+                if (!cost) {
+                    hasEmptySellingPrice = true;
+                    if (!firstEmptySellingPriceRow) {
+                        firstEmptySellingPriceRow = $(this); // Store the first row with empty quantity
+                    }
+                    return true; // Continue to the next row
+                }
+
                 const item = {
-                    item_id: $(this).find('select[name="item_id[]"]').val(),
+                    item_id: item_id,
                     item_name: $(this).find('.item-name').val(),
-                    quantity: $(this).find('input[name="quantity[]"]').val(),
-                    cost: $(this).find('input[name="cost[]"]').val(),
+                    quantity:quantity,
+                    cost:cost,
                     cost_price: $(this).find('input[name="cost_price[]"]').val(),
                     amount: $(this).find('input[name="amount[]"]').val(),
                     discount_percentage: $(this).find('select[name="discount_percentage[]"]').val(),
@@ -907,6 +978,44 @@ $page = 'sales_sales_return'; // Set the variable corresponding to the current p
                 };
                 items.push(item);
             });
+
+            // Show warnings based on which validation failed
+            if (hasEmptyItem) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Warning',
+                    text: 'Please select an item.'
+                }).then(() => {
+                    // Highlight the first row with an empty item
+                    firstEmptyItemRow.find('select[name="item_id[]"]').focus().css('border', '2px solid red');
+                });
+                return false;
+            }
+
+            if (hasEmptyQuantity) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Warning',
+                    text: 'Please enter a quantity for every item.'
+                }).then(() => {
+                    // Highlight the first row with an empty quantity
+                    firstEmptyQuantityRow.find('input[name="quantity[]"]').focus().css('border', '2px solid red');
+                });
+                return false;
+            }
+
+            if (hasEmptySellingPrice) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Warning',
+                    text: 'Please enter a selling price for every item.'
+                }).then(() => {
+                    // Highlight the first row with an empty quantity
+                    firstEmptySellingPriceRow.find('input[name="cost[]"]').focus().css('border', '2px solid red');
+                });
+                return false;
+            }
+
             return items;
         }
 
@@ -914,27 +1023,18 @@ $page = 'sales_sales_return'; // Set the variable corresponding to the current p
             event.preventDefault();
             const items = gatherTableItems();
 
-            // Log the sales_return_account_id value
-            console.log('Submitting sales_return_account_id:', $('#sales_return_account_id').val());
-            console.log('Submitting tax_withheld_account_id:', $('#tax_withheld_account_id').val());
-
-            // Show the loading overlay
-            document.getElementById('loadingOverlay').style.display = 'flex';
-
-            // Create and play the audio
-            const audio = new Audio('photos/rr.mp3');
-            audio.play().catch(e => console.error('Error playing audio:', e));
-
-            // Check if there are any items
-            if (items.length === 0) {
+            if (items === false || items.length === 0) {
+                if (items === false) return;
                 Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
+                    icon: 'warning',
+                    title: 'Warning',
                     text: 'Please add items first'
                 });
-                document.getElementById('loadingOverlay').style.display = 'none';
                 return;
             }
+
+            // Show the loading overlay
+
 
             $('#item_data').val(JSON.stringify(items));
 
@@ -948,6 +1048,8 @@ $page = 'sales_sales_return'; // Set the variable corresponding to the current p
 
             // Log the sales_return_account_id value
             console.log('Submitting sales_return_account_id:', $('#sales_return_account_id').val());
+
+            document.getElementById('loadingOverlay').style.display = 'flex';
 
             // Use AJAX to submit the form
             $.ajax({

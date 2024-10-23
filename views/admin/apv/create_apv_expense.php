@@ -1,8 +1,13 @@
 <?php
 //Guard
-include '_guards.php';
+//Guard
+require_once '_guards.php';
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('accounts_payable_voucher');
 
-Guard::adminOnly();
 $accounts = ChartOfAccount::all();
 $vendors = Vendor::all();
 $cost_centers = CostCenter::all();
@@ -10,6 +15,8 @@ $discounts = Discount::all();
 $wtaxes = WithholdingTax::all();
 $input_vats = InputVat::all();
 $terms = Term::all();
+$locations = Location::all();
+
 
 $newAPVoucherNo = Apv::getLastApvNo();
 
@@ -273,12 +280,26 @@ $newAPVoucherNo = Apv::getLastApvNo();
                                         </div>
                                     </div>
 
-                                    <div class="col-md-8 order-details mt-5">
-                                        <!-- MEMO -->
-                                        <div class="form-group">
-                                            <label for="memo">Memo</label>
-                                            <input type="text" class="form-control form-control-md" id="memo"
-                                                name="memo">
+                                    <div class="row order-details mt-5">
+                                        <div class="col-md-8">
+                                            <!-- MEMO -->
+                                            <div class="form-group">
+                                                <label for="memo">Memo</label>
+                                                <input type="text" class="form-control form-control-md" id="memo" name="memo">
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <!-- LOCATION -->
+                                            <div class="form-group">
+                                                <label for="location" class="form-label">Location</label>
+                                                <select class="form-select form-select-sm" id="location" name="location" required>
+                                                    <option value="">Select Location</option>
+                                                    <?php foreach ($locations as $location): ?>
+                                                        <option value="<?= $location->id ?>"><?= $location->name ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -436,7 +457,7 @@ $newAPVoucherNo = Apv::getLastApvNo();
     </main>
     <div id="loadingOverlay" style="display: none;">
         <div class="spinner"></div>
-        <div class="message">Processing wchecks</div>
+        <div class="message">Processing APV</div>
     </div>
 </div>
 
@@ -617,6 +638,12 @@ $newAPVoucherNo = Apv::getLastApvNo();
             placeholder: 'Select Vendor',
             allowClear: false
         });
+        $('#location').select2({
+            theme: 'classic', // Use 'bootstrap-5' for Bootstrap 5, 'bootstrap-4' for Bootstrap 4
+            width: '100%',
+            placeholder: 'Select Location',
+            allowClear: false
+        });
 
         // Populate dropdowns with accounts from PHP
         const accounts = <?php echo json_encode($accounts); ?>;
@@ -719,7 +746,9 @@ $newAPVoucherNo = Apv::getLastApvNo();
             $("#vat_percentage_amount").val(totalVat.toFixed(2));
             $("#net_of_vat").val(totalTaxableAmount.toFixed(2));
 
-            const taxWithheldPercentage = parseFloat($("#tax_withheld_percentage").val()) || 0;
+            // Get the selected tax withheld option
+            const selectedTaxWithheld = $("#tax_withheld_percentage option:selected");
+            const taxWithheldPercentage = parseFloat(selectedTaxWithheld.data('rate')) || 0;
             const taxWithheldAmount = (taxWithheldPercentage / 100) * totalTaxableAmount;
             $("#tax_withheld_amount").val(taxWithheldAmount.toFixed(2));
 
@@ -812,7 +841,7 @@ $newAPVoucherNo = Apv::getLastApvNo();
                         Swal.fire({
                             icon: 'success',
                             title: 'Success',
-                            text: 'Check submitted successfully!',
+                            text: 'APV submitted successfully!',
                             showCancelButton: false,
                             confirmButtonText: 'Print'
                         }).then((result) => {

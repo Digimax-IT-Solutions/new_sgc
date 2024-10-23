@@ -4,7 +4,6 @@ class ProfitAndLoss
 {
     public static function displayProfitAndLoss($fromDate = null, $toDate = null)
     {
-        global $connection;
 
         // Fetch data from database
         $currentData = self::fetchAccountData($fromDate, $toDate);
@@ -13,68 +12,155 @@ class ProfitAndLoss
         $displayedAccounts = [];
 
         // Output the Profit and Loss statement
-        echo '<div class="profit-loss-statement" style="width: 700px; margin: 0 auto;">';
-        echo '<h2 style="text-align: center;">DIGIMAX IT SOLUTIONS INC.</h2>';
-        echo '<h3 style="text-align: center;">PROFIT AND LOSS</h3>';
+        echo '<div class="profit-loss-statement">';
+        echo '<h1>LA PERLA SUGAR EXPORT CORPORATION</h1>';
+        echo '<h2>Profit and Loss</h2>';
         if ($fromDate && $toDate) {
-            echo '<h4 style="text-align: center;">From ' . date('F d, Y', strtotime($fromDate)) . ' to ' . date('F d, Y', strtotime($toDate)) . '</h4>';
+            echo '<h3>' . date('F d, Y', strtotime($fromDate)) . ' to ' . date('F d, Y', strtotime($toDate)) . '</h3>';
         } else {
-            echo '<h4 style="text-align: center;">' . date('Y') . '</h4>';
+            echo '<h3>Fiscal Year ' . date('Y') . '</h3>';
         }
-        echo '<table style="width: 100%; border-collapse: collapse;">';
-        echo '<thead><tr><th></th><th style="text-align: right;">' . $toDate . '</th></tr></thead>';
+
+        // Start report
+        echo '<div class="report-body">';
 
         // Income section
-        $totalIncome = self::displaySection($currentData, 'INCOME', 'Income', [], $displayedAccounts);
+        $totalIncome = self::displayReportSection($currentData, 'Income', 'Income', [], $displayedAccounts);
 
         // Cost of Goods Sold section
-        $totalCOGS = self::displaySection($currentData, 'EXPENSE', 'Cost of Goods Sold', [], $displayedAccounts);
+        $totalCOGS = self::displayReportSection($currentData, 'Cost of Goods Sold', 'Cost of Goods Sold', [], $displayedAccounts);
 
         // Gross Profit
         $grossProfit = $totalIncome - $totalCOGS;
-        echo self::totalLine('Gross Profit', $grossProfit);
+        echo self::reportTotalItem('Gross Profit', $grossProfit);
 
         // Expenses section
-        $totalExpenses = self::displaySection($currentData, 'EXPENSE', 'Expenses', ['Cost of Goods Sold'], $displayedAccounts);
+        $totalExpenses = self::displayReportSection($currentData, 'Expenses', 'Expenses', ['Cost of Goods Sold'], $displayedAccounts);
 
         // Operating Income
         $operatingIncome = $grossProfit - $totalExpenses;
-        echo self::totalLine('Operating Income', $operatingIncome);
+        echo self::reportTotalItem('Operating Income', $operatingIncome);
 
         // Other Income and Expense
-        $otherIncome = self::displaySection($currentData, 'INCOME', 'Other Income', $displayedAccounts, $displayedAccounts);
-        $otherExpense = self::displaySection($currentData, 'EXPENSE', 'Other Expense', $displayedAccounts, $displayedAccounts);
+        $otherIncome = self::displayReportSection($currentData, 'Other Income', 'Other Income', [], $displayedAccounts);
+        $otherExpense = self::displayReportSection($currentData, 'Other Expense', 'Other Expense', [], $displayedAccounts);
 
         // Net Income Before Tax
         $netIncomeBeforeTax = $operatingIncome + $otherIncome - $otherExpense;
-        echo self::totalLine('Net Income Before Tax', $netIncomeBeforeTax);
+        echo self::reportTotalItem('Net Income Before Tax', $netIncomeBeforeTax);
 
         // Income Tax (assuming 25% tax rate)
-        $incomeTax = $netIncomeBeforeTax * 0.25;
-        echo self::lineItem('Less provision for Income Tax (25%)', -$incomeTax);
+        if ($netIncomeBeforeTax > 0) {
+            $incomeTax = $netIncomeBeforeTax * 0.25;
+        } else {
+            $incomeTax = 0;
+        }
+        echo self::reportItem('Less provision for Income Tax (25%)', -$incomeTax);
 
         // Net Income/Loss
         $netIncomeLoss = $netIncomeBeforeTax - $incomeTax;
-        echo self::totalLine('Net Income/Loss', $netIncomeLoss, true);
+        echo self::reportTotalItem('Net Income/Loss', $netIncomeLoss, true);
 
-        echo '</table>';
+        // End report
+        echo '</div>';
+
         echo '</div>';
 
         // Return the net income
         return $netIncomeLoss;
     }
 
+    public static function calculateNetIncome($fromDate = null, $toDate = null)
+    {
+        // Fetch data from database
+        $currentData = self::fetchAccountData($fromDate, $toDate);
+
+        // Calculate net income without displaying the statement
+        $totalIncome = self::calculateSectionTotal($currentData, 'Income');
+        $totalCOGS = self::calculateSectionTotal($currentData, 'Cost of Goods Sold');
+        $grossProfit = $totalIncome - $totalCOGS;
+        $totalExpenses = self::calculateSectionTotal($currentData, 'Expenses', ['Cost of Goods Sold']);
+        $operatingIncome = $grossProfit - $totalExpenses;
+        $otherIncome = self::calculateSectionTotal($currentData, 'Other Income');
+        $otherExpense = self::calculateSectionTotal($currentData, 'Other Expense');
+        $netIncomeBeforeTax = $operatingIncome + $otherIncome - $otherExpense;
+        $incomeTax = $netIncomeBeforeTax > 0 ? $netIncomeBeforeTax * 0.25 : 0;
+        $netIncomeLoss = $netIncomeBeforeTax - $incomeTax;
+
+        return $netIncomeLoss;
+    }
+
+    private static function calculateSectionTotal($data, $accountType, $exclude = [])
+    {
+        $total = 0;
+        foreach ($data as $account) {
+            if ($account['account_type'] == $accountType && !in_array($account['account_name'], $exclude)) {
+                $amount = $accountType == 'Income' || $accountType == 'Other Income' ? $account['balance'] * -1 : $account['balance'];
+                $total += $amount;
+            }
+        }
+        return $total;
+    }
+
+    private static function displayReportSection($data, $accountType, $sectionTitle, $exclude = [], &$displayedAccounts = [])
+    {
+        echo "<div class='report-section'>";
+        echo "<h4 class='section-header'>$sectionTitle</h4>";
+        $total = 0;
+        foreach ($data as $account) {
+            if ($account['account_type'] == $accountType && !in_array($account['account_name'], $exclude) && !in_array($account['account_name'], $displayedAccounts)) {
+                $amount = $accountType == 'Income' || $accountType == 'Other Income' ? $account['balance'] * -1 : $account['balance'];
+                echo self::reportItem($account['account_name'], $amount);
+                $total += $amount;
+                $displayedAccounts[] = $account['account_name'];
+            }
+        }
+        echo self::reportTotalItem("Total $sectionTitle", $total);
+        echo "</div>";
+        return $total;
+    }
+
+    private static function reportItem($label, $amount, $indented = false)
+    {
+        $indentClass = $indented ? 'indented' : '';
+        $formattedAmount = number_format(abs($amount), 2);
+        $formattedAmount = $amount < 0 ? '-' . $formattedAmount : $formattedAmount;
+        return "<div class='report-item $indentClass'>
+                    <span class='item-label'>$label</span>
+                    <span class='item-amount'>$formattedAmount</span>
+                </div>";
+    }
+
+    private static function reportTotalItem($label, $amount, $bold = false)
+    {
+        $boldClass = $bold ? 'bold' : '';
+        $formattedAmount = number_format(abs($amount), 2);
+        $formattedAmount = $amount < 0 ? '-' . $formattedAmount : $formattedAmount;
+        return "<div class='report-item total $boldClass'>
+                    <span class='item-label'>$label</span>
+                    <span class='item-amount'>$formattedAmount</span>
+                </div>";
+    }
+
     private static function fetchAccountData($fromDate = null, $toDate = null)
     {
         global $connection;
 
-        $query = "SELECT coa.account_description, at.category, at.name as account_type,
-                         SUM(CASE WHEN te.credit > te.debit THEN te.credit - te.debit
-                                  ELSE te.debit - te.credit END) as balance
-                  FROM transaction_entries te
-                  JOIN chart_of_account coa ON te.account_id = coa.id
-                  JOIN account_types at ON coa.account_type_id = at.id
-                  WHERE 1=1";
+        $query = "SELECT 
+                    ca.id AS account_id,
+                    ca.account_code,
+                    ca.account_description AS account_name,
+                    at.name AS account_type,
+                    SUM(te.balance) AS balance
+                FROM 
+                    chart_of_account ca
+                JOIN 
+                    account_types at ON ca.account_type_id = at.id
+                LEFT JOIN 
+                    transaction_entries te ON ca.id = te.account_id
+                WHERE 
+                    at.name IN ('Income', 'Cost of Goods Sold', 'Expenses', 'Other Income', 'Other Expense')
+                    AND te.balance IS NOT NULL ";
 
         $params = [];
 
@@ -84,7 +170,7 @@ class ProfitAndLoss
             $params['to_date'] = $toDate;
         }
 
-        $query .= " GROUP BY coa.id, at.id";
+        $query .= " GROUP BY ca.id, ca.account_code, at.name";
 
         $stmt = $connection->prepare($query);
         $stmt->execute($params);
@@ -95,57 +181,5 @@ class ProfitAndLoss
         }
 
         return $data;
-    }
-
-    private static function displaySection($data, $category, $sectionTitle, $exclude = [], &$displayedAccounts = [])
-    {
-        echo self::sectionHeader($sectionTitle);
-        $total = 0;
-        foreach ($data as $account) {
-            if ($account['category'] == $category && !in_array($account['account_type'], $exclude) && !in_array($account['account_description'], $displayedAccounts)) {
-                $amount = $category == 'INCOME' ? $account['balance'] : -$account['balance'];
-                echo self::lineItem($account['account_description'], $amount);
-                $total += $amount;
-                $displayedAccounts[] = $account['account_description'];
-            }
-        }
-        echo self::totalLine("Total $sectionTitle", $total);
-        return $total;
-    }
-
-    private static function lineItem($label, $amount, $indented = false)
-    {
-        $indent = $indented ? 'padding-left: 20px;' : '';
-        $formattedAmount = number_format(abs($amount), 2);
-        $formattedAmount = $amount < 0 ? '-' . $formattedAmount : $formattedAmount;
-        return "<tr>
-                <td style='$indent'>$label</td>
-                <td style='text-align: right;'>$formattedAmount</td>
-            </tr>";
-    }
-
-    private static function totalLine($label, $amount, $bold = false)
-    {
-        $style = $bold ? 'font-weight: bold; border-top: 1px solid black; border-bottom: 3px double black;' : 'border-top: 1px solid black;';
-        $formattedAmount = number_format(abs($amount), 2);
-        $formattedAmount = $amount < 0 ? '-' . $formattedAmount : $formattedAmount;
-        return "<tr>
-                    <td style='$style'>$label</td>
-                    <td style='text-align: right; $style'>$formattedAmount</td>
-                </tr>";
-    }
-
-    private static function mapDataByAccountName($data)
-    {
-        $map = [];
-        foreach ($data as $row) {
-            $map[$row['account_name']] = $row;
-        }
-        return $map;
-    }
-
-    private static function sectionHeader($title)
-    {
-        return "<tr><td colspan='3'><strong>$title</strong></td></tr>";
     }
 }

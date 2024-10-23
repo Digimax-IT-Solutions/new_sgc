@@ -163,26 +163,51 @@ class Product
 
   public static function find($id)
   {
-    global $connection;
-
-    $stmt = $connection->prepare(' SELECT items.*, uom.name AS uom_name
-                                FROM items
-                                LEFT JOIN uom ON items.item_uom_id = uom.id
-                            
-                                      WHERE 
-                                        items.id = :id');
-    $stmt->bindParam(':id', $id);
-    $stmt->execute();
-    $stmt->setFetchMode(PDO::FETCH_ASSOC);
-
-    $result = $stmt->fetch();
-
-    if ($result) {
-      return new Product($result);
-    }
-
-    return null;
+      global $connection;
+  
+      // Explicitly list columns from 'items' table along with 'uom' name
+      $stmt = $connection->prepare('
+          SELECT 
+              items.id, 
+              items.item_name, 
+              items.item_code, 
+              items.item_type, 
+              items.item_vendor_id, 
+              items.item_uom_id, 
+              items.item_reorder_point, 
+              items.item_category_id, 
+              items.item_quantity, 
+              items.item_sales_description, 
+              items.item_purchase_description, 
+              items.item_selling_price, 
+              items.item_cost_price, 
+              items.item_cogs_account_id, 
+              items.item_income_account_id, 
+              items.item_asset_account_id, 
+              uom.name AS uom_name
+          FROM items
+          LEFT JOIN uom ON items.item_uom_id = uom.id
+          WHERE items.id = :id
+      ');
+  
+      // Bind the parameter
+      $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+      $stmt->execute();
+  
+      // Set fetch mode to associative array
+      $stmt->setFetchMode(PDO::FETCH_ASSOC);
+  
+      // Fetch the result
+      $result = $stmt->fetch();
+  
+      // Return result as Product object or null if not found
+      if ($result) {
+          return new Product($result);
+      }
+  
+      return null;
   }
+  
 
   public function update()
   {

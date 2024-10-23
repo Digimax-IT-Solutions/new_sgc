@@ -1,7 +1,12 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('credit_memo');
 $accounts = ChartOfAccount::all();
 $cost_centers = CostCenter::all();
 $customers = Customer::all();
@@ -10,6 +15,7 @@ $discounts = Discount::all();
 $input_vats = InputVat::all();
 $output_vats = SalesTax::all();
 $sales_taxes = SalesTax::all();
+$locations = Location::all();
 
 $newCreditNo = CreditMemo::getLastCreditNo();
 
@@ -134,8 +140,7 @@ $page = 'credit_memo'; // Set the variable corresponding to the current page
                                         <div class="col-md-4">
                                             <div class="form-group">
                                                 <label for="credit_no">Credit No</label>
-                                                <input type="text" class="form-control form-control-sm" id="credit_no"
-                                                    name="credit_no" value="<?php echo $newCreditNo; ?>" readonly>
+                                                <input type="text" class="form-control form-control-sm" id="credit_no" name="credit_no" value="<?php echo $newCreditNo; ?>" readonly>
                                             </div>
                                         </div>
 
@@ -143,8 +148,7 @@ $page = 'credit_memo'; // Set the variable corresponding to the current page
                                         <div class="col-md-4">
                                             <div class="form-group">
                                                 <label for="credit_date">Date</label>
-                                                <input type="date" class="form-control form-control-sm" id="credit_date"
-                                                    name="credit_date" value="<?php echo date('Y-m-d'); ?>">
+                                                <input type="date" class="form-control form-control-sm" id="credit_date" name="credit_date" value="<?php echo date('Y-m-d'); ?>">
                                             </div>
                                         </div>
 
@@ -152,29 +156,29 @@ $page = 'credit_memo'; // Set the variable corresponding to the current page
                                         <div class="col-md-4">
                                             <div class="form-group">
                                                 <label for="credit_account_id">Account</label>
-                                                <select class="form-control form-control-sm select2"
-                                                    id="credit_account_id" name="credit_account_id" required>
+                                                <select class="form-control form-control-sm select2" id="credit_account_id" name="credit_account_id" required>
                                                     <option value="">Select Account</option>
                                                     <?php foreach ($accounts as $account): ?>
-                                                        <option value="<?= $account->id ?>">
-                                                            <?= $account->account_code ?> -
-                                                            <?= $account->account_description ?>
-                                                        </option>
+                                                        <?php if ($account->account_type == 'Accounts Receivable'): ?>
+                                                            <option value="<?= $account->id ?>">
+                                                                <?= $account->account_code ?> - <?= $account->account_description ?>
+                                                            </option>
+                                                        <?php endif; ?>
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
                                         </div>
+                                    </div>
 
+                                    <div class="row">
                                         <!-- CUSTOMER -->
                                         <div class="col-md-4">
                                             <div class="form-group">
                                                 <label for="customer_id">Customer</label>
-                                                <select class="form-control form-control-sm select2" id="customer_id"
-                                                    name="customer_id">
+                                                <select class="form-control form-control-sm select2" id="customer_id" name="customer_id" required>
                                                     <option value="">Select Customer</option>
                                                     <?php foreach ($customers as $customer): ?>
-                                                        <option value="<?= $customer->id ?>"><?= $customer->customer_name ?>
-                                                        </option>
+                                                        <option value="<?= $customer->id ?>"><?= $customer->customer_name ?></option>
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
@@ -184,8 +188,20 @@ $page = 'credit_memo'; // Set the variable corresponding to the current page
                                         <div class="col-md-4">
                                             <div class="form-group">
                                                 <label for="credit_memo">Memo</label>
-                                                <input type="text" class="form-control form-control-sm" id="credit_memo"
-                                                    name="credit_memo" placeholder="Enter memo">
+                                                <input type="text" class="form-control form-control-sm" id="credit_memo" name="credit_memo" placeholder="Enter memo">
+                                            </div>
+                                        </div>
+
+                                        <!-- LOCATION -->
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label for="location" class="form-label">Location</label>
+                                                <select class="form-select form-select-sm" id="location" name="location" required>
+                                                    <option value="">Select Location</option>
+                                                    <?php foreach ($locations as $location): ?>
+                                                        <option value="<?= $location->id ?>"><?= $location->name ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
                                             </div>
                                         </div>
                                     </div>
@@ -244,12 +260,12 @@ $page = 'credit_memo'; // Set the variable corresponding to the current page
                                 <div class="row">
                                     <label class="col-sm-6 col-form-label">Tax Withheld (%):</label>
                                     <div class="col-sm-6">
-                                        <select class="form-select form-select-sm" id="tax_withheld_percentage"
-                                            name="tax_withheld_percentage">
-
+                                        <select class="form-select form-select-sm" id="tax_withheld_percentage" name="tax_withheld_percentage" required>
+                                            <option value="" selected disabled>Select Tax Withholding</option>
                                             <?php foreach ($wtaxes as $wtax): ?>
-                                                <option value="<?= $wtax->id ?>" data-rate="<?= $wtax->wtax_rate ?>"
-                                                    data-account-id="<?= $wtax->wtax_account_id ?>"
+                                                <option value="<?= $wtax->id ?>"
+                                                    data-rate="<?= $wtax->wtax_rate ?>"
+                                                    data-account-id="<?= $wtax->id ?>"
                                                     <?= strpos($wtax->wtax_name, 'N/A') !== false ? 'selected' : '' ?>>
                                                     <?= $wtax->wtax_name ?>
                                                 </option>
@@ -329,7 +345,7 @@ $page = 'credit_memo'; // Set the variable corresponding to the current page
 
 <div id="loadingOverlay" style="display: none;">
     <div class="spinner"></div>
-    <div class="message">Processing checks</div>
+    <div class="message">Processing Credit Memo</div>
 </div>
 <iframe id="printFrame" style="display:none;"></iframe>
 
@@ -337,7 +353,7 @@ $page = 'credit_memo'; // Set the variable corresponding to the current page
 <?php require 'views/templates/footer.php' ?>
 
 <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
         // Constants and cached DOM elements
         const $itemTableBody = $('#itemTableBody');
         const $addItemBtn = $('#addItemBtn');
@@ -347,12 +363,12 @@ $page = 'credit_memo'; // Set the variable corresponding to the current page
         const $clearBtn = $('button[type="reset"]');
 
         // Initialize Select2 for customer and credit account
-        $('#customer_id, #credit_account, #credit_account_id').select2({
+        $('#customer_id, #credit_account, #credit_account_id, #location').select2({
             theme: 'classic',
             width: '100%'
         });
 
-        $('#saveDraftBtn').click(function (e) {
+        $('#saveDraftBtn').click(function(e) {
             e.preventDefault();
             saveDraft();
         });
@@ -360,11 +376,12 @@ $page = 'credit_memo'; // Set the variable corresponding to the current page
         function saveDraft() {
             const items = gatherTableItems();
 
-            if (items.length === 0) {
+
+            if (items === false || items.length === 0) {
                 Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Please add items before saving as draft'
+                    icon: 'warning',
+                    title: 'Warning',
+                    text: 'Please add Gross for account first'
                 });
                 return;
             }
@@ -375,6 +392,8 @@ $page = 'credit_memo'; // Set the variable corresponding to the current page
             formData.append('action', 'save_draft');
 
             formData.append('credit_account_id', $('#credit_account_id').val());
+            const selectedWtaxId = $('#tax_withheld_percentage').val();
+            formData.append('tax_withheld_percentage', selectedWtaxId);
 
             $('#loadingOverlay').fadeIn();
 
@@ -385,7 +404,7 @@ $page = 'credit_memo'; // Set the variable corresponding to the current page
                 data: formData,
                 processData: false,
                 contentType: false,
-                success: function (response) {
+                success: function(response) {
                     $('#loadingOverlay').fadeOut();
                     if (response.success) {
                         Swal.fire({
@@ -406,7 +425,7 @@ $page = 'credit_memo'; // Set the variable corresponding to the current page
                         });
                     }
                 },
-                error: function (jqXHR, textStatus, errorThrown) {
+                error: function(jqXHR, textStatus, errorThrown) {
                     $('#loadingOverlay').fadeOut();
                     console.error('AJAX error:', textStatus, errorThrown);
                     Swal.fire({
@@ -417,18 +436,23 @@ $page = 'credit_memo'; // Set the variable corresponding to the current page
                 }
             });
         }
-        document.getElementById('tax_withheld_percentage').addEventListener('change', function () {
+        document.getElementById('tax_withheld_percentage').addEventListener('change', function() {
             var selectedOption = this.options[this.selectedIndex];
             var accountId = selectedOption.getAttribute('data-account-id');
+            var wtaxRate = selectedOption.getAttribute('data-rate');
             console.log('Tax Withheld Account ID:', accountId);
+            console.log('Tax Withheld Rate:', wtaxRate);
             document.getElementById('tax_withheld_account_id').value = accountId;
+            // You may want to update other fields or calculations based on the new wtax rate here
+            calculateNetAmount(); // Recalculate amounts if needed
         });
+
 
         // Event listeners
         $addItemBtn.on('click', addRow);
 
 
-        $itemTableBody.on('click', '.removeRow', function () {
+        $itemTableBody.on('click', '.removeRow', function() {
             $(this).closest('tr').remove();
             calculateNetAmount();
         });
@@ -437,25 +461,27 @@ $page = 'credit_memo'; // Set the variable corresponding to the current page
         $itemTableBody.on('change', '.vat_percentage', calculateNetAmount);
         $taxWithheldPercentage.on('change', calculateNetAmount);
         $clearBtn.on('click', clearForm);
-        $creditMemoForm.on('submit', function (event) {
+
+
+        $creditMemoForm.on('submit', function(event) {
             event.preventDefault();
 
             if (!validateForm()) {
                 return;
             }
-            if ($itemTableBody.find('tr').length === 0) {
+
+            const items = gatherTableItems();
+
+            if (items === false || items.length === 0) {
                 Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'You must add at least one account before submitting the credit memo.'
+                    icon: 'warning',
+                    title: 'Warning',
+                    text: 'Please add valid Account first'
                 });
                 return;
             }
 
-            const tableItems = gatherTableItems();
-            console.log('Gathered table items:', tableItems);
-
-            $('#item_data').val(JSON.stringify(tableItems));
+            $('#item_data').val(JSON.stringify(items));
             console.log('Set item_data value:', $('#item_data').val());
 
             // Show loading overlay
@@ -467,7 +493,7 @@ $page = 'credit_memo'; // Set the variable corresponding to the current page
                 type: 'POST',
                 dataType: 'json',
                 data: $(this).serialize(),
-                success: function (response) {
+                success: function(response) {
                     // Hide loading overlay
                     $loadingOverlay.fadeOut();
 
@@ -493,7 +519,7 @@ $page = 'credit_memo'; // Set the variable corresponding to the current page
                         });
                     }
                 },
-                error: function (jqXHR, textStatus, errorThrown) {
+                error: function(jqXHR, textStatus, errorThrown) {
                     // Hide loading overlay
                     $loadingOverlay.fadeOut();
 
@@ -510,15 +536,55 @@ $page = 'credit_memo'; // Set the variable corresponding to the current page
 
         function validateForm() {
             let isValid = true;
-            $('.account-dropdown').each(function () {
+            let firstInvalidField = null;
+
+            // Validate customer
+            if (!$('#customer_id').val()) {
+                isValid = false;
+                firstInvalidField = $('#customer_id');
+            }
+
+            // Validate credit account
+            if (!$('#credit_account_id').val()) {
+                isValid = false;
+                firstInvalidField = firstInvalidField || $('#credit_account_id');
+            }
+
+            // Validate date
+            if (!$('#credit_date').val()) {
+                isValid = false;
+                firstInvalidField = firstInvalidField || $('#credit_date');
+            }
+
+            // Validate items table
+            if ($('#itemTableBody tr').length === 0) {
+                isValid = false;
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No Items',
+                    text: 'Please add at least one Account to the credit memo.'
+                });
+                return false;
+            }
+
+            $('.account-dropdown').each(function() {
                 if (!$(this).val()) {
                     isValid = false;
-                    $(this).addClass('is-invalid');
-                } else {
-                    $(this).removeClass('is-invalid');
+                    firstInvalidField = firstInvalidField || $(this);
                 }
             });
-            // Add more validation as needed
+
+            if (!isValid) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Incomplete Form',
+                    text: 'Please fill in all required fields.'
+                });
+                if (firstInvalidField) {
+                    firstInvalidField.focus();
+                }
+            }
+
             return isValid;
         }
 
@@ -529,7 +595,7 @@ $page = 'credit_memo'; // Set the variable corresponding to the current page
             $('input').val('');
 
             // Reset all select elements to their default option
-            $('select').each(function () {
+            $('select').each(function() {
                 $(this).val($(this).find("option:first").val()).trigger('change');
             });
 
@@ -573,7 +639,7 @@ $page = 'credit_memo'; // Set the variable corresponding to the current page
         // Populate dropdowns with cost centers from PHP
         const costCenterOptions = <?php echo json_encode($cost_centers); ?>;
         let costCenterDropdownOptions = '';
-        costCenterOptions.forEach(function (cost) {
+        costCenterOptions.forEach(function(cost) {
             costCenterDropdownOptions += `<option value="${cost.id}">${cost.code} - ${cost.particular}</option>`;
         });
 
@@ -610,7 +676,7 @@ $page = 'credit_memo'; // Set the variable corresponding to the current page
             let totalVat = 0;
             let totalTaxableAmount = 0;
 
-            $('.amount').each(function () {
+            $('.amount').each(function() {
                 const $row = $(this).closest('tr');
                 const amount = parseFloat($(this).val()) || 0;
                 const vatPercentage = parseFloat($row.find('.vat_percentage').val()) || 0;
@@ -639,7 +705,9 @@ $page = 'credit_memo'; // Set the variable corresponding to the current page
             $("#vat_percentage_amount").val(totalVat.toFixed(2));
             $("#net_of_vat").val(totalTaxableAmount.toFixed(2));
 
-            const taxWithheldPercentage = parseFloat($taxWithheldPercentage.val()) || 0;
+            const selectedTaxWithheld = $("#tax_withheld_percentage option:selected");
+            const taxWithheldPercentage = parseFloat(selectedTaxWithheld.data('rate')) || 0;
+
             const taxWithheldAmount = (taxWithheldPercentage / 100) * totalTaxableAmount;
             $("#tax_withheld_amount").val(taxWithheldAmount.toFixed(2));
 
@@ -658,22 +726,73 @@ $page = 'credit_memo'; // Set the variable corresponding to the current page
 
         function gatherTableItems() {
             const items = [];
-            $('#itemTableBody tr').each(function () {
-                const item = {
-                    account_id: +$(this).find('.account-dropdown').val() || 0,
-                    cost_center_id: $(this).find('.cost-dropdown').val() || '',
-                    memo: $(this).find('.memo').val(),
-                    amount: parseFloat($(this).find('.amount').val()) || 0,
-                    net_amount_before_vat: parseFloat($(this).find('.net-amount-before-vat').val()) || 0,
-                    net_amount: parseFloat($(this).find('.net-amount').val()) || 0,
-                    vat_percentage: parseFloat($(this).find('.vat_percentage').val()) || 0,
-                    sales_tax: parseFloat($(this).find('.input-vat').val()) || 0,
-                    sales_tax_account_id: $(this).find('.vat_percentage option:selected').data('account-id')
-                };
-                items.push(item);
+            let hasEmptyAmount = false;
+            let hasInvalidAccount = false;
+            let firstEmptyAmountRow;
+            let firstInvalidAccountRow;
+
+            $('#itemTableBody tr').each(function() {
+                const $row = $(this);
+                const amount = parseFloat($row.find('.amount').val()) || 0;
+                const accountId = $row.find('.account-dropdown').val();
+
+                // Check if the account dropdown is not selected or invalid
+                if (!accountId || accountId === '') {
+                    hasInvalidAccount = true;
+                    if (!firstInvalidAccountRow) {
+                        firstInvalidAccountRow = $row; // Store the first row with an invalid account
+                    }
+                }
+
+                // Check if the amount is empty or zero
+                if (amount <= 0) {
+                    hasEmptyAmount = true;
+                    if (!firstEmptyAmountRow) {
+                        firstEmptyAmountRow = $row; // Store the first row with empty/zero amount
+                    }
+                }
+
+                // If no issues, gather the item data
+                if (!hasInvalidAccount && !hasEmptyAmount) {
+                    const item = {
+                        account_id: +$(this).find('.account-dropdown').val() || 0,
+                        cost_center_id: $(this).find('.cost-dropdown').val() || '',
+                        memo: $(this).find('.memo').val(),
+                        amount: parseFloat($(this).find('.amount').val()) || 0,
+                        net_amount_before_vat: parseFloat($(this).find('.net-amount-before-vat').val()) || 0,
+                        net_amount: parseFloat($(this).find('.net-amount').val()) || 0,
+                        vat_percentage: parseFloat($(this).find('.vat_percentage').val()) || 0,
+                        sales_tax: parseFloat($(this).find('.input-vat').val()) || 0,
+                        sales_tax_account_id: $(this).find('.vat_percentage option:selected').data('account-id')
+                    };
+                    items.push(item);
+                }
             });
+
+            // Handle validation errors for amount or account dropdowns
+            if (hasEmptyAmount) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Warning',
+                    text: 'Please enter valid amounts in all rows.'
+                });
+                firstEmptyAmountRow.find('.amount').focus(); // Focus on the first invalid amount field
+                return false;
+            }
+
+            if (hasInvalidAccount) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Warning',
+                    text: 'Please select a valid account for all rows.'
+                });
+                firstInvalidAccountRow.find('.account-dropdown').focus(); // Focus on the first invalid account dropdown
+                return false;
+            }
+
             return items;
         }
+
 
         function printCredit(id, printStatus) {
             // First, update the print status
@@ -686,7 +805,7 @@ $page = 'credit_memo'; // Set the variable corresponding to the current page
                     id: id,
                     print_status: printStatus
                 },
-                success: function (response) {
+                success: function(response) {
                     if (response.success) {
                         console.log('Print status updated, now printing Credit:', id);
                         // Open the print_credit.php file in a new window
@@ -695,7 +814,7 @@ $page = 'credit_memo'; // Set the variable corresponding to the current page
 
                         printFrame.src = printContentUrl;
 
-                        printFrame.onload = function () {
+                        printFrame.onload = function() {
                             printFrame.contentWindow.focus();
                             printFrame.contentWindow.print();
                         };
@@ -707,7 +826,7 @@ $page = 'credit_memo'; // Set the variable corresponding to the current page
                         });
                     }
                 },
-                error: function (jqXHR, textStatus, errorThrown) {
+                error: function(jqXHR, textStatus, errorThrown) {
                     console.error('AJAX error:', textStatus, errorThrown);
                     Swal.fire({
                         icon: 'error',

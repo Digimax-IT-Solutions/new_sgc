@@ -1,7 +1,12 @@
 <?php
 // Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('sales_return');
 
 // Fetch all salesReturn
 $salesReturn = SalesReturn::all();
@@ -9,7 +14,25 @@ $salesReturn = SalesReturn::all();
 
 <?php require 'views/templates/header.php'; ?>
 <?php require 'views/templates/sidebar.php'; ?>
+<style>
+    .btn-lg {
 
+        border-radius: 8px;
+    }
+
+    .btn-outline-primary,
+    .btn-outline-danger,
+    .btn-outline-secondary {
+        transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .btn-outline-success:hover,
+    .btn-outline-danger:hover,
+    .btn-outline-secondary:hover {
+        color: #fff !important;
+        box-shadow: 0px 4px 12px rgba(0, 123, 255, 0.3);
+    }
+</style>
 <div class="main">
     <?php require 'views/templates/navbar.php'; ?>
     <!-- Content Wrapper. Contains page content -->
@@ -27,19 +50,15 @@ $salesReturn = SalesReturn::all();
                         <div class="card-body">
                             <div class="row">
                                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                                    <h6 class="m-0 font-weight-bold text-primary">Sales Return</h6>
                                     <div>
-                                        <a href="draft_sales_return" class="btn btn-sm btn-danger">
-                                            <i class="fab fa-firstdraft"></i> Draft
+                                        <a href="draft_sales_return" class="btn btn-lg btn-outline-secondary me-2 mb-2">
+                                            <i class="fab fa-firstdraft fa-lg me-2"></i> Drafts
                                         </a>
-                                        <a href="upload" class="btn btn-sm btn-outline-secondary me-2">
-                                            <i class="fas fa-upload"></i> Upload
+                                        <a href="void_sales_return" class="btn btn-lg btn-outline-danger me-2 mb-2">
+                                            <i class="fas fa-file-excel fa-lg me-2"></i> Voids
                                         </a>
-                                        <a href="void_sales_return" class="btn btn-sm btn-secondary">
-                                            <i class="fas fa-ban"></i> Void
-                                        </a>
-                                        <a href="create_sales_return" class="btn btn-sm btn-primary">
-                                            <i class="fas fa-plus"></i> New Sales Return
+                                        <a href="create_sales_return" class="btn btn-lg btn-outline-success me-2 mb-2">
+                                            <i class="fas fa-plus fa-lg me-2"></i> Create Sales Return
                                         </a>
                                     </div>
                                 </div>
@@ -61,7 +80,8 @@ $salesReturn = SalesReturn::all();
                                             </thead>
                                             <tbody>
                                                 <?php foreach ($salesReturn as $salesReturn): ?>
-                                                    <?php if ($salesReturn->sales_return_status != 3 && $salesReturn->sales_return_status != 4): // Exclude invoices with status 3 and 4 ?>
+                                                    <?php if ($salesReturn->status != 3 && $salesReturn->status != 4): // Exclude invoices with status 3 and 4 
+                                                    ?>
                                                         <tr>
                                                             <td><?= htmlspecialchars($salesReturn->sales_return_number); ?></td>
                                                             <td><?= htmlspecialchars($salesReturn->sales_return_date); ?></td>
@@ -70,7 +90,7 @@ $salesReturn = SalesReturn::all();
                                                             </td>
                                                             <td class="text-center">
                                                                 <?php
-                                                                switch ($salesReturn->sales_return_status) {
+                                                                switch ($salesReturn->status) {
                                                                     case 0:
                                                                         echo '<span class="badge bg-danger">Unpaid</span>';
                                                                         break;
@@ -112,9 +132,11 @@ $salesReturn = SalesReturn::all();
 <?php require 'views/templates/footer.php'; ?>
 
 <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
         $('#dataTable').DataTable({
-            "order": [[3, "desc"]],
+            "order": [
+                [3, "desc"]
+            ],
             "pageLength": 25,
             "language": {
                 "search": "Search:",
@@ -127,8 +149,10 @@ $salesReturn = SalesReturn::all();
                     "previous": "Previous"
                 }
             },
-            "columnDefs": [
-                { "orderable": false, "targets": 4 } // Adjusted index to match existing columns
+            "columnDefs": [{
+                    "orderable": false,
+                    "targets": 4
+                } // Adjusted index to match existing columns
             ]
         });
     });

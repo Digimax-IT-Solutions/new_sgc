@@ -1,7 +1,12 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('receive_payment');
 $accounts = ChartOfAccount::all();
 $customers = Customer::all();
 $payment_methods = PaymentMethod::all();
@@ -128,12 +133,23 @@ $newCrNo = Payment::getLastCrNo();
                                         <label for="customer_name" class="form-label">Customer</label>
                                         <select class="form-select form-select-sm select2" id="customer_name" name="customer_name" disabled>
                                             <option value="">Select Customer</option>
-                                            <?php foreach ($customers as $customer): ?>
-                                                <option value="<?= $customer->id ?>" 
-                                                    <?= ($customer->id == $payments->customer_id) ? 'selected' : '' ?>>
-                                                    <?= $customer->customer_name ?>
-                                                </option>
-                                            <?php endforeach; ?>
+                                            <?php
+                                                // Array to prevent duplicates
+                                                $used_customers = [];
+                                                $selected_customer_id = $payments->customer_id ?? ''; // Assuming this holds the selected customer ID
+
+                                                foreach ($customers as $customer):
+                                                    if (!in_array($customer->id, $used_customers)):
+                                                        $used_customers[] = $customer->id; // Track used customer IDs
+                                            ?>
+                                                        <option value="<?= htmlspecialchars($customer->id) ?>" 
+                                                                <?= $customer->id == $selected_customer_id ? 'selected' : '' ?>>
+                                                            <?= htmlspecialchars($customer->customer_name) ?>
+                                                        </option>
+                                            <?php
+                                                    endif;
+                                                endforeach;
+                                            ?>
                                         </select>
                                     </div>
 
@@ -142,7 +158,8 @@ $newCrNo = Payment::getLastCrNo();
                                     <div class="col-md-4 customer-details">
                                         <label for="credit_balance" class="form-label">Balance</label>
                                         <input type="text" class="form-control form-control-sm" id="credit_balance"
-                                            name="credit_balance" value="<?= htmlspecialchars($payments->credit_balance) ?>" readonly>
+                                            name="credit_balance" 
+                                            value="<?= number_format($payments->credit_balance, 2, '.', ',') ?>" readonly>
                                     </div>
 
                                     <!-- Payment Details Section -->
@@ -170,12 +187,24 @@ $newCrNo = Payment::getLastCrNo();
                                                 <label for="payment_method" class="form-label">Payment Method</label>
                                                 <select class="form-select" id="payment_method" name="payment_method" disabled>
                                                     <option value="">Select Payment</option>
-                                                    <?php foreach ($payment_methods as $payment_method): ?>
-                                                        <option value="<?= $payment_method->id ?>" 
-                                                            <?= ($payment_method->id == $payments->payment_method_id) ? 'selected' : '' ?>>
-                                                            <?= $payment_method->payment_method_name ?>
-                                                        </option>
-                                                    <?php endforeach; ?>
+                                                    <?php
+                                                        // Array to prevent duplicates
+                                                        $used_payment_methods = [];
+                                                        $selected_payment_method = $payments->payment_method ?? ''; // Assuming this holds the selected payment method
+
+                                                        // Payment Methods
+                                                        foreach ($payment_methods as $payment_method):
+                                                            if (!in_array($payment_method->payment_method_name, $used_payment_methods)):
+                                                                $used_payment_methods[] = $payment_method->payment_method_name; // Track used payment methods
+                                                    ?>
+                                                                <option value="<?= htmlspecialchars($payment_method->payment_method_name) ?>" 
+                                                                        <?= $payment_method->payment_method_name == $selected_payment_method ? 'selected' : '' ?>>
+                                                                    <?= htmlspecialchars($payment_method->payment_method_name) ?>
+                                                                </option>
+                                                    <?php
+                                                            endif;
+                                                        endforeach;
+                                                    ?>
                                                 </select>
                                             </div>
 
@@ -250,21 +279,21 @@ $newCrNo = Payment::getLastCrNo();
                                     <label class="col-sm-6 col-form-label">Discount & Credits Applied:</label>
                                     <div class="col-sm-6">
                                         <input type="text" class="form-control-plaintext text-end"
-                                            id="summary_amount_due" name="summary_amount_due"  value="<?= number_format($payments->summary_amount_due, 2, '.', ',') ?>" readonly>
+                                            id="applied_credits_discount" name="applied_credits_discount"  value="<?= number_format($payments->applied_credits_discount, 2, '.', ',') ?>" readonly>
                                     </div>
                                 </div>
                                 <div class="row">
                                     <label class="col-sm-6 col-form-label fw-bold">Remaining Balance:</label>
                                     <div class="col-sm-6">
                                         <input type="text" class="form-control-plaintext text-end fw-bold"
-                                            id="total_amount_due" name="total_amount_due" value="<?= number_format($payments->total_amount_due, 2, '.', ',') ?>" readonly>
+                                            id="total_amount_due" name="total_amount_due" value="<?= number_format($payments->credit_balance, 2, '.', ',') ?>" readonly>
                                     </div>
                                 </div>
                             </div>
-                            <div class="card-footer">
+                            <div class="card-footer d-flex justify-content-center">
                                 <?php if ($payments->status == 4): ?>
-                                    <!-- Buttons to show when invoice_status is 4 -->
-                                    <button type="submit" class="btn btn-info me-2">Save and Print</button>
+                                    <button type="button" id="saveDraftBtn" class="btn btn-secondary me-2">Update Draft</button>
+                                            <button type="submit" class="btn btn-info me-2">Save as Final</button>
                                 <?php elseif ($payments->status == 3): ?>
                                     <!-- Button to show when invoice_status is 3 -->
                                     <a class="btn btn-primary" href="#" id="reprintButton">
@@ -384,7 +413,7 @@ $newCrNo = Payment::getLastCrNo();
                 confirmButtonText: 'Yes, reprint it!'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    printInvoice(<?= $payments->id ?>, 2);  // Pass 2 for reprint
+                    printMethod(<?= $payments->id ?>, 2);  // Pass 2 for reprint
                 }
             });
         });
@@ -511,108 +540,119 @@ $newCrNo = Payment::getLastCrNo();
 
       
     });
+    // Update the submit event handler
     $('#paymentForm').submit(function (event) {
-            event.preventDefault();
-            
-            // Check if there are any selected invoices
-            if ($('#itemTableBody .invoice-select:checked').length === 0) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'No Invoices Selected',
-                    text: 'You must select at least one invoice before submitting the payment.'
-                });
-                return false;
-            }
+        event.preventDefault();
+        
+        // Check if there are any selected invoices
+        if ($('#itemTableBody .invoice-select:checked').length === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'No Invoices Selected',
+                text: 'You must select at least one invoice before submitting the payment.'
+            });
+            return false;
+        }
 
-            const selectedInvoices = gatherSelectedInvoices();
-            $('#selected_invoices').val(JSON.stringify(selectedInvoices));
+        const selectedInvoices = gatherSelectedInvoices();
 
-            const id = <?= json_encode($payments->id) ?>;
-            const customerId = <?= json_encode($payments->customer_id) ?>;
-            const accountId = <?= json_encode($payments->account_id) ?>;
-            const summaryAmountDue = <?= json_encode($payments->summary_amount_due) ?>;
-            const summaryAppliedAmount = <?= json_encode($payments->summary_applied_amount) ?>;
+        // Show loading overlay
+        document.getElementById('loadingOverlay').style.display = 'flex';
 
-            // Show loading overlay
-            document.getElementById('loadingOverlay').style.display = 'flex';
-
-            // Create and play the audio
-            const audio = new Audio('photos/rr.mp3');
-            audio.play();
-
-            $.ajax({
-                url: 'api/receive_payment_controller.php',
-                type: 'POST',
-                dataType: 'json',
-                data: {
-                    action: 'update_draft',
-                    payment_id: <?= json_encode($payments->id) ?>,
-                    customer_id: <?= json_encode($payments->customer_id) ?>,
-                    payment_date: $('#payment_date').val(),
-                    payment_method_id: $('#payment_method').val(),
-                    account_id: <?= json_encode($payments->account_id) ?>,
-                    ref_no: $('#reference_no').val(),
-                    cr_no: $('#cr_no').val(),
-                    customer_name: $('#customer_name option:selected').text(),
-                    memo: $('#memo').val(),
-                    summary_amount_due: <?= json_encode($payments->summary_amount_due) ?>,
-                    summary_applied_amount: <?= json_encode($payments->summary_applied_amount) ?>,
-                    selected_invoices: JSON.stringify(gatherSelectedInvoices())
-                },
-                success: function (response) {
-                    hideLoadingOverlay();
-                    if (response.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success',
-                            text: 'Payment submitted successfully!',
-                            showCancelButton: true,
-                            confirmButtonText: 'Print',
-                            cancelButtonText: 'Close'
-                        }).then((result) => {
-                            if (result.isConfirmed && response.payment_id) {
-                                printMethod(response.payment_id, 1);
-                            } else {
-                                location.reload();
-                            }
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'Error saving payment: ' + (response.message || 'Unknown error')
-                        });
-                    }
-                },
-                error: function (jqXHR, textStatus, errorThrown) {
-                    hideLoadingOverlay();
-                    console.error('AJAX error:', textStatus, errorThrown);
+        $.ajax({
+            url: 'api/receive_payment_controller.php',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                action: 'update_draft',
+                payment_id: <?= json_encode($payments->id) ?>,
+                customer_id: <?= json_encode($payments->customer_id) ?>,
+                payment_date: $('#payment_date').val(),
+                payment_method_id: $('#payment_method').val(),
+                account_id: <?= json_encode($payments->account_id) ?>,
+                ref_no: $('#reference_no').val(),
+                cr_no: $('#cr_no').val(),
+                customer_name: $('#customer_name option:selected').text(),
+                memo: $('#memo').val(),
+                summary_amount_due: $('#summary_amount_due').val(),
+                summary_applied_amount: $('#summary_applied_amount').val(),
+                applied_credits_discount: $('#applied_credits_discount').val(),
+                selected_invoices: JSON.stringify(selectedInvoices)
+            },
+            success: function (response) {
+                document.getElementById('loadingOverlay').style.display = 'none';
+                if (response.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'Payment submitted successfully!',
+                        showCancelButton: true,
+                        confirmButtonText: 'Print',
+                        cancelButtonText: 'Close'
+                    }).then((result) => {
+                        if (result.isConfirmed && response.payment_id) {
+                            printMethod(response.payment_id, 1);
+                        } else {
+                            location.reload();
+                        }
+                    });
+                } else {
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: 'An error occurred while saving the payment: ' + textStatus
+                        text: 'Error saving payment: ' + (response.message || 'Unknown error')
                     });
                 }
-            });
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                document.getElementById('loadingOverlay').style.display = 'none';
+                console.error('AJAX error:', textStatus, errorThrown);
+                console.log('Response Text:', jqXHR.responseText);
+                let errorMessage = 'An error occurred while saving the payment';
+                try {
+                    const errorResponse = JSON.parse(jqXHR.responseText);
+                    if (errorResponse && errorResponse.message) {
+                        errorMessage += ': ' + errorResponse.message;
+                    }
+                } catch (e) {
+                    errorMessage += ': ' + textStatus;
+                }
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: errorMessage
+                });
+            }
         });
+    });
+    function gatherSelectedInvoices() {
+        const selectedInvoices = [];
+        document.querySelectorAll('#itemTable tbody tr').forEach(row => {
+            const checkbox = row.querySelector('.invoice-select');
+            if (checkbox && checkbox.checked) {
+                const creditInputs = row.querySelectorAll('.credit-input');
+                const creditNoInputs = row.querySelectorAll('.credit-no-input');
+                const credits = Array.from(creditInputs).map((input, index) => ({
+                    amount: parseFloat(input.value) || 0,
+                    credit_no: creditNoInputs[index].value
+                }));
 
-        function gatherSelectedInvoices() {
-            const selectedInvoices = [];
-            $('#itemTableBody tr').each(function() {
-                const $row = $(this);
-                const $checkbox = $row.find('.invoice-select');
-                if ($checkbox.is(':checked')) {
-                    selectedInvoices.push({
-                        invoice_id: $checkbox.data('invoice-id'),
-                        invoice_account_id: $row.find('td:eq(1)').text(),
-                        amount_applied: $row.find('.payment-input').val() || '0',
-                        discount_amount: $row.find('.discount-input').val() || '0',
-                        credit_amount: $row.find('.credit-input').val() || '0'
-                    });
-                }
-            });
-            return selectedInvoices;
-        }
+                const discountAccountInput = row.querySelector('.discount-account-input');
+                const discountAmountInput = row.querySelector('.discount-amount-input');
+
+                const invoice = {
+                    invoice_id: checkbox.dataset.invoiceId,
+                    invoice_account_id: row.querySelector('td:nth-child(2)').textContent,
+                    amount_applied: row.querySelector('.payment-input').value || '0',
+                    credits: credits,
+                    discount_account_id: discountAccountInput ? discountAccountInput.value : null,
+                    discount_amount: discountAmountInput ? parseFloat(discountAmountInput.value) || 0 : 0
+                };
+                selectedInvoices.push(invoice);
+            }
+        });
+        return selectedInvoices;
+    }
 
     function initializeSelect2() {
         $('#customer_name').select2({
@@ -747,36 +787,52 @@ $newCrNo = Payment::getLastCrNo();
         let totalAppliedAmount = 0;
         let totalDiscountAndCredits = 0;
 
+        // Iterate over each row in the table
         document.querySelectorAll('#itemTable tbody tr').forEach(row => {
             const checkbox = row.querySelector('.invoice-select');
             if (checkbox && checkbox.checked) {
                 const amountDueElement = row.querySelector('.amount-due');
                 const paymentInput = row.querySelector('.payment-input');
+                const creditInput = row.querySelector('.credit-input');
 
+                // Calculate total amount due
                 if (amountDueElement) {
                     const amountDue = parseFloat(amountDueElement.textContent) || 0;
                     totalAmountDue += amountDue;
                 }
 
+                // Calculate total applied amount
                 if (paymentInput) {
                     const paymentAmount = parseFloat(paymentInput.value) || 0;
                     totalAppliedAmount += paymentAmount;
                 }
 
-                // You'll need to implement logic for discount and credits
+                // Calculate total discounts and credits
+                if (creditInput) {
+                    const creditAmount = parseFloat(creditInput.value) || 0;
+                    totalDiscountAndCredits += creditAmount;
+                }
             }
         });
 
+        // Update the summary fields
         const summaryAmountDue = document.getElementById('summary_amount_due');
         const summaryAppliedAmount = document.getElementById('summary_applied_amount');
-        const summaryDiscountCredits = document.getElementById('summary_discount_credits');
+        const summaryDiscountCredits = document.getElementById('applied_credits_discount');
         const totalAmountDueElement = document.getElementById('total_amount_due');
 
         if (summaryAmountDue) summaryAmountDue.value = totalAmountDue.toFixed(2);
         if (summaryAppliedAmount) summaryAppliedAmount.value = totalAppliedAmount.toFixed(2);
         if (summaryDiscountCredits) summaryDiscountCredits.value = totalDiscountAndCredits.toFixed(2);
         if (totalAmountDueElement) totalAmountDueElement.value = (totalAmountDue - totalAppliedAmount - totalDiscountAndCredits).toFixed(2);
+
+        // Debugging output
+        console.log('Total Amount Due:', totalAmountDue.toFixed(2));
+        console.log('Total Applied Amount:', totalAppliedAmount.toFixed(2));
+        console.log('Total Discounts and Credits:', totalDiscountAndCredits.toFixed(2));
+        console.log('Total Amount Due Element:', totalAmountDueElement.value);
     }
+
 
     function setupEventListeners() {
         $('#customer_name').on('change', function () {
@@ -810,22 +866,33 @@ $newCrNo = Payment::getLastCrNo();
 
         // Gather selected invoices and their details
         function gatherSelectedInvoices() {
-            const selectedInvoices = [];
-            document.querySelectorAll('#itemTable tbody tr').forEach(row => {
-                const checkbox = row.querySelector('.invoice-select');
-                if (checkbox && checkbox.checked) {
-                    const invoice = {
-                        invoice_id: checkbox.dataset.invoiceId,
-                        invoice_account_id: row.querySelector('td:nth-child(2)').textContent, // Get the hidden invoice_account_id
-                        amount_applied: row.querySelector('.payment-input').value || '0',
-                        discount_amount: row.querySelector('.discount-input')?.value || '0',
-                        credit_amount: row.querySelector('.credit-input')?.value || '0'
-                    };
-                    selectedInvoices.push(invoice);
-                }
-            });
-            return selectedInvoices;
-        }
+        const selectedInvoices = [];
+        document.querySelectorAll('#itemTable tbody tr').forEach(row => {
+            const checkbox = row.querySelector('.invoice-select');
+            if (checkbox && checkbox.checked) {
+                const creditInputs = row.querySelectorAll('.credit-input');
+                const creditNoInputs = row.querySelectorAll('.credit-no-input');
+                const credits = Array.from(creditInputs).map((input, index) => ({
+                    amount: parseFloat(input.value) || 0,
+                    credit_no: creditNoInputs[index].value
+                }));
+
+                const discountAccountInput = row.querySelector('.discount-account-input');
+                const discountAmountInput = row.querySelector('.discount-amount-input');
+
+                const invoice = {
+                    invoice_id: checkbox.dataset.invoiceId,
+                    invoice_account_id: row.querySelector('td:nth-child(2)').textContent,
+                    amount_applied: row.querySelector('.payment-input').value || '0',
+                    credits: credits,
+                    discount_account_id: discountAccountInput ? discountAccountInput.value : null,
+                    discount_amount: discountAmountInput ? parseFloat(discountAmountInput.value) || 0 : 0
+                };
+                selectedInvoices.push(invoice);
+            }
+        });
+        return selectedInvoices;
+    }
 
         const selectedInvoices = gatherSelectedInvoices();
 

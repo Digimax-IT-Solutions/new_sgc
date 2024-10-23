@@ -1,9 +1,12 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
-
-//require_once 'api/category_controller.php';
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('payment_method');
 
 $payment_methods = PaymentMethod::all();
 

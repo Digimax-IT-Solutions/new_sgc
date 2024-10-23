@@ -1,7 +1,12 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::purchasingOnly();
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('purchasing_purchase_request');
 $products = Product::all();
 $cost_centers = CostCenter::all();
 $locations = Location::all();
@@ -10,7 +15,8 @@ $newPrNo = PurchaseRequest::getLastPrNo();
 ?>
 
 <?php require 'views/templates/header.php' ?>
-<?php require 'views/templates/purchasing_sidebar.php' ?>
+<?php require 'views/templates/sidebar.php' ?>
+
 <style>
     .form-label {
         font-size: 0.675rem;
@@ -89,7 +95,7 @@ $newPrNo = PurchaseRequest::getLastPrNo();
     }
 </style>
 <div class="main">
-    <?php require 'views/templates/purchasing_navbar.php' ?>
+    <?php require 'views/templates/navbar.php' ?>
 
     <!-- Content Wrapper. Contains page content -->
     <main class="content">
@@ -101,7 +107,7 @@ $newPrNo = PurchaseRequest::getLastPrNo();
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb">
                                 <li class="breadcrumb-item"><a href="dashboard">Dashboard</a></li>
-                                <li class="breadcrumb-item"><a href="purchase_request">Purchase Request</a></li>
+                                <li class="breadcrumb-item"><a href="purchasing_purchase_request">Purchase Request</a></li>
                                 <li class="breadcrumb-item active" aria-current="page">Create Purchase Request</li>
                             </ol>
                         </nav>
@@ -117,8 +123,7 @@ $newPrNo = PurchaseRequest::getLastPrNo();
             <div class="row">
                 <div class="col-12">
                     <!-- Purchase Order Form -->
-                    <form id="purchaseOrderForm" action="api/purchasing/purchase_request_controller.php?action=add"
-                        method="POST">
+                    <form id="purchaseOrderForm" action="api/purchase_request_controller.php?action=add" method="POST">
                         <input type="hidden" name="action" id="modalAction" value="add" />
                         <input type="hidden" name="id" id="itemId" value="" />
                         <input type="hidden" name="item_data" id="item_data" />
@@ -127,7 +132,7 @@ $newPrNo = PurchaseRequest::getLastPrNo();
                             <div class="col-12 col-lg-12">
                                 <div class="card h-100">
                                     <div class="card-header">
-                                        <h5 class="card-title mb-0">Purchase Order Details</h5>
+                                        <h5 class="card-title mb-0">Purchase Request Details</h5>
                                     </div>
 
                                     <div class="card-body">
@@ -162,7 +167,7 @@ $newPrNo = PurchaseRequest::getLastPrNo();
                                                 <div class="form-group">
                                                     <label for="date">Date</label>
                                                     <input type="date" class="form-control form-control-sm" id="date"
-                                                        name="date" value="<?php echo date('Y-m-d'); ?>">
+                                                        name="date" value="<?php echo date('Y-m-d'); ?>" required>
                                                 </div>
                                             </div>
 
@@ -172,7 +177,7 @@ $newPrNo = PurchaseRequest::getLastPrNo();
                                                     <label for="required_date">Required Date</label>
                                                     <input type="date" class="form-control form-control-sm"
                                                         id="required_date" name="required_date"
-                                                        value="<?php echo date('Y-m-d'); ?>">
+                                                        value="<?php echo date('Y-m-d'); ?>" required>
                                                 </div>
                                             </div>
                                             <div class="col-md-3 order-details"></div>
@@ -182,7 +187,7 @@ $newPrNo = PurchaseRequest::getLastPrNo();
                                                 <!-- MEMO -->
                                                 <label for="memo" class="form-label">Memo/Purpose</label>
                                                 <input type="text" class="form-control form-control-sm" id="memo"
-                                                    name="memo">
+                                                    name="memo" required>
                                             </div>
                                         </div>
                                         <br>
@@ -210,7 +215,7 @@ $newPrNo = PurchaseRequest::getLastPrNo();
                                 <div class="col-12">
                                     <div class="card">
                                         <div class="card-header d-flex justify-content-between align-items-center">
-                                            <h5 class="card-title mb-0">Add Purchase Order</h5>
+                                            <h5 class="card-title mb-0">Add Purchase Request Items</h5>
                                         </div>
                                         <div class="card-body">
                                             <div class="table-responsive">
@@ -245,7 +250,7 @@ $newPrNo = PurchaseRequest::getLastPrNo();
     </main>
     <div id="loadingOverlay" style="display: none;">
         <div class="spinner"></div>
-        <div class="message">Processing Purchase Order</div>
+        <div class="message">Processing Purchase Request</div>
     </div>
 </div>
 
@@ -312,7 +317,7 @@ $newPrNo = PurchaseRequest::getLastPrNo();
 
             // Use AJAX to submit the form
             $.ajax({
-                url: 'api/purchase_order_controller.php',
+                url: 'api/purchase_request_controller.php',
                 type: 'POST',
                 dataType: 'json',
                 data: formData,
@@ -364,7 +369,8 @@ $newPrNo = PurchaseRequest::getLastPrNo();
         const products = <?php echo json_encode($products); ?>;
         let itemDropdownOptions = '<option value="" selected disabled>Select An Item</option>';
         $.each(products, function (index, product) {
-            itemDropdownOptions += `<option value="${product.id}" data-description="${product.item_purchase_description}" data-uom="${product.uom_name}">${product.item_name}</option>`;
+            itemDropdownOptions += `<option value="${product.id}" data-description="${product.item_purchase_description}" data-uom="${product.uom_name}">${product.item_code} - ${product.item_name}</option>`;
+            
         });
 
         const costCenterOptions = <?php echo json_encode($cost_centers); ?>;
@@ -372,13 +378,14 @@ $newPrNo = PurchaseRequest::getLastPrNo();
         costCenterOptions.forEach(function (costCenter) {
             costCenterDropdownOptions += `<option value="${costCenter.id}">${costCenter.code} - ${costCenter.particular}</option>`;
         });
+
         // Add a new row to the table
         function addRow() {
             const newRow = `
                 <tr>
                     <td><select class="form-control form-control-sm account-dropdown select2" name="item_id[]" onchange="populateFields(this)">${itemDropdownOptions}</select></td>
                     <td><select class="form-control form-control-sm cost-center-dropdown select2" name="cost_center_id[]">${costCenterDropdownOptions}</select></td>
-                    <td><input type="text" class="form-control form-control-sm description-field" name="description[]" readonly></td>
+                    <td><input type="text" class="form-control form-control-sm description-field" name="description[]"></td>
                     <td style="background-color: #e6f3ff;"><input type="text" class="form-control form-control-sm quantity" name="quantity[]" placeholder="Quantity"></td>
                     <td><input type="text" class="form-control form-control-sm uom" name="uom[]" readonly></td> 
                     <td><button type="button" class="btn btn-danger btn-sm removeRow"><i class="fas fa-trash"></i></button></td>
@@ -390,6 +397,7 @@ $newPrNo = PurchaseRequest::getLastPrNo();
                 theme: 'classic' // Use this if you're using Bootstrap 4
             });
         }
+
 
         $('#addItemBtn').click(addRow);
 
@@ -447,7 +455,8 @@ $newPrNo = PurchaseRequest::getLastPrNo();
 
                     if (response.success) {
                         // Redirect to purchase_request page on success
-                        window.location.href = 'purchasing_purchase_request';
+                        const transactionId = response.id;
+                        updatePrintStatusAndPrint(transactionId, 1);
                     } else {
                         // Show error message in SweetAlert
                         Swal.fire({
@@ -474,7 +483,65 @@ $newPrNo = PurchaseRequest::getLastPrNo();
             });
         });
 
+        function updatePrintStatusAndPrint(id, printStatus) {
+            $.ajax({
+                url: 'api/purchase_request_controller.php',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    action: 'update_print_status',
+                    id: id,
+                    print_status: printStatus
+                },
+                success: function (response) {
+                    if (response.success) {
+                        console.log('Print status updated, now printing Credit:', id);
+
+                        // Now proceed with printing
+                        const printFrame = document.getElementById('printFrame');
+                        const printContentUrl = `purchasing_print_purchase_request?action=print&id=${id}`;
+                        const submitButton = document.querySelector('.btn-primary[type="submit"]');
+                        submitButton.disabled = true;
+
+                        printFrame.src = printContentUrl;
+
+                        printFrame.onload = function() {
+                            printFrame.contentWindow.focus();
+                            printFrame.contentWindow.print();
+
+                            // Redirect after print dialog closes
+                            const originalOnFocus = window.onfocus;
+
+                            window.onfocus = function() {
+                                window.location.href = 'purchasing_purchase_request';
+                            };
+
+                            // Clean up event handler after redirection
+                            printFrame.contentWindow.onafterprint = function() {
+                                window.onfocus = originalOnFocus;
+                            };
+                        };
+                    } else {
+                        console.error('Failed to update print status:', response.message);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Failed to update print status: ' + (response.message || 'Unknown error')
+                        });
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error('AJAX error:', textStatus, errorThrown);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'An error occurred while updating print status: ' + textStatus
+                    });
+                }
+            });
+        }
     });
+
     // Function to populate multiple fields based on selected option
     function populateFields(select) {
         const selectedOption = $(select).find('option:selected');

@@ -4,6 +4,8 @@ require_once __DIR__ . '/../_init.php';
 // Include FPDF library
 require_once 'fpdf.php';
 
+
+
 if (post('action') === 'add') {
     try {
         // Process your form data here
@@ -24,6 +26,8 @@ if (post('action') === 'add') {
         $vat_exempt_amount = post('vat_exempt_amount');
         $total_amount_due = post('total_amount_due');
         $memo = post('memo');
+        $location = post('location');
+
 
         // Check for existing invoice to prevent duplicates
         $existingRecord = PurchaseOrder::findByPoNo($po_no);
@@ -44,25 +48,20 @@ if (post('action') === 'add') {
         }
 
         PurchaseOrder::add(
-            $po_no,
-            $po_date,
-            $delivery_date,
-            $vendor_id,
-            $terms,
-            $gross_amount,
-            $discount_amount,
-            $net_amount_due,
-            $input_vat_amount,
-            $vatable_amount,
-            $zero_rated_amount,
-            $vat_exempt_amount,
-            $total_amount_due,
-            $memo,
-            $items
+            $po_no, $po_date, $delivery_date, $vendor_id, $terms, $gross_amount, $discount_amount, $net_amount_due, $input_vat_amount, $vatable_amount, $zero_rated_amount, $vat_exempt_amount, $total_amount_due, $memo, $location, $items
         );
 
         // You can output a success message or redirect the user to another page after successful processing.
         flashMessage('add_purchase_order', 'Purchase order added!.', FLASH_SUCCESS);
+
+        // Send a message to Discord with the user info
+        // Send a message to Discord with the user info
+        $discordMessage = "**" . $_SESSION['name'] . " created a purchase order!**\n"; // Bold username and action
+        $discordMessage .= "-----------------------\n"; // Top border
+        $discordMessage .= "**PO No:** `" . post('po_no') . "`\n"; // Bold "PR No" and use backticks for code block style
+        $discordMessage .= "**Memo:** `" . post('memo') . "`\n"; // Bold "Memo" and use backticks for code block style
+        $discordMessage .= "-----------------------\n"; // Bottom border
+        sendToDiscord($discordMessage); // Send the message to Discord
 
         $response = ['success' => true, 'id' => $transaction_id + 1];
     } catch (Exception $ex) {
@@ -148,6 +147,7 @@ if (post('action') === 'save_draft') {
         $vendor_id = post('vendor_id');
         $terms = post('terms');
         $memo = post('memo');
+        $location = post('location');
 
         // Summary details
         $gross_amount = post('gross_amount');
@@ -180,6 +180,7 @@ if (post('action') === 'save_draft') {
             $vat_exempt_amount,
             $total_amount_due,
             $memo,
+            $location,
             $items
         );
 
@@ -201,6 +202,58 @@ if (post('action') === 'save_draft') {
 }
 
 if (post('action') === 'update_draft') {
+    try {
+        $id = post('id');
+        $po_date = post('po_date');
+        $delivery_date = post('delivery_date');
+        $vendor_id = post('vendor_id');
+        $vendor_address = post('vendor_address');
+        $terms = post('terms');
+        $gross_amount = post('gross_amount');
+        $discount_amount = post('total_discount_amount');
+        $net_amount_due = post('net_amount_due');
+        $input_vat_amount = post('total_input_vat_amount');
+        $vatable_amount = post('vatable_amount');
+        $zero_rated_amount = post('zero_rated_amount');
+        $vat_exempt_amount = post('vat_exempt_amount');
+        $total_amount_due = post('total_amount_due');
+        $location = post('location');
+        $memo = post('memo');
+        $items = json_decode(post('item_data'), true);
+
+        // Call the updateDraft function
+        $response = PurchaseOrder::updateDraft(
+            $id, $po_date, $delivery_date, $vendor_id, $terms, $gross_amount,
+            $discount_amount, $net_amount_due, $input_vat_amount, $vatable_amount, 
+            $zero_rated_amount, $vat_exempt_amount, $total_amount_due, $memo, $location, $items
+        );
+    
+        // Check if the response indicates success
+        if ($response['success']) {
+            // Success response
+            $response = [
+                'success' => true,
+                'id' => $id,
+                'message' => 'Purchase order updated successfully'
+            ];
+        } else {
+            // Handle failure
+            throw new Exception($response['message']);
+        }
+    } catch (Exception $ex) {
+        // Error handling
+        $response = ['success' => false, 'message' => 'Error: ' . $ex->getMessage()];
+        error_log('Error updating draft purchase order: ' . $ex->getMessage());
+    }
+
+    // Send JSON response
+    header('Content-Type: application/json');
+    echo json_encode($response);
+    exit;
+}
+
+
+if (post('action') === 'save_final') {
     try {
         $id = post('id');
         $po_no = post('po_no');
@@ -248,22 +301,42 @@ if (post('action') === 'update_draft') {
     echo json_encode($response);
     exit;
 }
-
-if (post('action') === 'get_pr_info') {
+// Fetch items by PR No.
+if (post('action') === 'get_items_by_pr_no') {
     try {
-        $item_id = post('item_id');
-        $pr_info = PurchaseOrder::getPurchaseRequestInfo($item_id);
+        $pr_no = post('pr_no');
+        $items = PurchaseOrder::getItemsByPRNo($pr_no);
 
-        if (!empty($pr_info)) {
-            $response = ['success' => true, 'pr_numbers' => $pr_info];
+        if (!empty($items)) {
+            $response = ['success' => true, 'items' => $items];
         } else {
-            $response = ['success' => false, 'message' => 'No Purchase Request found for this item.'];
+            $response = ['success' => false, 'message' => 'No items found for this Purchase Request.'];
         }
     } catch (Exception $ex) {
         error_log("Exception: " . $ex->getMessage());
-        error_log("File: " . $ex->getFile());
-        error_log("Line: " . $ex->getLine());
+        $response = ['success' => false, 'message' => 'An error occurred while processing your request. Please try again later.'];
+    }
 
+    header('Content-Type: application/json');
+    echo json_encode($response);
+    exit;
+}
+
+// Check if item is in the selected PR
+if (post('action') === 'check_item_in_pr') {
+    try {
+        $pr_no = post('pr_no');
+        $item_id = post('item_id');
+
+        $isItemInPR = PurchaseOrder::isItemInPR($pr_no, $item_id);
+
+        if ($isItemInPR) {
+            $response = ['success' => true];
+        } else {
+            $response = ['success' => false, 'message' => 'Item not found in the selected Purchase Request.'];
+        }
+    } catch (Exception $ex) {
+        error_log("Exception: " . $ex->getMessage());
         $response = ['success' => false, 'message' => 'An error occurred while processing your request. Please try again later.'];
     }
 
@@ -287,7 +360,7 @@ if (post('action') === 'get_pr_quantity') {
     } catch (Exception $ex) {
         error_log("Exception: " . $ex->getMessage());
         error_log("File: " . $ex->getFile());
-        error_log("Line: " . $ex->getLine());
+        error_log(message: "Line: " . $ex->getLine());
 
         $response = ['success' => false, 'message' => 'An error occurred while processing your request. Please try again later.'];
     }

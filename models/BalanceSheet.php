@@ -1,26 +1,34 @@
 <?php
+
+
+require_once __DIR__ . '/../_init.php';
 class BalanceSheet
 {
     public static function displayBalanceSheet()
     {
         global $connection; // Assuming $connection is your PDO database connection
 
+        // Calculate net income
+        $netIncome = ProfitAndLoss::calculateNetIncome();
+
         // Query to fetch all account types and their associated accounts for Balance Sheet
-        $query = "SELECT account_types.name AS account_type, chart_of_account.account_description AS account, chart_of_account.balance AS balance
-                  FROM account_types
-                  LEFT JOIN chart_of_account ON chart_of_account.account_type_id = account_types.id
-                  WHERE account_types.name IN (
-                      'Bank', 
-                      'Accounts Receivable', 
-                      'Other Current Assets', 
-                      'Fixed Assets', 
-                      'Accounts Payable', 
-                      'Other Current Liabilities', 
-                      'Long-term Liabilities', 
-                      'Other Non-current Liabilities', 
-                      'Equity'
-                  )
-                  ORDER BY FIELD(account_types.name, 'Assets', 'Liabilities', 'Equity'), account_types.id, chart_of_account.id";
+        $query = "SELECT 
+    ca.id AS account_id,
+    ca.account_code,
+    ca.account_description AS account,
+    at.name AS account_type,
+    SUM(te.balance) AS balance
+FROM 
+    chart_of_account ca
+JOIN 
+    account_types at ON ca.account_type_id = at.id
+LEFT JOIN 
+    transaction_entries te ON ca.id = te.account_id
+WHERE 
+    at.name NOT IN ('Income', 'Cost of Goods Sold', 'Expenses', 'Other Income', 'Other Expense')
+    AND te.balance IS NOT NULL
+GROUP BY 
+    ca.id, ca.account_code, ca.account_description, at.name";
 
         $statement = $connection->prepare($query);
         $statement->execute();
@@ -29,12 +37,16 @@ class BalanceSheet
         // Initialize arrays to hold data for each account type dynamically
         $assets = [];
         $liabilities = [];
-        $equity = [];
+        // Add net income to equity
+        $equity[] = [
+            'account' => 'Net Income',
+            'balance' => $netIncome
+        ];
 
         // Categorize data into respective arrays based on account types for Balance Sheet
         foreach ($results as $row) {
             switch ($row['account_type']) {
-                case 'Bank':
+                case 'Cash and Cash Equivalents':
                 case 'Accounts Receivable':
                 case 'Other Current Assets':
                 case 'Fixed Assets':
@@ -99,11 +111,13 @@ class BalanceSheet
         echo '</tr>';
 
         // Display Equity section
+        // When displaying the Equity section
         echo '<tr><td colspan="2"><strong>Equity</strong></td></tr>';
         displayAccounts($equity);
+        $totalEquity = array_sum(array_column($equity, 'balance'));
         echo '<tr>';
         echo '<td></td>';
-        echo '<td style="text-align: right;"><strong>Total Equity</strong>: ' . formatAsPhilippinePeso(array_sum(array_column($equity, 'balance'))) . '</td>';
+        echo '<td style="text-align: right;"><strong>Total Equity</strong>: ' . formatAsPhilippinePeso($totalEquity) . '</td>';
         echo '</tr>';
 
         echo '</tbody>';
@@ -111,4 +125,3 @@ class BalanceSheet
         echo '</div>';
     }
 }
-?>

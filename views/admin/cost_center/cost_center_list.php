@@ -1,8 +1,12 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
-
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('cost_center');
 $cost_centers = CostCenter::all();
 
 ?>
@@ -32,9 +36,9 @@ $cost_centers = CostCenter::all();
                                             <input type="hidden" name="upload" id="upload" value="upload" />
                                             <input type="file" class="form-control-file mr-1" id="excelFile"
                                                 name="excelFile">
-                                                <a href="upload" class="btn btn-sm btn-outline-secondary me-2">
-                                                    <i class="fas fa-upload"></i> Upload
-                                                </a>
+                                            <a href="upload" class="btn btn-sm btn-outline-secondary me-2">
+                                                <i class="fas fa-upload"></i> Upload
+                                            </a>
                                         </form>
                                         <a href="create_cost_center" class="btn btn-sm btn-primary">
                                             <i class="fas fa-plus"></i> New Cost Center
@@ -57,7 +61,8 @@ $cost_centers = CostCenter::all();
                                             <td><?= $cost_center->code ?></td>
                                             <td><?= $cost_center->particular ?></td>
                                             <td>
-                                                <a class="text-primary" href="view_cost_center?action=update&id=<?= $cost_center->id ?>">
+                                                <a class="text-primary"
+                                                    href="view_cost_center?action=update&id=<?= $cost_center->id ?>">
                                                     <i class="fas fa-edit"></i> Update
                                                 </a>
                                                 <a class="text-danger ml-2"

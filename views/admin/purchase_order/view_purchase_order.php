@@ -1,14 +1,22 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('purchase_order');
 $accounts = ChartOfAccount::all();
 $vendors = Vendor::all();
 $products = Product::all();
 $discounts = Discount::all();
 $input_vats = InputVat::all();
 $purchase_orders = PurchaseOrder::all();
+$purchase_requests = PurchaseRequest::all();
 $cost_centers = CostCenter::all();
+$terms = Term::all();
+$locations = Location::all();
 
 $newPoNo = PurchaseOrder::getLastPoNo();
 
@@ -188,7 +196,7 @@ $newPoNo = PurchaseOrder::getLastPoNo();
                                                         <div class="form-group">
                                                             <label for="vendor_id">Vendor</label>
                                                             <select class="form-control form-control-sm select2" id="vendor_id"
-                                                                name="vendor_id" disabled>
+                                                                name="vendor_id"       <?php echo ($purchase_order->po_status != 4) ? 'disabled' : ''; ?>>
                                                                 <option value="">Select Vendor</option>
                                                                 <?php foreach ($vendors as $vendor): ?>
                                                                     <option value="<?= $vendor->id ?>"
@@ -209,7 +217,7 @@ $newPoNo = PurchaseOrder::getLastPoNo();
                                                             <label for="vendor_address">Address</label>
                                                             <input type="text" class="form-control form-control-sm"
                                                                 id="vendor_address" name="vendor_address"
-                                                                value="<?= $purchase_order->vendor_address ?>" disabled>
+                                                                value="<?= $purchase_order->vendor_address ?>"   <?php echo ($purchase_order->po_status != 4) ? 'disabled' : 'readonly'; ?>>
                                                         </div>
                                                     </div>
 
@@ -218,7 +226,7 @@ $newPoNo = PurchaseOrder::getLastPoNo();
                                                         <div class="form-group">
                                                             <label for="tin">TIN</label>
                                                             <input type="text" class="form-control form-control-sm" id="tin"
-                                                                name="tin" value="<?= $purchase_order->tin ?>" disabled>
+                                                                name="tin" value="<?= $purchase_order->tin ?>" <?php echo ($purchase_order->po_status != 4) ? 'disabled' : 'readonly'; ?>>
                                                         </div>
                                                     </div>
 
@@ -246,15 +254,27 @@ $newPoNo = PurchaseOrder::getLastPoNo();
                                                         <!-- TERMS -->
                                                         <div class="form-group">
                                                             <label for="terms">Terms</label>
-                                                            <select class="form-control form-control-sm" id="terms"
-                                                                name="terms" disabled>
-                                                                <option value="<?= $purchase_order->terms ?>">
-                                                                    <?= $purchase_order->terms ?>
-                                                                </option>
-                                                                <option value="Due on Receipt">Due on Receipt</option>
-                                                                <option value="NET 7">NET 7</option>
-                                                                <option value="NET 15">NET 15</option>
-                                                                <option value="NET 30">NET 30</option>
+                                                            <select class="form-control form-control-sm select2" id="terms"
+                                                                name="terms"  <?php echo ($purchase_order->po_status != 4) ? 'disabled' : ''; ?>>
+                                                                <?php
+                                                                // The selected term, based on the term name from the invoice
+                                                                $selected_term = $purchase_order->terms ?? ''; // Assuming this holds the term name
+
+                                                                // Array to prevent duplicate term names
+                                                                $used_terms = [];
+                                                                foreach ($terms as $term):
+                                                                    if (!in_array($term->id, $used_terms)): // Use term ID to prevent duplicates
+                                                                        $used_terms[] = $term->id; // Track used term IDs
+                                                                ?>
+                                                                        <option value="<?= htmlspecialchars($term->term_name) ?>"
+                                                                            data-days="<?= htmlspecialchars($term->term_days_due) ?>"
+                                                                            <?= $term->term_name == $selected_term ? 'selected' : '' ?>>
+                                                                            <?= htmlspecialchars($term->term_name) ?>
+                                                                        </option>
+                                                                <?php
+                                                                    endif;
+                                                                endforeach;
+                                                                ?>
                                                             </select>
                                                         </div>
                                                     </div>
@@ -266,7 +286,7 @@ $newPoNo = PurchaseOrder::getLastPoNo();
                                                             <label for="po_date">Date</label>
                                                             <input type="date" class="form-control form-control-sm" id="po_date"
                                                                 name="po_date"
-                                                                value="<?= date('Y-m-d', strtotime($purchase_order->po_date)) ?>" disabled>
+                                                                value="<?= date('Y-m-d', strtotime($purchase_order->po_date)) ?>" <?php echo ($purchase_order->po_status != 4) ? 'disabled' : ''; ?>>
                                                         </div>
                                                     </div>
 
@@ -276,7 +296,7 @@ $newPoNo = PurchaseOrder::getLastPoNo();
                                                             <label for="delivery_date">Delivery Date</label>
                                                             <input type="date" class="form-control form-control-sm"
                                                                 id="delivery_date" name="delivery_date"
-                                                                value="<?= date('Y-m-d', strtotime($purchase_order->delivery_date)) ?>" disabled>
+                                                                value="<?= date('Y-m-d', strtotime($purchase_order->delivery_date)) ?>" <?php echo ($purchase_order->po_status != 4) ? 'disabled' : ''; ?>>
                                                         </div>
                                                     </div>
 
@@ -284,8 +304,33 @@ $newPoNo = PurchaseOrder::getLastPoNo();
                                                         <!-- MEMO -->
                                                         <label for="memo" class="form-label">Memo</label>
                                                         <textarea class="form-control" id="memo" name="memo" rows="2"
-                                                            placeholder="Enter memo" disabled><?= $purchase_order->memo ?></textarea>
+                                                            placeholder="Enter memo" <?php echo ($purchase_order->po_status != 4) ? 'disabled' : ''; ?>><?= $purchase_order->memo ?></textarea>
 
+                                                    </div>
+
+                                                    <div class="col-md-4 customer-details">
+                                                        <label for="location" class="form-label">Location</label>
+                                                        <select class="form-control form-control-sm select2" id="location" name="location" 
+                                                            <?php if ($purchase_order->po_status != 4) echo 'disabled'; ?>>
+                                                            <?php
+                                                                // Array to prevent duplicates
+                                                                $used_locations = [];
+                                                                $selected_location = $purchase_order->location ?? ''; // Assuming this holds the selected location
+
+                                                                // Locations
+                                                                foreach ($locations as $location):
+                                                                    if (!in_array($location->name, $used_locations)):
+                                                                        $used_locations[] = $location->name; // Track used locations
+                                                            ?>
+                                                                        <option value="<?= htmlspecialchars($location->id) ?>" 
+                                                                                <?= $location->id == $selected_location ? 'selected' : '' ?>>
+                                                                            <?= htmlspecialchars($location->name) ?>
+                                                                        </option>
+                                                            <?php
+                                                                    endif;
+                                                                endforeach;
+                                                            ?>
+                                                        </select>
                                                     </div>
                                                 </div>
                                             </div>
@@ -299,9 +344,9 @@ $newPoNo = PurchaseOrder::getLastPoNo();
                                                 <?php if ($purchase_order->po_status == 0): ?>
                                                     <span class="badge bg-danger">Waiting for Delivery</span>
                                                 <?php elseif ($purchase_order->po_status == 1): ?>
-                                                    <span class="badge bg-success">Paid</span>
+                                                    <span class="badge bg-success">Received</span>
                                                 <?php elseif ($purchase_order->po_status == 2): ?>
-                                                    <span class="badge bg-warning">Partially Paid</span>
+                                                    <span class="badge bg-warning">Partially Received</span>
                                                 <?php elseif ($purchase_order->po_status == 3): ?>
                                                 <span class="badge bg-secondary">Void</span>
                                                 <?php elseif ($purchase_order->po_status == 4): ?>
@@ -344,7 +389,7 @@ $newPoNo = PurchaseOrder::getLastPoNo();
 
                                                 <!-- VAT PERCENTAGE -->
                                                 <div class="row">
-                                                    <label class="col-sm-6 col-form-label">VAT:</label>
+                                                    <label class="col-sm-6 col-form-label">Input VAT:</label>
                                                     <div class="col-sm-6">
                                                         <input type="text" class="form-control-plaintext text-end"
                                                             id="input_vat_amount" name="input_vat_amount"
@@ -400,7 +445,8 @@ $newPoNo = PurchaseOrder::getLastPoNo();
                                                 <div class="card-footer d-flex justify-content-center">
                                                     <?php if ($purchase_order->po_status == 4): ?>
                                                         <!-- Buttons to show when invoice_status is 4 -->
-                                                        <button type="submit" class="btn btn-info me-2">Save and Print</button>
+                                                        <button type="button" id="saveDraftBtn" class="btn btn-secondary me-2">Update Draft</button>
+                                                        <button type="submit" class="btn btn-info me-2">Save as Final</button>
                                                     <?php elseif ($purchase_order->po_status == 3): ?>
                                                         <!-- Button to show when invoice_status is 3 -->
                                                         <a class="btn btn-primary" href="#" id="reprintButton">
@@ -437,14 +483,17 @@ $newPoNo = PurchaseOrder::getLastPoNo();
                                                                 <th>Description</th>
                                                                 <th>Unit</th>
                                                                 <th style="background-color: #e6f3ff;">Pr Quantity</th>
-                                                                <th style="background-color: #e6f3ff;">Ordered</th>
-                                                                <th style="background-color: #e6f3ff;">Quantity</th>
+                                                                <?php if ($purchase_order->po_status != 4): ?>
+                                                                    <!-- Show these headers only if status is NOT 4 -->
+                                                                    <th style="width: 100px; background-color: #e6f3ff;">Ordered QTY</th>
+                                                                    <th style="width: 100px; background-color: #e6f3ff;">Balance QTY</th>
+                                                                <?php endif; ?>
                                                                 <th>Cost</th>
                                                                 <th>Amount</th>
                                                                 <th>Disc Type</th>
                                                                 <th>Discount</th>
                                                                 <th>Net</th>
-                                                                <th>Tax Amount</th>
+                                                                <th>Taxable Amount</th>
                                                                 <th>Tax Type</th>
                                                                 <th>VAT</th>
                                                             </tr>
@@ -454,15 +503,19 @@ $newPoNo = PurchaseOrder::getLastPoNo();
                                                                 <?php foreach ($purchase_order->details as $detail): ?>
                                                                     <tr>
                                                                         <td>
-                                                                            <input type="text" class="form-control form-control-sm pr_no" name="pr_no[]"
-                                                                                value="<?= htmlspecialchars($detail['pr_no']) ?>" readonly>
+                                                                            <select class="form-control form-control-sm pr_no select2" name="pr_no[]" <?php echo ($purchase_order->po_status != 4) ? 'disabled' : ''; ?>>
+                                                                                <?php foreach ($purchase_requests as $purchase_request): ?>
+                                                                                    <option value="<?= htmlspecialchars($purchase_request->pr_no) ?>" 
+                                                                                        <?= ($detail['pr_no'] == $purchase_request->pr_no) ? 'selected' : ''; ?>>
+                                                                                        <?= htmlspecialchars($purchase_request->pr_no) ?>
+                                                                                    </option>
+                                                                                <?php endforeach; ?>
+                                                                            </select>
                                                                         </td>
                                                                         <td>
-                                                                            <select
-                                                                                class="form-control form-control-sm item-dropdown select2"
-                                                                                name="item_id[]" disabled>
+                                                                            <select class="form-control form-control-sm item-dropdown select2" name="item_id[]" <?php echo ($purchase_order->po_status != 4) ? 'disabled' : ''; ?>>
                                                                                 <?php foreach ($products as $product): ?>
-                                                                                    <option value="<?= htmlspecialchars($product->id) ?>"
+                                                                                    <option value="<?= htmlspecialchars($product->id) ?>" 
                                                                                         <?= ($product->id == $detail['item_id']) ? 'selected' : '' ?>>
                                                                                         <?= htmlspecialchars($product->item_name) ?>
                                                                                     </option>
@@ -472,7 +525,7 @@ $newPoNo = PurchaseOrder::getLastPoNo();
                                                                         <td>
                                                                             <select
                                                                                 class="form-control form-control-sm cost-center-dropdown select2"
-                                                                                name="cost_center_id[]" disabled>
+                                                                                name="cost_center_id[]" <?php echo ($purchase_order->po_status != 4) ? 'disabled' : ''; ?>>
                                                                                 <?php foreach ($cost_centers as $cost_center): ?>
                                                                                     <option
                                                                                         value="<?= htmlspecialchars($cost_center->id) ?>"
@@ -500,9 +553,33 @@ $newPoNo = PurchaseOrder::getLastPoNo();
                                                                             <input type="text"
                                                                                 class="form-control form-control-sm pr_quantity text-right"
                                                                                 name="pr_quantity[]"
-                                                                                value="<?= htmlspecialchars($detail['related_quantity']) ?>"
-                                                                                placeholder="Qty" disabled>
+                                                                                value="<?= htmlspecialchars($detail['qty']) ?>"
+                                                                                placeholder="Qty"<?php echo ($purchase_order->po_status != 4) ? 'disabled' : ''; ?>>
                                                                         </td>
+                                                                        <?php if ($purchase_order->po_status == 4): ?>
+                                                                                <!-- Content is hidden if status is 4 -->
+                                                                                <td style="display: none;">
+                                                                                    <input type="hidden" class="form-control form-control-sm quantity text-right" name="quantity[]"
+                                                                                        value="<?= htmlspecialchars($detail['last_ordered_qty']) ?>">
+                                                                                </td>
+
+                                                                                <td style="display: none;">
+                                                                                    <input type="hidden" class="form-control form-control-sm quantity text-right" name="quantity[]"
+                                                                                        value="<?= htmlspecialchars($detail['qty']) ?>">
+                                                                                </td>
+                                                                            <?php else: ?>
+                                                                                <!-- Content is visible if status is not 4 -->
+                                                                                <td class="text-right" style="background-color: #e6f3ff;">
+                                                                                    <input type="text" class="form-control form-control-sm quantity text-right" name="quantity[]"
+                                                                                        value="<?= htmlspecialchars($detail['last_ordered_qty']) ?>">
+                                                                                </td>
+
+                                                                                <td class="text-right" style="background-color: #e6f3ff;">
+                                                                                    <input type="text" class="form-control form-control-sm quantity text-right" name="quantity[]"
+                                                                                        value="<?= htmlspecialchars($detail['qty']) ?>">
+                                                                                </td>
+                                                                            <?php endif; ?>
+<!-- 
                                                                         <td class="text-right" style="background-color: #e6f3ff;">
                                                                             <input type="text"
                                                                                 class="form-control form-control-sm quantity text-right"
@@ -516,13 +593,13 @@ $newPoNo = PurchaseOrder::getLastPoNo();
                                                                                 name="quantity[]"
                                                                                 value="<?= htmlspecialchars($detail['qty']) ?>"
                                                                                 placeholder="Qty" disabled>
-                                                                        </td>
+                                                                        </td> -->
                                                                         <td class="text-right">
                                                                             <input type="text"
                                                                                 class="form-control form-control-sm cost text-right"
                                                                                 name="cost[]"
                                                                                 value="<?= number_format($detail['cost'], 2, '.', ',') ?>"
-                                                                                placeholder="Enter Cost" disabled>
+                                                                                placeholder="Enter Cost" <?php echo ($purchase_order->po_status != 4) ? 'disabled' : ''; ?>>
                                                                         </td>
                                                                         <td class="text-right">
                                                                             <input type="text"
@@ -534,12 +611,12 @@ $newPoNo = PurchaseOrder::getLastPoNo();
                                                                         <td>
                                                                             <select
                                                                                 class="form-control form-control-sm discount-dropdown select2"
-                                                                                name="discount_percentage[]" disabled>
+                                                                                name="discount_percentage[]" <?php echo ($purchase_order->po_status != 4) ? 'disabled' : ''; ?>>
                                                                                 <?php foreach ($discounts as $discount): ?>
                                                                                     <option
                                                                                         value="<?= htmlspecialchars($discount->discount_rate) ?>"
                                                                                         <?= ($discount->discount_rate == $detail['discount_percentage']) ? 'selected' : '' ?>>
-                                                                                        <?= htmlspecialchars($discount->discount_description) ?>
+                                                                                        <?= htmlspecialchars($discount->discount_name) ?>
                                                                                     </option>
                                                                                 <?php endforeach; ?>
                                                                             </select>
@@ -553,22 +630,22 @@ $newPoNo = PurchaseOrder::getLastPoNo();
                                                                         </td>
                                                                         <td class="text-right">
                                                                             <input type="text"
-                                                                                class="form-control form-control-sm taxable_amount text-right"
-                                                                                name="taxable_amount[]"
+                                                                                class="form-control form-control-sm net_amount text-right"
+                                                                                name="net_amount[]"
                                                                                 value="<?= number_format($detail['net_amount'], 2, '.', ',') ?>"
                                                                                 readonly>
                                                                         </td>
                                                                         <td class="text-right">
                                                                             <input type="text"
-                                                                                class="form-control form-control-sm net_amount text-right"
-                                                                                name="net_amount[]"
+                                                                                class="form-control form-control-sm taxable_amount text-right"
+                                                                                name="taxable_amount[]"
                                                                                 value="<?= number_format($detail['taxable_amount'], 2, '.', ',') ?>"
                                                                                 readonly>
                                                                         </td>
                                                                         <td>
                                                                             <select
                                                                                 class="form-control form-control-sm input_vat_percentage select2"
-                                                                                name="input_vat_percentage[]" disabled>
+                                                                                name="input_vat_percentage[]" <?php echo ($purchase_order->po_status != 4) ? 'disabled' : ''; ?>>
                                                                                 <?php foreach ($input_vats as $vat): ?>
                                                                                     <option
                                                                                         value="<?= htmlspecialchars($vat->input_vat_rate) ?>"
@@ -777,16 +854,23 @@ $newPoNo = PurchaseOrder::getLastPoNo();
             $('#delivery_date').val(calculateDeliveryDate(terms));
         });
 
-        // $('#terms').select2({
-        //     theme: 'classic', // Use 'bootstrap-5' for Bootstrap 5, 'bootstrap-4' for Bootstrap 4
-        //     width: '100%',
-        //     allowClear: false
-        // });
+        $('#terms').select2({
+            theme: 'classic', // Use 'bootstrap-5' for Bootstrap 5, 'bootstrap-4' for Bootstrap 4
+            width: '100%',
+            allowClear: false
+        });
 
         $('#vendor_id').select2({
             theme: 'classic', // Use 'bootstrap-5' for Bootstrap 5, 'bootstrap-4' for Bootstrap 4
             width: '100%',
             allowClear: false
+        });
+
+        $('#location').select2({
+            theme: 'classic', // Use 'bootstrap-5' for Bootstrap 5, 'bootstrap-4' for Bootstrap 4
+            width: '100%',
+            placeholder: 'Select Location',
+            allowClear: true
         });
 
 
@@ -834,8 +918,9 @@ $newPoNo = PurchaseOrder::getLastPoNo();
                     <td><input type="text" class="form-control form-control-sm amount text-right" name="amount[]" placeholder="Amount" readonly></td>
                     <td><select class="form-control form-control-sm discount-dropdown select2" name="discount_percentage[]">${discountDropdownOptions}</select></td>
                     <td><input type="text" class="form-control form-control-sm discount_amount text-right" name="discount_amount[]" readonly></td>
+                     <td><input type="text" class="form-control form-control-sm net_amount text-right" name="net_amount[]" readonly></td>
                     <td><input type="text" class="form-control form-control-sm taxable_amount text-right" name="taxable_amount[]" readonly></td>
-                    <td><input type="text" class="form-control form-control-sm net_amount text-right" name="net_amount[]" readonly></td>
+                   
                     <td><select class="form-control form-control-sm input_vat_percentage select2" name="input_vat_percentage[]">${inputVatDropdownOptions}</select></td>
                     <td><input type="text" class="form-control form-control-sm input_vat_amount text-right" name="input_vat_amount[]" readonly></td>
                 
@@ -856,67 +941,133 @@ $newPoNo = PurchaseOrder::getLastPoNo();
         }
 
 
-        function attachRowEventListeners(row) {
-            row.find('.quantity, .cost, .discount-dropdown, .input_vat_percentage').on('input change', function() {
-                calculateRowValues(row);
-                calculateTotalAmount();
-            });
-        }
+        $(document).ready(function() {
+    // Attach event listeners to cost, discount percentage, and input vat percentage
+    $('.cost, .discount-dropdown, .input_vat_percentage').on('change', function() {
+        // Get the row where the change occurred
+        var row = $(this).closest('tr');
 
-        function calculateRowValues(row) {
-            const quantity = parseFloat(row.find('.quantity').val()) || 0;
-            const cost = parseFloat(row.find('.cost').val()) || 0;
-            const discountPercentage = parseFloat(row.find('.discount-dropdown').val()) || 0;
-            const vatPercentage = parseFloat(row.find('.input_vat_percentage').val()) || 0 || 0;
+        // Perform recalculation for this row
+        recalculateRow(row);
+    });
 
-            const amount = quantity * cost;
-            const discountAmount = (amount * discountPercentage) / 100;
-            const netAmountBeforeVat = amount - discountAmount;
-            const vatAmount = (netAmountBeforeVat / (1 + vatPercentage / 100)) * (vatPercentage / 100);
-            const netAmount = netAmountBeforeVat - vatAmount;
+    // Function to recalculate the values in the row
+    function recalculateRow(row) {
+        // Get the values from the row
+        var quantity = parseFloat(row.find('.pr_quantity').val()) || 0;
+        var cost = parseFloat(row.find('.cost').val().replace(/,/g, '')) || 0;
+        var discountPercentage = parseFloat(row.find('.discount-dropdown').val()) || 0;
+        var inputVatPercentage = parseFloat(row.find('.input_vat_percentage').val()) || 0;
 
-            row.find('.amount').val(amount.toFixed(2));
-            row.find('.discount_amount').val(discountAmount.toFixed(2));
-            row.find('.taxable_amount').val(netAmountBeforeVat.toFixed(2));
-            row.find('.input_vat_amount').val(vatAmount.toFixed(2));
-            row.find('.net_amount').val(netAmount.toFixed(2));
-        }
+        // Calculate amount (quantity * cost)
+        var amount = quantity * cost;
+        row.find('.amount').val(amount.toFixed(2));
 
-        function calculateTotalAmount() {
-            let totalAmount = 0;
-            let totalDiscountAmount = 0;
-            let totalNetAmountBeforeVat = 0;
-            let totalVatAmount = 0;
+        // Calculate discount amount (amount * discountPercentage / 100)
+        var discountAmount = (amount * discountPercentage) / 100;
+        row.find('.discount_amount').val(discountAmount.toFixed(2));
 
-            // Calculate totals for each field
-            $('.amount').each(function() {
-                totalAmount += parseFloat($(this).val()) || 0;
-            });
+        // Calculate net amount (amount - discountAmount)
+        var netAmount = amount - discountAmount;
+        row.find('.net_amount').val(netAmount.toFixed(2));
 
-            $('.discount_amount').each(function() {
-                totalDiscountAmount += parseFloat($(this).val()) || 0;
-            });
+        // Calculate taxable amount (netAmount is taxable amount in this case)
+        row.find('.taxable_amount').val(netAmount.toFixed(2));
 
-            $('.taxable_amount').each(function() {
-                totalNetAmountBeforeVat += parseFloat($(this).val()) || 0;
-            });
+        // Calculate input VAT amount (taxableAmount * inputVatPercentage / 100)
+        var inputVatAmount = (netAmount * inputVatPercentage) / 100;
+        row.find('.input_vat_amount').val(inputVatAmount.toFixed(2));
 
-            $('.input_vat_amount').each(function() {
-                totalVatAmount += parseFloat($(this).val()) || 0;
-            });
+        // Optionally update totals if needed for the entire table
+        recalculateTotals();
+    }
 
-            // Total net amount is the net amount before VAT minus the total VAT amount
-            const totalNetAmount = totalNetAmountBeforeVat - totalVatAmount;
+    // Function to recalculate totals for all rows
+    function recalculateTotals() {
+        var totalAmount = 0;
+        var totalDiscount = 0;
+        var totalNetAmount = 0;
+        var totalTaxableAmount = 0;
+        var totalVat = 0;
 
-            // Update totals in the form
-            $("#gross_amount").val(totalAmount.toFixed(2));
-            $("#discount_amount").val(totalDiscountAmount.toFixed(2));
-            $("#net_amount_due").val(totalNetAmountBeforeVat.toFixed(2));
-            $("#input_vat_amount").val(totalVatAmount.toFixed(2));
-            $("#total_amount_due").val(totalNetAmount.toFixed(2)); // This should be the total net amount after VAT deduction
-        }
+        $('tr').each(function() {
+            var row = $(this);
+            totalAmount += parseFloat(row.find('.amount').val().replace(/,/g, '')) || 0;
+            totalDiscount += parseFloat(row.find('.discount_amount').val().replace(/,/g, '')) || 0;
+            totalNetAmount += parseFloat(row.find('.net_amount').val().replace(/,/g, '')) || 0;
+            totalTaxableAmount += parseFloat(row.find('.taxable_amount').val().replace(/,/g, '')) || 0;
+            totalVat += parseFloat(row.find('.input_vat_amount').val().replace(/,/g, '')) || 0;
+        });
+
+        // Update total fields
+        $('#totalAmount').val(totalAmount.toFixed(2));
+        $('#totalDiscount').val(totalDiscount.toFixed(2));
+        $('#totalNetAmount').val(totalNetAmount.toFixed(2));
+        $('#totalTaxableAmount').val(totalTaxableAmount.toFixed(2));
+        $('#totalVat').val(totalVat.toFixed(2));
+    }
+});
 
 
+function attachRowEventListeners(row) {
+    row.find('.quantity, .cost, .discount-dropdown, .input_vat_percentage').on('input change', function() {
+        calculateRowValues(row);
+        calculateTotalAmount();
+    });
+}
+
+function calculateRowValues(row) {
+    const quantity = parseFloat(row.find('.quantity').val()) || 0;
+    const cost = parseFloat(row.find('.cost').val()) || 0;
+    const discountPercentage = parseFloat(row.find('.discount-dropdown').val()) || 0;
+    const vatPercentage = parseFloat(row.find('.input_vat_percentage').val()) || 0;
+
+    const amount = quantity * cost;
+    const discountAmount = (amount * discountPercentage) / 100;
+    const netAmountBeforeVat = amount - discountAmount;
+    const vatAmount = (netAmountBeforeVat / (1 + vatPercentage / 100)) * (vatPercentage / 100);
+    const netAmount = netAmountBeforeVat - vatAmount;
+
+    row.find('.amount').val(amount.toFixed(2));
+    row.find('.discount_amount').val(discountAmount.toFixed(2));
+    row.find('.taxable_amount').val(netAmountBeforeVat.toFixed(2));
+    row.find('.input_vat_amount').val(vatAmount.toFixed(2));
+    row.find('.net_amount').val(netAmount.toFixed(2));
+}
+
+function calculateTotalAmount() {
+    let totalAmount = 0;
+    let totalDiscountAmount = 0;
+    let totalNetAmountBeforeVat = 0;
+    let totalVatAmount = 0;
+
+    // Calculate totals for each field
+    $('.amount').each(function() {
+        totalAmount += parseFloat($(this).val()) || 0;
+    });
+
+    $('.discount_amount').each(function() {
+        totalDiscountAmount += parseFloat($(this).val()) || 0;
+    });
+
+    $('.taxable_amount').each(function() {
+        totalNetAmountBeforeVat += parseFloat($(this).val()) || 0;
+    });
+
+    $('.input_vat_amount').each(function() {
+        totalVatAmount += parseFloat($(this).val()) || 0;
+    });
+
+    // Total net amount is the net amount before VAT minus the total VAT amount
+    const totalNetAmount = totalNetAmountBeforeVat - totalVatAmount;
+
+    // Update totals in the form
+    $("#gross_amount").val(totalAmount.toFixed(2));
+    $("#discount_amount").val(totalDiscountAmount.toFixed(2));
+    $("#net_amount_due").val(totalNetAmountBeforeVat.toFixed(2));
+    $("#input_vat_amount").val(totalVatAmount.toFixed(2));
+    $("#total_amount_due").val(totalNetAmount.toFixed(2)); // This should be the total net amount after VAT deduction
+}
 
 
 
@@ -924,11 +1075,12 @@ $newPoNo = PurchaseOrder::getLastPoNo();
             const items = [];
             $('#itemTableBody tr').each(function() {
                 items.push({
+                    pr_no: $(this).find('select[name="pr_no[]"]').val(), // Add this line
                     item_id: $(this).find('select[name="item_id[]"]').val(),
                     cost_center_id: $(this).find('select[name="cost_center_id[]"]').val(),
                     description: $(this).find('input[name="item_purchase_description[]"]').val(),
                     uom: $(this).find('input[name="uom_name[]"]').val(),
-                    quantity: $(this).find('input[name="quantity[]"]').val(),
+                    qty: $(this).find('input[name="quantity[]"]').val(),
                     cost: $(this).find('input[name="cost[]"]').val(),
                     amount: $(this).find('input[name="amount[]"]').val(),
                     discount_percentage: $(this).find('select[name="discount_percentage[]"]').val(),
@@ -937,6 +1089,8 @@ $newPoNo = PurchaseOrder::getLastPoNo();
                     net_amount: $(this).find('input[name="net_amount[]"]').val(),
                     input_vat_percentage: $(this).find('select[name="input_vat_percentage[]"]').val(),
                     input_vat_amount: $(this).find('input[name="input_vat_amount[]"]').val(),
+                    discount_account_id: $(this).find('.discount_percentage option:selected').data('account-id'),
+                    input_vat_account_id: $(this).find('.input_vat_percentage option:selected').data('account-id')
                 });
             });
             return items;
@@ -964,7 +1118,7 @@ $newPoNo = PurchaseOrder::getLastPoNo();
                 document.getElementById('loadingOverlay').style.display = 'flex';
                 
                 const formData = {
-                    action: 'update_draft',
+                    action: 'save_final',
                     id: id,
                     po_no: $('#po_no').val(),
                     item_data: JSON.stringify(items)
@@ -1009,6 +1163,97 @@ $newPoNo = PurchaseOrder::getLastPoNo();
                             icon: 'error',
                             title: 'Error',
                             text: 'An error occurred while saving the purchase order: ' + textStatus
+                        });
+                    }
+                });
+            }
+        });
+
+        $('#saveDraftBtn').click(function(event) {
+            event.preventDefault();
+
+            // Check if the table has any rows
+            if ($('#itemTableBody tr').length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No Items',
+                    text: 'You must add at least one item before updating the draft.'
+                });
+                return false;
+            }
+
+            const items = gatherTableItems();
+            $('#item_data').val(JSON.stringify(items));
+
+            const purchaseStatus = <?= json_encode($purchase_order->po_status) ?>;
+            const id = <?= json_encode($purchase_order->po_id) ?>;
+
+            if (purchaseStatus == 4) {
+                // Show loading overlay
+                document.getElementById('loadingOverlay').style.display = 'flex';
+
+                // Gather all form data
+                const formData = {
+                    action: 'update_draft',
+                    id: id,
+                    po_no: $('#po_no').val(),
+                    vendor_id: $('#vendor_id').val(),
+                    vendor_address: $('#vendor_address').val(),
+                    tin: $('#tin').val(),
+                    terms: $('#terms').val(),
+                    po_date: $('#po_date').val(),
+                    delivery_date: $('#delivery_date').val(),
+                    memo: $('#memo').val(),
+                    location: $('#location').val(),
+                    gross_amount: $('#gross_amount').val(),
+                    discount_amount: $('#discount_amount').val(),
+                    net_amount_due: $('#net_amount_due').val(),
+                    input_vat_amount: $('#input_vat_amount').val(),
+                    vatable_amount: $('#vatable_amount').val(),
+                    zero_rated_amount: $('#zero_rated_amount').val(),
+                    vat_exempt_amount: $('#vat_exempt_amount').val(),
+                    total_amount_due: $('#total_amount_due').val(),
+                    item_data: JSON.stringify(items)
+                };
+
+                $.ajax({
+                    url: 'api/purchase_order_controller.php',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: formData,
+                    success: function(response) {
+                        document.getElementById('loadingOverlay').style.display = 'none';
+
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: 'Draft updated successfully!',
+                                showCancelButton: true,
+                                cancelButtonText: 'Close'
+                            }).then((result) => {
+                                if (result.isConfirmed && response.invoiceId) {
+                                    saveAsPDF(response.invoiceId); // Assuming you have a saveAsPDF function
+                                } else {
+                                    location.reload();
+                                }
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Error updating draft: ' + (response.message || 'Unknown error')
+                            });
+                        }
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        document.getElementById('loadingOverlay').style.display = 'none';
+                        console.error('AJAX error:', textStatus, errorThrown);
+                        console.log('Response Text:', jqXHR.responseText);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'An error occurred while updating the draft: ' + textStatus
                         });
                     }
                 });

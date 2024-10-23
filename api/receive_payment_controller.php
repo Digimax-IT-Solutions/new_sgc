@@ -68,12 +68,22 @@ if (post('action') === 'add') {
         $memo = post('memo');
         $summary_amount_due = post('summary_amount_due');
         $summary_applied_amount = post('summary_applied_amount');
+        $applied_credits_discount = post('applied_credits_discount');
         $created_by = $_SESSION['user_name'];
 
         // Decode JSON data for selected invoices
         $selected_invoices = json_decode(post('selected_invoices'), true);
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new Exception("Error decoding selected invoices data: " . json_last_error_msg());
+        }
+
+        // Process credit_nos for each invoice
+        foreach ($selected_invoices as &$invoice) {
+            if (isset($invoice['credit_no']) && !empty($invoice['credit_no'])) {
+                $invoice['credit_no'] = explode(',', $invoice['credit_no']);
+            } else {
+                $invoice['credit_no'] = [];
+            }
         }
 
         // Call the Payment::add method to insert the payment into the database
@@ -89,7 +99,8 @@ if (post('action') === 'add') {
             $summary_amount_due,
             $summary_applied_amount,
             $selected_invoices,
-            $created_by
+            $created_by,
+            $applied_credits_discount
         );
 
         // Set success message
@@ -101,15 +112,15 @@ if (post('action') === 'add') {
     } catch (Exception $ex) {
         // Handle exceptions and set error message
         flashMessage('add_payment', 'Error: ' . $ex->getMessage(), FLASH_ERROR);
-
         // Optional: Log the error for debugging
         error_log('Error in payment submission: ' . $ex->getMessage());
-
         // Return error response as JSON
         echo json_encode(['success' => false, 'message' => 'Error: ' . $ex->getMessage()]);
         exit;
     }
 }
+
+
 // ==========================================================================
 // WARNING: DO NOT MODIFY THE CODE ABOVE!
 // This section is critical for the functionality of the payment processing.
@@ -162,7 +173,7 @@ if (post('action') === 'save_draft') {
         $memo = post('memo');
         $summary_amount_due = post('summary_amount_due');
         $summary_applied_amount = post('summary_applied_amount');
-        $created_by = $_SESSION['user_name'];
+        $applied_credits_discount = post('applied_credits_discount');
 
         // Decode JSON data for selected invoices
         $selected_invoices = json_decode(post('selected_invoices'), true);
@@ -181,7 +192,7 @@ if (post('action') === 'save_draft') {
             $summary_amount_due,
             $summary_applied_amount,
             $selected_invoices,
-            $created_by
+            $applied_credits_discount
         );
 
         echo json_encode(['success' => true, 'message' => 'Payment saved as draft successfully', 'payment_id' => $result]);
@@ -206,6 +217,7 @@ if (post('action') === 'update_draft') {
         $memo = (string)post('memo');
         $summary_amount_due = (float)post('summary_amount_due');
         $summary_applied_amount = (float)post('summary_applied_amount');
+        $applied_credits_discount = (float)post('applied_credits_discount');
         $created_by = $_SESSION['user_name'] ?? 'unknown';
 
         $selected_invoices_json = post('selected_invoices');
@@ -220,9 +232,6 @@ if (post('action') === 'update_draft') {
         if (!$payment_id || !$customer_id || !$selected_invoices) {
             throw new Exception("Payment ID, customer ID, and selected invoices are required.");
         }
-
-        // Log received data for debugging
-        error_log('Received data: ' . print_r($_POST, true));
 
         // Update the payment draft status and cr_no
         $stmt = $connection->prepare("
@@ -251,36 +260,9 @@ if (post('action') === 'update_draft') {
                 $summary_amount_due,
                 $summary_applied_amount,
                 $selected_invoices,
-                $created_by
+                $created_by,
+                $applied_credits_discount
             );
-
-            // Fetch and update payment status based on invoice balance_due
-            foreach ($selected_invoices as $invoice) {
-                $invoice_id = (int)$invoice['invoice_id'];
-
-                // Fetch balance_due from sales_invoice
-                $sql1 = "SELECT balance_due FROM sales_invoice WHERE id = :invoice_id";
-                $stmt1 = $connection->prepare($sql1);
-                $stmt1->execute(['invoice_id' => $invoice_id]);
-                $invoice_data = $stmt1->fetch(PDO::FETCH_ASSOC);
-
-                if ($invoice_data) {
-                    $balance_due = $invoice_data['balance_due'];
-
-                    // Determine payment status based on balance_due
-                    $payment_status = ($balance_due <= 0) ? 1 : 2;
-
-                    // Update payment status
-                    $sql2 = "UPDATE payments
-                            SET status = :status
-                            WHERE id = :payment_id";
-                    $stmt2 = $connection->prepare($sql2);
-                    $stmt2->execute([
-                        'status' => $payment_status,
-                        'payment_id' => $payment_id
-                    ]);
-                }
-            }
 
             $response = [
                 'success' => true,
@@ -291,12 +273,14 @@ if (post('action') === 'update_draft') {
             throw new Exception("Failed to update payment draft.");
         }
     } catch (Exception $ex) {
-        $response = ['success' => false, 'message' => 'Error: ' . $ex->getMessage()];
+        $response = [
+            'success' => false,
+            'message' => 'Error: ' . $ex->getMessage()
+        ];
         error_log('Error updating draft payment: ' . $ex->getMessage());
     }
 
     // Send JSON response
-    header('Content-Type: application/json');
     echo json_encode($response);
     exit;
 }

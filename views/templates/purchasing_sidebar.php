@@ -72,12 +72,6 @@ function shouldSidebarBeCollapsed()
                     <i class="fas fa-shopping-cart align-middle"></i> <span class="align-middle">Purchase Order</span>
                 </a>
             </li>
-
-            <li class="sidebar-item <?php echo getCurrentPage() == 'purchasing_receive_item' ? 'active' : ''; ?>">
-                <a class='sidebar-link' href='purchasing_receive_item'>
-                    <i class="fas fa-box align-middle"></i> Receive items
-                </a>
-            </li>
         </ul>
     </div>
 </nav>

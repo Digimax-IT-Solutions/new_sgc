@@ -1,8 +1,12 @@
 <?php
 // Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
-
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('other_name');
 // Include necessary files and retrieve data
 $other_names = OtherNameList::all();
 
@@ -61,9 +65,11 @@ $page = 'other_name_list';
                     <?php displayFlashMessage('update_uom'); ?>
                     <div class="card">
                         <div class="card-body">
-                            <form method="POST" action="api/masterlist/other_name_list_controller.php" id="othernameForm">
+                            <form method="POST" action="api/masterlist/other_name_list_controller.php"
+                                id="othernameForm">
                                 <input type="hidden" name="action" id="modalAction" value="<?= $action ?>" />
-                                <input type="hidden" name="id" id="other_nameId" value="<?= $other_name ? $other_name->id : '' ?>" />
+                                <input type="hidden" name="id" id="other_nameId"
+                                    value="<?= $other_name ? $other_name->id : '' ?>" />
                                 <div class="row mb-3">
                                     <label for="other_name" class="col-sm-2 col-form-label">Other Name</label>
                                     <div class="col-sm-4">
@@ -73,19 +79,20 @@ $page = 'other_name_list';
                                     </div>
                                     <label for="other_name_code" class="col-sm-2 col-form-label">Other Name Code</label>
                                     <div class="col-sm-4">
-                                        <input type="text" class="form-control" id="other_name_code" name="other_name_code"
-                                            placeholder="Enter Other Name Code"
+                                        <input type="text" class="form-control" id="other_name_code"
+                                            name="other_name_code" placeholder="Enter Other Name Code"
                                             value="<?= $other_name ? htmlspecialchars($other_name->other_name_code) : '' ?>">
                                     </div>
                                 </div>
                                 <div class="row mb-3">
                                     <label for="account_number" class="col-sm-2 col-form-label">Account Number</label>
                                     <div class="col-sm-4">
-                                        <input type="text" class="form-control" id="account_number" name="account_number"
-                                            placeholder="Enter Account Number"
+                                        <input type="text" class="form-control" id="account_number"
+                                            name="account_number" placeholder="Enter Account Number"
                                             value="<?= $other_name ? htmlspecialchars($other_name->account_number) : '' ?>">
                                     </div>
-                                    <label for="other_name_address" class="col-sm-2 col-form-label">Other Name Address</label>
+                                    <label for="other_name_address" class="col-sm-2 col-form-label">Other Name
+                                        Address</label>
                                     <div class="col-sm-4">
                                         <input type="text" class="form-control" id="other_name_address"
                                             name="other_name_address" placeholder="Enter Other Name Address"
@@ -95,8 +102,8 @@ $page = 'other_name_list';
                                 <div class="row mb-3">
                                     <label for="contact_number" class="col-sm-2 col-form-label">Contact #</label>
                                     <div class="col-sm-4">
-                                        <input type="text" class="form-control" id="contact_number" name="contact_number"
-                                            placeholder="Enter Contact #"
+                                        <input type="text" class="form-control" id="contact_number"
+                                            name="contact_number" placeholder="Enter Contact #"
                                             value="<?= $other_name ? htmlspecialchars($other_name->contact_number) : '' ?>">
                                     </div>
                                     <label for="email" class="col-sm-2 col-form-label">Email</label>

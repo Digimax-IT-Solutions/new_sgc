@@ -1,9 +1,13 @@
 <?php
 
 // Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
-
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('cost_center');
 $cost_centers = CostCenter::all();
 ?>
 
@@ -32,14 +36,15 @@ $cost_centers = CostCenter::all();
                     <!-- Default box -->
                     <div class="card">
                         <div class="card-body">
-                            <?php if (isset($_GET['id'])): 
+                            <?php if (isset($_GET['id'])):
                                 $id = $_GET['id'];
                                 $cost_center = CostCenter::find($id);
                                 if ($cost_center): ?>
                                     <form method="POST" action="api/masterlist/cost_center_controller.php">
                                         <input type="hidden" name="action" value="update" />
-                                        <input type="hidden" name="id" value="<?= htmlspecialchars($cost_center->id, ENT_QUOTES, 'UTF-8') ?>" />
-                                        
+                                        <input type="hidden" name="id"
+                                            value="<?= htmlspecialchars($cost_center->id, ENT_QUOTES, 'UTF-8') ?>" />
+
                                         <div class="row mb-3">
                                             <label for="code" class="col-sm-2 col-form-label">Code</label>
                                             <div class="col-sm-4">
@@ -62,7 +67,7 @@ $cost_centers = CostCenter::all();
                                     </form>
                                 <?php else: ?>
                                     <p>Cost Center not found.</p>
-                                <?php endif; 
+                                <?php endif;
                             else: ?>
                                 <p>No ID provided.</p>
                             <?php endif; ?>

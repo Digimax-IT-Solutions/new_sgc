@@ -133,12 +133,13 @@ class SalesReturn
             $account_type_name = $stmt->fetchColumn();
 
             // Determine the sales_return status and balance due based on the account type
-            $sales_return_status = 0;
+            $status = 0;
             $balance_due = $total_amount_due;
-            if ($account_type_name == 'Other Current Assets') {
-                $sales_return_status = 1;
+            if ($account_type_name == 'Bank' || $account_type_name == 'Other Current Assets') {
+                $status = 1;
                 $balance_due = 0;
             }
+            
 
 
             // If it's an Accounts Receivable, update the customer's balance
@@ -154,7 +155,7 @@ class SalesReturn
                 customer_id, payment_method, location, terms, memo, gross_amount,
                 discount_amount, net_amount_due, vat_amount, vatable_amount,
                 zero_rated_amount, vat_exempt_amount, tax_withheld_percentage,
-                tax_withheld_amount, total_amount_due, sales_return_status, balance_due
+                tax_withheld_amount, total_amount_due, status, balance_due
             ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
 
             $stmt->execute([
@@ -180,7 +181,7 @@ class SalesReturn
                 $tax_withheld_percentage,
                 $tax_withheld_amount,
                 $total_amount_due,
-                $sales_return_status,
+                $status,
                 $balance_due
             ]);
 
@@ -195,6 +196,7 @@ class SalesReturn
                 $transaction_type,
                 $sales_return_date,
                 $sales_return_number,
+                $location,
                 $customer_name,
                 null,
                 null,
@@ -210,6 +212,7 @@ class SalesReturn
                 $transaction_type,
                 $sales_return_date,
                 $sales_return_number,
+                $location,
                 $customer_name,
                 null,
                 null,
@@ -225,6 +228,7 @@ class SalesReturn
                 $transaction_type,
                 $sales_return_date,
                 $sales_return_number,
+                $location,
                 $customer_name,
                 null,
                 null,
@@ -248,7 +252,12 @@ class SalesReturn
                     $item['net_amount_before_sales_tax'],
                     $item['net_amount'],
                     $item['sales_tax_percentage'],
-                    $item['sales_tax_amount']
+                    $item['sales_tax_amount'],
+                    $item['output_vat_id'],
+                    $item['discount_account_id'],
+                    $item['cogs_account_id'],
+                    $item['income_account_id'],
+                    $item['asset_account_id']
                 );
 
                 // Log discount for this item
@@ -257,6 +266,7 @@ class SalesReturn
                     $transaction_type,
                     $sales_return_date,
                     $sales_return_number,
+                    $location,
                     $customer_name,
                     $item['item_name'],
                     $item['quantity'],
@@ -272,6 +282,7 @@ class SalesReturn
                     $transaction_type,
                     $sales_return_date,
                     $sales_return_number,
+                    $location,
                     $customer_name,
                     $item['item_name'],
                     $item['quantity'],
@@ -287,6 +298,7 @@ class SalesReturn
                     $transaction_type,
                     $sales_return_date,
                     $sales_return_number,
+                    $location,
                     $customer_name,
                     $item['item_name'],
                     $item['quantity'],
@@ -302,6 +314,7 @@ class SalesReturn
                     $transaction_type,
                     $sales_return_date,
                     $sales_return_number,
+                    $location,
                     $customer_name,
                     $item['item_name'],
                     $item['quantity'],
@@ -318,6 +331,7 @@ class SalesReturn
                 $transaction_type,
                 $sales_return_date,
                 $sales_return_number,
+                $location,
                 $customer_name,
                 null,
                 null,
@@ -333,6 +347,7 @@ class SalesReturn
                 $transaction_type,
                 $sales_return_date,
                 $sales_return_number,
+                $location,
                 $customer_name,
                 null,
                 null,
@@ -352,7 +367,7 @@ class SalesReturn
         }
     }
 
-    public static function addSalesReturnItems($sales_return_id, $item_id, $quantity, $cost, $amount, $discount_percentage, $discount_amount, $net_amount_before_sales_tax, $net_amount, $sales_tax_percentage, $sales_tax_amount)
+    public static function addSalesReturnItems($sales_return_id, $item_id, $quantity, $cost, $amount, $discount_percentage, $discount_amount, $net_amount_before_sales_tax, $net_amount, $sales_tax_percentage, $sales_tax_amount,$output_vat_id, $discount_account_id, $cogs_account_id, $income_account_id, $asset_account_id)
     {
         global $connection;
 
@@ -367,8 +382,13 @@ class SalesReturn
                 net_amount_before_sales_tax, 
                 net_amount, 
                 sales_tax_percentage, 
-                sales_tax_amount
-            ) VALUES (?,?,?,?,?,?,?,?,?,?,?)
+                sales_tax_amount,
+                output_vat_id,
+                discount_account_id,
+                cogs_account_id,
+                income_account_id,
+                asset_account_id
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         ");
 
         $stmt->execute([
@@ -382,7 +402,12 @@ class SalesReturn
             $net_amount_before_sales_tax,
             $net_amount,
             $sales_tax_percentage,
-            $sales_tax_amount
+            $sales_tax_amount,
+            $output_vat_id,
+            $discount_account_id,
+            $cogs_account_id,
+            $income_account_id,
+            $asset_account_id
         ]);
     }
 
@@ -405,7 +430,7 @@ class SalesReturn
     }
 
     // ACCOUNTING LOGS
-    private static function logAuditTrail($general_journal_id, $transaction_type, $transaction_date, $ref_no, $customer_name, $item, $qty_sold, $account_id, $debit, $credit, $created_by)
+    private static function logAuditTrail($general_journal_id, $transaction_type, $transaction_date, $ref_no, $location, $customer_name, $item, $qty_sold, $account_id, $debit, $credit, $created_by)
     {
         global $connection;
 
@@ -417,6 +442,7 @@ class SalesReturn
                     transaction_type,
                     transaction_date,
                     ref_no,
+                    location,
                     name,
                     item,
                     qty_sold,
@@ -425,7 +451,7 @@ class SalesReturn
                     credit,
                     created_by,
                     created_at
-                ) VALUES (?,?,?,?,?,?,?,?,?,?,?, NOW())
+                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?, NOW())
             ");
 
         $stmt->execute([
@@ -433,6 +459,7 @@ class SalesReturn
             $transaction_type,
             $transaction_date,
             $ref_no,
+            $location,
             $customer_name,
             $item,
             $negative_qty_sold,
@@ -473,8 +500,6 @@ class SalesReturn
         return $result['last_transaction_id'] ?? null;
     }
 
-
-
     public static function all()
     {
         global $connection;
@@ -499,6 +524,7 @@ class SalesReturn
                 'customer_name' => $row['customer_name'],
                 'billing_address' => $row['billing_address'],
                 'memo' => $row['memo'],
+                'location' => $row['location'],
                 'total_amount_due' => $row['total_amount_due'],
                 'sales_return_status' => $row['sales_return_status'],
                 'status' => $row['status'],
@@ -539,7 +565,7 @@ class SalesReturn
                 sr.tax_withheld_amount,
                 sr.total_amount_due,
                 sr.sales_return_status,
-                sr.status as sales_return_status_code,
+                sr.status,
                 sr.print_status,
                 c.id as customer_id,
                 c.customer_name,
@@ -588,6 +614,11 @@ class SalesReturn
                 srd.net_amount,
                 srd.sales_tax_percentage,
                 srd.sales_tax_amount,
+                srd.output_vat_id,
+                srd.discount_account_id,
+                srd.cogs_account_id,
+                srd.income_account_id,
+                srd.asset_account_id,
                 i.id AS item_id,
                 i.item_name,
                 i.item_code,
@@ -631,7 +662,7 @@ class SalesReturn
     {
         global $connection;
 
-        $stmt = $connection->prepare('SELECT COUNT(*) as unpaid_count FROM sales_return WHERE sales_return_status = 0');
+        $stmt = $connection->prepare('SELECT COUNT(*) as unpaid_count FROM sales_return WHERE status = 0');
         $stmt->execute();
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -642,7 +673,7 @@ class SalesReturn
     {
         global $connection;
 
-        $stmt = $connection->prepare('SELECT COUNT(*) as paid_count FROM sales_return WHERE sales_return_status = 1');
+        $stmt = $connection->prepare('SELECT COUNT(*) as paid_count FROM sales_return WHERE status = 1');
         $stmt->execute();
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -659,7 +690,7 @@ class SalesReturn
         SELECT COUNT(*) as overdue_count 
         FROM sales_return 
         WHERE sales_return_due_date < :currentDate 
-        AND sales_return_status = 0 
+        AND status = 0 
         AND balance_due > 0
     ');
 
@@ -703,7 +734,7 @@ class SalesReturn
         INNER JOIN chart_of_account coa ON si.sales_return_account_id = coa.id
         INNER JOIN account_types at ON coa.account_type_id = at.id
         WHERE si.customer_id = :customer_id
-        AND si.sales_return_status = 0 
+        AND si.status = 0 
         AND si.status = 1
         AND at.name = "Accounts Receivable"
         ';
@@ -729,138 +760,6 @@ class SalesReturn
         }
 
         return $sales_returns;
-    }
-
-
-    public static function update(
-        $sales_return_id,
-        $sales_return_number,
-        $sales_return_date,
-        $sales_return_account_id,
-        $sales_return_due_date,
-        $customer_id,
-        $payment_method,
-        $location,
-        $terms,
-        $memo,
-        $gross_amount,
-        $discount_amount,
-        $net_amount_due,
-        $vat_amount,
-        $vatable_amount,
-        $zero_rated_amount,
-        $vat_exempt_amount,
-        $tax_withheld_percentage,
-        $tax_withheld_amount,
-        $total_amount_due
-    ) {
-        // Get database connection
-        global $connection;
-
-        // Start transaction
-        $connection->beginTransaction();
-
-        try {
-            // Prepare and execute the update statement
-            $stmt = $connection->prepare("
-                UPDATE sales_return
-                SET 
-                    sales_return_number = :sales_return_number,
-                    sales_return_date = :sales_return_date,
-                    sales_return_account_id = :sales_return_account_id,
-                    sales_return_due_date = :sales_return_due_date,
-                    customer_id = :customer_id,
-                    payment_method = :payment_method,
-                    location = :location,
-                    terms = :terms,
-                    memo = :memo,
-                    gross_amount = :gross_amount,
-                    discount_amount = :discount_amount,
-                    net_amount_due = :net_amount_due,
-                    vat_amount = :vat_amount,
-                    vatable_amount = :vatable_amount,
-                    zero_rated_amount = :zero_rated_amount,
-                    vat_exempt_amount = :vat_exempt_amount,
-                    tax_withheld_percentage = :tax_withheld_percentage,
-                    tax_withheld_amount = :tax_withheld_amount,
-                    total_amount_due = :total_amount_due
-                WHERE id = :sales_return_id
-            ");
-            $stmt->execute([
-                ':sales_return_id' => $sales_return_id,
-                ':sales_return_number' => $sales_return_number,
-                ':sales_return_date' => $sales_return_date,
-                ':sales_return_account_id' => $sales_return_account_id,
-                ':sales_return_due_date' => $sales_return_due_date,
-                ':customer_id' => $customer_id,
-                ':payment_method' => $payment_method,
-                ':location' => $location,
-                ':terms' => $terms,
-                ':memo' => $memo,
-                ':gross_amount' => $gross_amount,
-                ':discount_amount' => $discount_amount,
-                ':net_amount_due' => $net_amount_due,
-                ':vat_amount' => $vat_amount,
-                ':vatable_amount' => $vatable_amount,
-                ':zero_rated_amount' => $zero_rated_amount,
-                ':vat_exempt_amount' => $vat_exempt_amount,
-                ':tax_withheld_percentage' => $tax_withheld_percentage,
-                ':tax_withheld_amount' => $tax_withheld_amount,
-                ':total_amount_due' => $total_amount_due,
-            ]);
-
-            // Commit transaction
-            $connection->commit();
-        } catch (Exception $e) {
-            // Rollback transaction if something failed
-            $connection->rollBack();
-            error_log("Update failed: " . $e->getMessage()); // Log error message
-            throw $e;
-        }
-    }
-
-    public static function updateDetails($sales_return_id, $item_data)
-    {
-        // Get database connection
-        global $connection;
-
-        // Start transaction
-        $connection->beginTransaction();
-
-        try {
-            // Delete existing details for the given sales_return_id
-            $stmt = $connection->prepare("DELETE FROM sales_return_details WHERE sales_return_id = :sales_return_id");
-            $stmt->execute([':sales_return_id' => $sales_return_id]);
-
-            // Insert new details into sales_return_details
-            foreach ($item_data as $item) {
-                $stmt = $connection->prepare("
-                    INSERT INTO sales_return_details (sales_return_id, item_id, quantity, cost, amount, discount_percentage, discount_amount, net_amount_before_sales_tax, net_amount, sales_tax_percentage, sales_tax_amount)
-                    VALUES (:sales_return_id, :item_id, :quantity, :cost, :amount, :discount_percentage, :discount_amount, :net_amount_before_sales_tax, :net_amount, :sales_tax_percentage, :sales_tax_amount)
-                ");
-                $stmt->execute([
-                    ':sales_return_id' => $sales_return_id,
-                    ':item_id' => $item['item_id'],
-                    ':quantity' => $item['quantity'],
-                    ':cost' => $item['cost'],
-                    ':amount' => $item['amount'],
-                    ':discount_percentage' => $item['discount_percentage'],
-                    ':discount_amount' => $item['discount_amount'],
-                    ':net_amount_before_sales_tax' => $item['net_amount_before_sales_tax'],
-                    ':net_amount' => $item['net_amount'],
-                    ':sales_tax_percentage' => $item['sales_tax_percentage'],
-                    ':sales_tax_amount' => $item['sales_tax_amount']
-                ]);
-            }
-
-            // Commit transaction
-            $connection->commit();
-        } catch (Exception $e) {
-            // Rollback transaction if something failed
-            $connection->rollBack();
-            error_log("Update details failed: " . $e->getMessage()); // Log error message
-            throw $e;
-        }
     }
 
     // GET LAST sales_return_NO 
@@ -901,8 +800,6 @@ class SalesReturn
             return null;
         }
     }
-    
-    
 
     public static function addDraft(
         $sales_return_date,
@@ -939,13 +836,13 @@ class SalesReturn
                 payment_method, location, terms, memo, gross_amount, discount_amount,
                 net_amount_due, vat_amount, vatable_amount, zero_rated_amount, vat_exempt_amount,
                 tax_withheld_percentage, tax_withheld_amount,
-                total_amount_due, sales_return_status
+                total_amount_due, status
             ) VALUES (
                 :sales_return_date, :sales_return_account_id, :customer_po, :so_no, :rep, :sales_return_due_date, :customer_id,
                 :payment_method, :location, :terms, :memo, :gross_amount, :discount_amount,
                 :net_amount_due, :vat_amount, :vatable_amount, :zero_rated_amount, :vat_exempt_amount,
                 :tax_withheld_percentage, :tax_withheld_amount,
-                :total_amount_due, :sales_return_status
+                :total_amount_due, :status
             )";
     
             $stmt = $connection->prepare($sql);
@@ -970,7 +867,7 @@ class SalesReturn
             $stmt->bindParam(':tax_withheld_percentage', $tax_withheld_percentage);
             $stmt->bindParam(':tax_withheld_amount', $tax_withheld_amount);
             $stmt->bindParam(':total_amount_due', $total_amount_due);
-            $stmt->bindValue(':sales_return_status', 4, PDO::PARAM_INT); // Set status to 0 for draft
+            $stmt->bindValue(':status', 4, PDO::PARAM_INT); // Set status to 0 for draft
     
             $stmt->execute();
     
@@ -980,9 +877,9 @@ class SalesReturn
             // Insert sales_return items
             if (!empty($items)) {
                 $itemSql = "INSERT INTO sales_return_details (
-                    sales_return_id, item_id, quantity, cost, amount, discount_percentage, discount_amount, net_amount_before_sales_tax, net_amount, sales_tax_percentage, sales_tax_amount
+                    sales_return_id, item_id, quantity, cost, amount, discount_percentage, discount_amount, net_amount_before_sales_tax, net_amount, sales_tax_percentage, sales_tax_amount, output_vat_id,  discount_account_id,  cogs_account_id,  income_account_id,  asset_account_id
                 ) VALUES (
-                    :sales_return_id, :item_id, :quantity, :cost, :amount, :discount_percentage, :discount_amount, :net_amount_before_sales_tax, :net_amount, :sales_tax_percentage, :sales_tax_amount
+                    :sales_return_id, :item_id, :quantity, :cost, :amount, :discount_percentage, :discount_amount, :net_amount_before_sales_tax, :net_amount, :sales_tax_percentage, :sales_tax_amount, :output_vat_id, :discount_account_id, :cogs_account_id, :income_account_id, :asset_account_id
                 )";
     
                 $itemStmt = $connection->prepare($itemSql);
@@ -1000,6 +897,19 @@ class SalesReturn
                     $itemStmt->bindParam(':net_amount', $item['net_amount']);
                     $itemStmt->bindParam(':sales_tax_percentage', $item['sales_tax_percentage']);
                     $itemStmt->bindParam(':sales_tax_amount', $item['sales_tax_amount']);
+
+                    // Handle potential empty values for the following fields
+                    $outputVatId = !empty($item['output_vat_id']) ? $item['output_vat_id'] : null;
+                    $discountAccountId = !empty($item['discount_account_id']) ? $item['discount_account_id'] : null;
+                    $cogsAccountId = !empty($item['cogs_account_id']) ? $item['cogs_account_id'] : null;
+                    $incomeAccountId = !empty($item['income_account_id']) ? $item['income_account_id'] : null;
+                    $assetAccountId = !empty($item['asset_account_id']) ? $item['asset_account_id'] : null;
+
+                    $itemStmt->bindParam(':output_vat_id', $outputVatId, PDO::PARAM_INT);
+                    $itemStmt->bindParam(':discount_account_id', $discountAccountId, PDO::PARAM_INT);
+                    $itemStmt->bindParam(':cogs_account_id', $cogsAccountId, PDO::PARAM_INT);
+                    $itemStmt->bindParam(':income_account_id', $incomeAccountId, PDO::PARAM_INT);
+                    $itemStmt->bindParam(':asset_account_id', $assetAccountId, PDO::PARAM_INT);
                     $itemStmt->execute();
                 }
             }
@@ -1013,8 +923,517 @@ class SalesReturn
             throw $ex;
         }
     }
+
+    public static function void($id)
+    {
+        global $connection;
     
+        try {
+            $connection->beginTransaction();
+            
+            // Update the status to 3 (void) in the sales_invoice table
+            $stmt = $connection->prepare("UPDATE sales_return SET status = 3 WHERE id = :id");
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $result = $stmt->execute();
+            
+            if ($result) {
+                // Update the state to 2 in the audit_trail table
+                $auditStmt = $connection->prepare("UPDATE audit_trail SET state = 2 WHERE transaction_id = :id");
+                $auditStmt->bindParam(':id', $id, PDO::PARAM_INT);
+                $auditResult = $auditStmt->execute();
+                
+                if ($auditResult) {
+                    // Delete from transaction_entries
+                    $deleteStmt = $connection->prepare("DELETE FROM transaction_entries WHERE transaction_id = :id");
+                    $deleteStmt->bindParam(':id', $id, PDO::PARAM_INT);
+                    $deleteResult = $deleteStmt->execute();
+                    
+                    if ($deleteResult) {
+                        $connection->commit();
+                        return true;
+                    } else {
+                        throw new Exception("Failed to delete transaction entries.");
+                    }
+                } else {
+                    throw new Exception("Failed to update audit trail.");
+                }
+            } else {
+                throw new Exception("Failed to void invoice.");
+            }
+        } catch (Exception $e) {
+            $connection->rollBack();
+            throw $e;
+        }
+    }
     
+    public static function updateDraft(
+        $id,  $sales_return_number,  $sales_return_account_id,   $customer_name,  $customer_id,  $tax_withheld_account_id,  $tax_withheld_amount,  $total_amount_due,  $gross_amount,  $sales_return_date, $sales_return_due_date, $customer_po, $so_no, $rep, $payment_method, $location, $terms, $memo, $output_vat_ids, $vat_amount, $zero_rated_amount, $vat_exempt_amount, $vatable_amount, $tax_withheld_percentage, $discount_amount, $created_by, $items
+    ) {
+        global $connection;
+    
+        try {
+            $connection->beginTransaction();
+    
+            $stmt = $connection->prepare("
+                UPDATE sales_return 
+                SET sales_return_number = :sales_return_number,
+                    sales_return_date = :sales_return_date,
+                    sales_return_account_id = :sales_return_account_id,
+                    sales_return_due_date = :sales_return_due_date,
+                    customer_po = :customer_po,
+                    so_no = :so_no,
+                    rep = :rep,
+                    customer_id = :customer_id,
+                    payment_method = :payment_method,
+                    location = :location,
+                    terms = :terms,
+                    memo = :memo,
+                    gross_amount = :gross_amount,
+                    discount_amount = :discount_amount,
+                    net_amount_due = :net_amount_due,
+                    vat_amount = :vat_amount,
+                    vatable_amount = :vatable_amount,
+                    zero_rated_amount = :zero_rated_amount,
+                    vat_exempt_amount = :vat_exempt_amount,
+                    tax_withheld_percentage = :tax_withheld_percentage,
+                    tax_withheld_amount = :tax_withheld_amount,
+                    total_amount_due = :total_amount_due,
+                    status = 4
+                WHERE id = :id
+            ");
+            
+            // Bind the parameters
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->bindParam(':sales_return_number', $sales_return_number, PDO::PARAM_STR);
+            $stmt->bindParam(':sales_return_date', $sales_return_date, PDO::PARAM_STR);
+            $stmt->bindParam(':sales_return_account_id', $sales_return_account_id, PDO::PARAM_INT);
+            $stmt->bindParam(':sales_return_due_date', $sales_return_due_date, PDO::PARAM_STR);
+            $stmt->bindParam(':customer_po', $customer_po, PDO::PARAM_STR);
+            $stmt->bindParam(':so_no', $so_no, PDO::PARAM_STR);
+            $stmt->bindParam(':rep', $rep, PDO::PARAM_STR);
+            $stmt->bindParam(':customer_id', $customer_id, PDO::PARAM_INT);
+            $stmt->bindParam(':payment_method', $payment_method, PDO::PARAM_STR);
+            $stmt->bindParam(':location', $location, PDO::PARAM_STR);
+            $stmt->bindParam(':terms', $terms, PDO::PARAM_STR);
+            $stmt->bindParam(':memo', $memo, PDO::PARAM_STR);
+            $stmt->bindParam(':gross_amount', $gross_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':discount_amount', $discount_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':net_amount_due', $total_amount_due, PDO::PARAM_STR);
+            $stmt->bindParam(':vat_amount', $vat_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':vatable_amount', $vatable_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':zero_rated_amount', $zero_rated_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':vat_exempt_amount', $vat_exempt_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':tax_withheld_percentage', $tax_withheld_percentage, PDO::PARAM_STR);
+            $stmt->bindParam(':tax_withheld_amount', $tax_withheld_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':total_amount_due', $total_amount_due, PDO::PARAM_STR);
+            
+            // Execute the statement
+            $result = $stmt->execute();
+    
+            if ($result) {
+    
+                // Delete existing sales return details for the given sales_return_id
+                $stmt = $connection->prepare("DELETE FROM sales_return_details WHERE sales_return_id = ?");
+                $stmt->execute([$id]);
+    
+                // Prepare SQL for inserting new sales return details
+                $stmt = $connection->prepare("
+                    INSERT INTO sales_return_details (
+                        sales_return_id, item_id, quantity, cost, amount, discount_percentage, discount_amount,
+                        net_amount_before_sales_tax, net_amount, sales_tax_percentage, sales_tax_amount,
+                        output_vat_id, discount_account_id, cogs_account_id, income_account_id, asset_account_id
+                    ) VALUES (
+                        :sales_return_id, :item_id, :quantity, :cost, :amount, :discount_percentage, :discount_amount,
+                        :net_amount_before_sales_tax, :net_amount, :sales_tax_percentage, :sales_tax_amount,
+                        :output_vat_id, :discount_account_id, :cogs_account_id, :income_account_id, :asset_account_id
+                    )
+                ");
+    
+                // Insert each item into the sales_return_details table
+                foreach ($items as $item) {
+                    $stmt->execute([
+                        ':sales_return_id' => $id,
+                        ':item_id' => $item['item_id'],
+                        ':quantity' => $item['quantity'],
+                        ':cost' => $item['cost'],
+                        ':amount' => $item['amount'],
+                        ':discount_percentage' => $item['discount_percentage'],
+                        ':discount_amount' => $item['discount_amount'],
+                        ':net_amount_before_sales_tax' => $item['net_amount_before_sales_tax'],
+                        ':net_amount' => $item['net_amount'],
+                        ':sales_tax_percentage' => $item['sales_tax_percentage'],
+                        ':sales_tax_amount' => $item['sales_tax_amount'],
+                        ':output_vat_id' => !empty($item['output_vat_id']) ? $item['output_vat_id'] : null,
+                        ':discount_account_id' => !empty($item['discount_account_id']) ? $item['discount_account_id'] : null,
+                        ':cogs_account_id' => !empty($item['cogs_account_id']) ? $item['cogs_account_id'] : null,
+                        ':income_account_id' => !empty($item['income_account_id']) ? $item['income_account_id'] : null,
+                        ':asset_account_id' => !empty($item['asset_account_id']) ? $item['asset_account_id'] : null
+                    ]);
+                }
+    
+                $connection->commit();
+                return [
+                    'success' => true,
+                    'invoiceId' => $id
+                ];
+            } else {
+                throw new Exception("Failed to update invoice.");
+            }
+        } catch (Exception $ex) {
+            $connection->rollback();
+            error_log('Error updating draft invoice: ' . $ex->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Error: ' . $ex->getMessage()
+            ];
+        }
+    }
+
+    public static function saveFinal(
+        $id,  $sales_return_number,  $sales_return_account_id,   $customer_name,  $customer_id,  $tax_withheld_account_id,  $tax_withheld_amount,  $total_amount_due,  $gross_amount,  $sales_return_date, $sales_return_due_date, $customer_po, $so_no, $rep, $payment_method, $location, $terms, $memo, $output_vat_ids, $vat_amount, $zero_rated_amount, $vat_exempt_amount, $vatable_amount, $tax_withheld_percentage, $discount_amount, $created_by, $items
+    ) {
+        global $connection;
+    
+        try {
+            $connection->beginTransaction();
+    
+            // Check if the sales return account is of the type 'Bank' or 'Other Current Assets'
+            $stmt = $connection->prepare("
+                SELECT at.name
+                FROM chart_of_account coa
+                JOIN account_types at ON coa.account_type_id = at.id
+                WHERE coa.id = ?
+            ");
+            $stmt->execute([$sales_return_account_id]);
+            $account_type_name = $stmt->fetchColumn();
+    
+            // Determine the invoice status and balance due based on the account type
+            $status = 0;
+            $balance_due = $total_amount_due;
+            if ($account_type_name == 'Bank' || $account_type_name == 'Other Current Assets') {
+                $status = 1;
+                $balance_due = 0;
+            }
+    
+            $stmt = $connection->prepare("
+                UPDATE sales_return 
+                SET sales_return_number = :sales_return_number,
+                    sales_return_date = :sales_return_date,
+                    sales_return_account_id = :sales_return_account_id,
+                    sales_return_due_date = :sales_return_due_date,
+                    customer_po = :customer_po,
+                    so_no = :so_no,
+                    rep = :rep,
+                    customer_id = :customer_id,
+                    payment_method = :payment_method,
+                    location = :location,
+                    terms = :terms,
+                    memo = :memo,
+                    gross_amount = :gross_amount,
+                    discount_amount = :discount_amount,
+                    net_amount_due = :net_amount_due,
+                    vat_amount = :vat_amount,
+                    vatable_amount = :vatable_amount,
+                    zero_rated_amount = :zero_rated_amount,
+                    vat_exempt_amount = :vat_exempt_amount,
+                    tax_withheld_percentage = :tax_withheld_percentage,
+                    tax_withheld_amount = :tax_withheld_amount,
+                    total_amount_due = :total_amount_due,
+                    status = :status,
+                    balance_due = :balance_due
+                WHERE id = :id
+            ");
+            
+            // Bind the parameters
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->bindParam(':sales_return_number', $sales_return_number, PDO::PARAM_STR);
+            $stmt->bindParam(':sales_return_date', $sales_return_date, PDO::PARAM_STR);
+            $stmt->bindParam(':sales_return_account_id', $sales_return_account_id, PDO::PARAM_INT);
+            $stmt->bindParam(':sales_return_due_date', $sales_return_due_date, PDO::PARAM_STR);
+            $stmt->bindParam(':customer_po', $customer_po, PDO::PARAM_STR);
+            $stmt->bindParam(':so_no', $so_no, PDO::PARAM_STR);
+            $stmt->bindParam(':rep', $rep, PDO::PARAM_STR);
+            $stmt->bindParam(':customer_id', $customer_id, PDO::PARAM_INT);
+            $stmt->bindParam(':payment_method', $payment_method, PDO::PARAM_STR);
+            $stmt->bindParam(':location', $location, PDO::PARAM_STR);
+            $stmt->bindParam(':terms', $terms, PDO::PARAM_STR);
+            $stmt->bindParam(':memo', $memo, PDO::PARAM_STR);
+            $stmt->bindParam(':gross_amount', $gross_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':discount_amount', $discount_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':net_amount_due', $total_amount_due, PDO::PARAM_STR);
+            $stmt->bindParam(':vat_amount', $vat_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':vatable_amount', $vatable_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':zero_rated_amount', $zero_rated_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':vat_exempt_amount', $vat_exempt_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':tax_withheld_percentage', $tax_withheld_percentage, PDO::PARAM_STR);
+            $stmt->bindParam(':tax_withheld_amount', $tax_withheld_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':total_amount_due', $total_amount_due, PDO::PARAM_STR);
+            $stmt->bindParam(':status', $status, PDO::PARAM_INT);
+            $stmt->bindParam(':balance_due', $balance_due, PDO::PARAM_STR);
+            
+            // Execute the statement
+            $result = $stmt->execute();
+    
+            if ($result) {
+    
+                // Delete existing sales return details for the given sales_return_id
+                $stmt = $connection->prepare("DELETE FROM sales_return_details WHERE sales_return_id = ?");
+                $stmt->execute([$id]);
+    
+                // Prepare SQL for inserting new sales return details
+                $stmt = $connection->prepare("
+                    INSERT INTO sales_return_details (
+                        sales_return_id, item_id, quantity, cost, amount, discount_percentage, discount_amount,
+                        net_amount_before_sales_tax, net_amount, sales_tax_percentage, sales_tax_amount,
+                        output_vat_id, discount_account_id, cogs_account_id, income_account_id, asset_account_id
+                    ) VALUES (
+                        :sales_return_id, :item_id, :quantity, :cost, :amount, :discount_percentage, :discount_amount,
+                        :net_amount_before_sales_tax, :net_amount, :sales_tax_percentage, :sales_tax_amount,
+                        :output_vat_id, :discount_account_id, :cogs_account_id, :income_account_id, :asset_account_id
+                    )
+                ");
+    
+                // Insert each item into the sales_return_details table
+                foreach ($items as $item) {
+                    $stmt->execute([
+                        ':sales_return_id' => $id,
+                        ':item_id' => $item['item_id'],
+                        ':quantity' => $item['quantity'],
+                        ':cost' => $item['cost'],
+                        ':amount' => $item['amount'],
+                        ':discount_percentage' => $item['discount_percentage'],
+                        ':discount_amount' => $item['discount_amount'],
+                        ':net_amount_before_sales_tax' => $item['net_amount_before_sales_tax'],
+                        ':net_amount' => $item['net_amount'],
+                        ':sales_tax_percentage' => $item['sales_tax_percentage'],
+                        ':sales_tax_amount' => $item['sales_tax_amount'],
+                        ':output_vat_id' => !empty($item['output_vat_id']) ? $item['output_vat_id'] : null,
+                        ':discount_account_id' => !empty($item['discount_account_id']) ? $item['discount_account_id'] : null,
+                        ':cogs_account_id' => !empty($item['cogs_account_id']) ? $item['cogs_account_id'] : null,
+                        ':income_account_id' => !empty($item['income_account_id']) ? $item['income_account_id'] : null,
+                        ':asset_account_id' => !empty($item['asset_account_id']) ? $item['asset_account_id'] : null
+                    ]);
+                }
+    
+                $transaction_type = "Sales Return";
+
+
+                // Fetch sales return details
+                $stmt = $connection->prepare("
+                    SELECT 
+                        srd.*,
+                        i.item_name
+                    FROM 
+                        sales_return_details srd
+                    JOIN 
+                        items i ON srd.item_id = i.id
+                    WHERE 
+                        srd.sales_return_id = :sales_return_id
+                ");
+                $stmt->bindParam(':sales_return_id', $id, PDO::PARAM_INT);
+                $stmt->execute();
+                $invoiceDetails = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                // Fetch wtax_account_id based on tax_withheld_percentage
+                $stmt = $connection->prepare("
+                    SELECT wtax_account_id 
+                    FROM wtax 
+                    WHERE id = :id
+                ");
+                $stmt->bindParam(':id', $tax_withheld_percentage);
+                $stmt->execute();
+                $wtax_account_id = $stmt->fetchColumn();
+
+                if (!$wtax_account_id) {
+                    throw new Exception("WTax account ID not found for percentage: $tax_withheld_percentage.");
+                }
+
+               
+    
+                // Log the main sales return transaction
+                self::logAuditTrail(
+                    $id,
+                    $transaction_type,
+                    self::getCurrentDate(),
+                    $sales_return_number,
+                    $location,
+                    $customer_name,
+                    null,
+                    null,
+                    $sales_return_account_id,
+                    $gross_amount,
+                    0.00,
+                    $created_by
+                );
+    
+                // Log tax withheld transaction
+                self::logAuditTrail(
+                    $id,
+                    $transaction_type,
+                    self::getCurrentDate(),
+                    $sales_return_number,
+                    $location,
+                    $customer_name,
+                    null,
+                    null,
+                    $wtax_account_id,
+                    $tax_withheld_amount,
+                    0.00,
+                    $created_by
+                );
+
+    
+                // Process each item in the invoice
+                foreach ($invoiceDetails as $item) {
+                    // Log VAT for this item
+                    if (!empty($item['output_vat_id']) && $item['sales_tax_amount'] > 0) {
+                        self::logAuditTrail(
+                            $id,
+                            $transaction_type,
+                            self::getCurrentDate(),
+                            $sales_return_number,
+                            $location,
+                            $customer_name,
+                            $item['item_name'],
+                            $item['quantity'],
+                            $item['output_vat_id'],
+                            0.00,
+                            $item['sales_tax_amount'],
+                            $created_by
+                        );
+                    }
+                    // Log discount for this item
+                    if (!empty($item['discount_account_id']) && $item['discount_amount'] > 0) {
+                        self::logAuditTrail(
+                            $id,
+                            $transaction_type,
+                            self::getCurrentDate(),
+                            $sales_return_number,
+                            $location,
+                            $customer_name,
+                            $item['item_name'],
+                            $item['quantity'],
+                            $item['discount_account_id'],
+                            $item['discount_amount'],
+                            0.00,
+                            $created_by
+                        );
+                    }
+    
+                    // Log income for this item
+                    if (!empty($item['income_account_id'])) {
+                        self::logAuditTrail(
+                            $id,
+                            $transaction_type,
+                            self::getCurrentDate(),
+                            $sales_return_number,
+                            $location,
+                            $customer_name,
+                            $item['item_name'],
+                            $item['quantity'],
+                            $item['income_account_id'],
+                            0.00,
+                            ($item['amount'] - $item['sales_tax_amount']),
+                            $created_by
+                        );
+                    }
+    
+                    // Log Cost of Goods Sold (COGS) for this item
+                    if (!empty($item['cogs_account_id'])) {
+                        self::logAuditTrail(
+                            $id,
+                            $transaction_type,
+                            self::getCurrentDate(),
+                            $sales_return_number,
+                            $location,
+                            $customer_name,
+                            $item['item_name'],
+                            $item['quantity'],
+                            $item['cogs_account_id'],
+                            $item['cost'] * $item['quantity'],
+                            0.00,
+                            $created_by
+                        );
+                    }
+    
+                    // Log asset transaction for this item
+                    if (!empty($item['asset_account_id'])) {
+                        self::logAuditTrail(
+                            $id,
+                            $transaction_type,
+                            self::getCurrentDate(),
+                            $sales_return_number,
+                            $location,
+                            $customer_name,
+                            $item['item_name'],
+                            $item['quantity'],
+                            $item['asset_account_id'],
+                            0.00,
+                            $item['cost'] * $item['quantity'],
+                            $created_by
+                        );
+                    }
+                }
+    
+                // Log the main invoice transaction discount credit
+                self::logAuditTrail(
+                    $id,
+                    $transaction_type,
+                    self::getCurrentDate(),
+                    $sales_return_number,
+                    $location,
+                    $customer_name,
+                    null,
+                    null,
+                    $sales_return_account_id,
+                    0.00,
+                    $discount_amount,
+                    $created_by
+                );
+
+                // Log the main invoice transaction wtax credit
+                self::logAuditTrail(
+                    $id,
+                    $transaction_type,
+                    self::getCurrentDate(),
+                    $sales_return_number,
+                    $location,
+                    $customer_name,
+                    null,
+                    null,
+                    $sales_return_account_id,
+                    0.00,
+                    $tax_withheld_amount,
+                    $created_by
+                );
+    
+                // // If it's an Accounts Receivable, update the customer's balance
+                // if ($account_type_name == 'Accounts Receivable') {
+                //     $stmt = $connection->prepare("UPDATE customers SET credit_balance = credit_balance + ?, total_invoiced = total_invoiced + ? WHERE id = ?");
+                //     $stmt->execute([$total_amount_due, $total_amount_due, $customer_id]);
+                // }
+    
+                $connection->commit();
+                return [
+                    'success' => true,
+                    'invoiceId' => $id
+                ];
+            } else {
+                throw new Exception("Failed to update invoice.");
+            }
+        } catch (Exception $ex) {
+            $connection->rollback();
+            error_log('Error updating draft invoice: ' . $ex->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Error: ' . $ex->getMessage()
+            ];
+        }
+    }
+    // Method to get the current date
+    private static function getCurrentDate() {
+        return date('Y-m-d');
+    }
     
 }
 

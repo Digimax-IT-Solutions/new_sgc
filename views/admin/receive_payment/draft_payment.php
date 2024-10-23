@@ -1,7 +1,13 @@
 <?php
 // Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('receive_payment');
+
 
 $accounts = ChartOfAccount::all();
 $customers = Customer::all();
@@ -31,31 +37,26 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                     <!-- Default box -->
                     <div class="card">
                         <div class="card-body">
-                            <div class="row">
-                                <div class="col-sm-12 d-flex justify-content-between align-items-center mb-4">
-                                    <h1 class="h3 mb-3"><strong>Payment</strong></h1>
-                                    <!-- <div class="d-flex justify-content-end">
-                                        <a href="customer_payment" class="btn btn-secondary">
-                                            <i class="align-middle" data-feather="file-text"></i> Receive Payment
+
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <a href="receive_payment" class="btn btn-lg btn-outline-secondary me-2 mb-2">
+                                        <i class="fas fa-arrow-left fa-lg me-2"></i> Go Back
+                                    </a>
+                                    <div class="btn-group">
+                                        <a href="#" class="btn btn-lg btn-outline-success dropdown-toggle me-2 mb-2" id="apvDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="fas fa-plus fa-lg me-2"></i> Create Receive Payment
                                         </a>
-                                    </div> -->
-                                    <div class="dropdown d-inline-block">
-                                        <a href="receive_payment" class="btn btn-sm btn-secondary">
-                                            <i class="fas fa-arrow-left"></i> Go Back
-                                        </a>
-                                        <button class="btn btn-sm btn-primary dropdown-toggle" type="button"
-                                            id="apvDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                             Receive Payment
-                                        </button>
                                         <ul class="dropdown-menu" aria-labelledby="apvDropdown">
                                             <li><a class="dropdown-item" href="official_receipt">Official Receipt</a></li>
-                                            <li><a class="dropdown-item" href="customer_payment">Collection Receipt</a>
-                                            </li>   
+                                            <li><a class="dropdown-item" href="customer_payment">Collection Receipt</a></li>   
                                         </ul>
                                     </div>
                                 </div>
                             </div>
                         </div>
+
                         <div class="card-body">
                             <div class="table-responsive" style="overflow-x: auto;">
                                 <table class="table table-bordered" id="dataTable"
@@ -83,8 +84,9 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                                                     <?= htmlspecialchars($payment->payment_date) ?></td>
                                                 <td style="white-space: nowrap;">
                                                     <?= htmlspecialchars($payment->payment_method_name) ?></td>
-                                                <td style="white-space: nowrap;">
-                                                    ₱<?= htmlspecialchars($payment->summary_applied_amount) ?></td>
+                                                    <td style="white-space: nowrap;">
+                                                    <b>₱<?= number_format($payment->summary_applied_amount, 2, '.', ','); ?></b>
+                                                </td>
                                                 <td style="white-space: nowrap;"><?= htmlspecialchars($payment->ref_no) ?>
                                                 <td class="text-center">
                                                     <?php

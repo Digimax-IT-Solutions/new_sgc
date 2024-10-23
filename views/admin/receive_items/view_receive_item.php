@@ -1,10 +1,16 @@
 <?php
 //Guard
+//Guard
+require_once '_guards.php';
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('receive_items');
 
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat\Wizard\Number;
 
-require_once '_guards.php';
-Guard::adminOnly();
+
 $accounts = ChartOfAccount::all();
 $vendors = Vendor::all();
 $products = Product::all();
@@ -154,10 +160,24 @@ $page = 'view_receive_item'; // Set the variable corresponding to the current pa
                                             <div class="col-md-4 vendor-details">
                                                 <label for="location" class="form-label">Location</label>
                                                 <select class="form-control form-control-sm" id="location" name="location" disabled>
-                                                    <option value="<?= $receive_items->location ?>"><?= $receive_items->location ?></option>
-                                                    <?php foreach ($locations as $location): ?>
-                                                        <option value="<?= $location->name ?>"><?= $location->name ?></option>
-                                                    <?php endforeach; ?>
+                                                    <?php
+                                                        // Array to prevent duplicates
+                                                        $used_locations = [];
+                                                        $selected_location = $receive_items->location ?? ''; // Assuming this holds the selected location
+
+                                                        // Locations
+                                                        foreach ($locations as $location):
+                                                            if (!in_array($location->name, $used_locations)):
+                                                                $used_locations[] = $location->name; // Track used locations
+                                                    ?>
+                                                                <option value="<?= htmlspecialchars($location->id) ?>" 
+                                                                        <?= $location->id == $selected_location ? 'selected' : '' ?>>
+                                                                    <?= htmlspecialchars($location->name) ?>
+                                                                </option>
+                                                    <?php
+                                                            endif;
+                                                        endforeach;
+                                                    ?>
                                                 </select>
                                             </div>
                                             <!-- Receive Item Details Section -->

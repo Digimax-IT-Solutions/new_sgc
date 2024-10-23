@@ -1,8 +1,12 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
-
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('purchase_order');
 $purchase_orders = PurchaseOrder::all();
 
 // Calculate summary statistics
@@ -35,17 +39,16 @@ $page = 'purchase_order';
             <?php displayFlashMessage('update_purchase_order') ?>
 
             <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">Purchase Orders</h6>
-                    <div>
-                        <a href="purchase_order" class="btn btn-sm btn-secondary">
-                            <i class="fas fa-arrow-left"></i> Go Back
-                        </a>
-                        <a href="create_purchase_order" class="btn btn-sm btn-primary">
-                            <i class="fas fa-plus"></i> New Purchase Order
-                        </a>
+                    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                        <div>
+                            <a href="purchase_order" class="btn btn-lg btn-outline-secondary me-2 mb-2">
+                                    <i class="fas fa-arrow-left  fa-lg me-2"></i> Go Back
+                            </a>
+                            <a href="create_purchase_order" class="btn btn-lg btn-outline-success me-2 mb-2">
+                                <i class="fas fa-plus fa-lg me-2"></i> Create Purchase Order
+                            </a>
+                        </div>
                     </div>
-                </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">

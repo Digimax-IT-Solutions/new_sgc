@@ -26,6 +26,12 @@ $pages = [
     'draft_payment' => 'views/admin/receive_payment/draft_payment.php',
     'void_payment' => 'views/admin/receive_payment/void_payment.php',
     'print_payment' => 'views/admin/receive_payment/print_payment.php',
+    'print_or' => 'views/admin/receive_payment/print_or.php',
+    'or_list' => 'views/admin/receive_payment/or_list.php',
+    'view_or' => 'views/admin/receive_payment/view_or.php',
+    'draft_or' => 'views/admin/receive_payment/draft_or.php',
+    'void_or' => 'views/admin/receive_payment/void_or.php',
+
 
     // CREDIT MEMO
     'credit_memo' => 'views/admin/credit_memo/credit_memo_list.php',
@@ -44,6 +50,7 @@ $pages = [
     'void_sales_return' => 'views/admin/sales_return/void_sales_return.php',
 
     // PURCHASE ORDER
+    'purchase_request' => 'views/admin/purchase_request/purchase_request_list.php',
     'purchase_order' => 'views/admin/purchase_order/purchase_order_list.php',
     'view_purchase_order' => 'views/admin/purchase_order/view_purchase_order.php',
     'create_purchase_order' => 'views/admin/purchase_order/create_purchase_order.php',
@@ -78,11 +85,11 @@ $pages = [
     'create_pay_bills' => 'views/admin/pay_bills/create_pay_bills.php',
 
     // PURCHASE REQUEST
-    'purchase_request' => 'views/admin/purchase_request/purchase_request_list.php',
     'create_purchase_request' => 'views/admin/purchase_request/create_purchase_request.php',
     'view_purchase_request' => 'views/admin/purchase_request/view_purchase_request.php',
     'print_purchase_request' => 'views/admin/purchase_request/print_purchase_request.php',
-
+    'void_purchase_request' => 'views/admin/purchase_request/void_purchase_request.php',
+    'draft_purchase_request' => 'views/admin/purchase_request/draft_purchase_request.php',
     // MAKE DEPOSIT
     'make_deposit' => 'views/admin/make_deposit/make_deposit_list.php',
 
@@ -145,10 +152,23 @@ $pages = [
     'view_vendor' => 'views/admin/vendor/view_vendor.php',
     'create_vendor' => 'views/admin/vendor/create_vendor.php',
 
+    // EMPLOYEE LIST
+    'employee_list' => 'views/admin/employee/employee_list.php',
+    'create_employee' => 'views/admin/employee/create_employee.php',
+    'edit_employee' => 'views/admin/employee/edit_employee.php',
+
     // OTHER NAME
     'other_name' => 'views/admin/other_name/other_name_list.php',
     'view_other_name_list' => 'views/admin/other_name/view_other_name_list.php',
     'create_other_name' => 'views/admin/other_name/create_other_name.php',
+
+    // FS CLASSIFICATION 
+    'fs_classification' => 'views/admin/fs_classification/fs_classification_list.php',
+    'create_fs_classification' => 'views/admin/fs_classification/create_fs_classification.php',
+    'view_fs_classification' => 'views/admin/fs_classification/view_fs_classification.php',
+    'fs_notes_classification' => 'views/admin/fs_notes_classification/fs_notes_classification_list.php',
+    'create_fs_notes_classification' => 'views/admin/fs_notes_classification/create_fs_notes_classification.php',
+    'view_fs_notes_classification' => 'views/admin/fs_notes_classification/view_fs_notes_classification.php',
 
     // LOCATION LIST
     'location' => 'views/admin/location/location_list.php',
@@ -208,159 +228,39 @@ $pages = [
     'draft_check' => 'views/admin/write_check/draft_check.php',
     'void_check' => 'views/admin/write_check/void_check.php',
 
-    // DEPOSIT
+    // REPORTS
     'create_make_deposit' => 'views/admin/make_deposit/create_make_deposit.php',
     'reports' => 'views/admin/reports/reports.php',
-    'user_list' => 'views/admin/user/user_list.php',
+    'purchases_by_item_details' => 'views/admin/reports/purchases_by_item_details.php',
+    'inventory_valuation_detail' => 'views/admin/reports/inventory_valuation_detail.php',
+
 
     // END ADMIN ROUTE ==========================================================
 
 
-    // START ACCOUNTING ROUTE ==========================================================
-    // SALES INVOICE
-    'accounting_invoice_list' => 'views/accounting/invoice/invoice_list.php',
-    'accounting_create_invoice' => 'views/accounting/invoice/create_invoice.php',
-    'accounting_view_invoice' => 'views/accounting/invoice/view_invoice.php',
-    'accounting_print_invoice' => 'views/accounting/invoice/print_invoice.php',
-    'accounting_void_invoice_list' => 'views/accounting/invoice/void_invoice_list.php',
-    'accounting_draft_invoice_list' => 'views/accounting/invoice/draft_invoice_list.php',
-    // RECEIVE PAYMENT
-    'accounting_receive_payment_list' => 'views/accounting/receive_payment/receive_payment_list.php',
-    'accounting_customer_payment' => 'views/accounting/receive_payment/customer_payment.php',
-    'accounting_official_receipt' => 'views/accounting/receive_payment/official_receipt.php',
-    'accounting_view_payment' => 'views/accounting/receive_payment/view_payment.php',
-    'accounting_draft_payment' => 'views/accounting/receive_payment/draft_payment.php',
-    'accounting_void_payment' => 'views/accounting/receive_payment/void_payment.php',
-    'accounting_print_payment' => 'views/accounting/receive_payment/print_payment.php',
-    // CREDIT MEMO
-    'accounting_credit_memo_list' => 'views/accounting/credit_memo/credit_memo_list.php',
-    'accounting_create_credit_memo' => 'views/accounting/credit_memo/create_credit_memo.php',
-    'accounting_view_credit_memo' => 'views/accounting/credit_memo/view_credit_memo.php',
-    'accounting_print_credit_memo' => 'views/accounting/credit_memo/print_credit_memo.php',
-    'accounting_draft_credit_memo' => 'views/accounting/credit_memo/draft_credit_memo.php',
-    'accounting_void_credit_memo' => 'views/accounting/credit_memo/void_credit_memo.php',
-    // SALES RETURN
-    'accounting_sales_return_list' => 'views/accounting/sales_return/sales_return_list.php',
-    'accounting_create_sales_return' => 'views/accounting/sales_return/create_sales_return.php',
-    'accounting_print_sales_return' => 'views/accounting/sales_return/print_sales_return.php',
-    'accounting_view_sales_return' => 'views/accounting/sales_return/view_sales_return.php',
-    'accounting_draft_sales_return' => 'views/accounting/sales_return/draft_sales_return.php',
-    'accounting_void_sales_return' => 'views/accounting/sales_return/void_sales_return.php',
-    // PURCHASE ORDER
-    'accounting_purchase_order_list' => 'views/accounting/purchase_order/purchase_order_list.php',
-    'accounting_view_purchase_order' => 'views/accounting/purchase_order/view_purchase_order.php',
-    'accounting_create_purchase_order' => 'views/accounting/purchase_order/create_purchase_order.php',
-    'accounting_print_purchase_order' => 'views/accounting/purchase_order/print_purchase_order.php',
-    'accounting_draft_purchase_order' => 'views/accounting/purchase_order/draft_purchase_order.php',
-    'accounting_void_purchase_order' => 'views/accounting/purchase_order/void_purchase_order.php',
-    // RECEIVE ITEMS
-    'accounting_receive_item_list' => 'views/accounting/receive_items/receive_item_list.php',
-    'accounting_create_receive_item' => 'views/accounting/receive_items/create_receive_item.php',
-    'accounting_view_receive_item' => 'views/accounting/receive_items/view_receive_item.php',
-    'accounting_print_receive_item' => 'views/accounting/receive_items/print_receive_item.php',
-    // RECEIVE ITEMS WAREHOUSE
-    'accounting_warehouse_receive_item_list' => 'views/warehouse/receive_items/receive_item_list.php',
-    'accounting_create_receive_item_warehouse' => 'views/warehouse/receive_items/create_receive_item.php',
-    'accounting_warehouse_print' => 'views/warehouse/receive_items/warehouse_print.php',
-    'accounting_warehouse_view_receive_item' => 'views/warehouse/receive_items/view_receive_item.php',
-    // PURCHASE REQUEST WAREHOUSE
-    'accounting_warehouse_purchase_request_list' => 'views/warehouse/purchase_request/purchase_request_list.php',
-    'accounting_create_purchase_request_warehouse' => 'views/warehouse/purchase_request/create_purchase_request.php',
-    'accounting_view_purchase_request_warehouse' => 'views/warehouse/purchase_request/view_purchase_request.php',
-    'accounting_print_purchase_request_warehouse' => 'views/warehouse/purchase_request/print_purchase_request.php',
-    // MATERIAL ISSUANCE
-    'accounting_material_issuance_list' => 'views/warehouse/material_issuance/material_issuance_list.php',
-    'accounting_create_material_issuance' => 'views/warehouse/material_issuance/create_material_issuance.php',
-    'accounting_view_material_issuance' => 'views/warehouse/material_issuance/view_material_issuance.php',
-    'accounting_print_material_issuance' => 'views/warehouse/material_issuance/print_material_issuance.php',
-    // APV
-    'accounting_apv_list' => 'views/accounting/apv/apv_list.php',
-    'accounting_create_apv_expense' => 'views/accounting/apv/create_apv_expense.php',
-    'accounting_create_apv_item' => 'views/accounting/apv/create_apv_item.php',
-    'accounting_view_apv' => 'views/accounting/apv/view_apv.php',
-    'accounting_print_apv' => 'views/accounting/apv/print_apv.php',
-    'accounting_draft_apv' => 'views/accounting/apv/draft_apv.php',
-    'accounting_void_apv' => 'views/accounting/apv/void_apv.php',
-    // ENTER BILLS 
-    'accounting_enter_bills_list' => 'views/accounting/enter_bills/enter_bills_list.php',
-    'accounting_create_enter_bills' => 'views/accounting/enter_bills/create_enter_bills.php',
-    // PURCHASE RETURN
-    'accounting_purchase_return_list' => 'views/accounting/purchase_return/purchase_return_list.php',
-    // PAY BILLS
-    'accounting_pay_bills_list' => 'views/accounting/pay_bills/pay_bills_list.php',
-    'accounting_create_pay_bills' => 'views/accounting/pay_bills/create_pay_bills.php',
-    // PURCHASE REQUEST
-    'accounting_purchase_request_list' => 'views/accounting/purchase_request/purchase_request_list.php',
-    'accounting_create_purchase_request' => 'views/accounting/purchase_request/create_purchase_request.php',
-    'accounting_view_purchase_request' => 'views/accounting/purchase_request/view_purchase_request.php',
-    'accounting_print_purchase_request' => 'views/accounting/purchase_request/print_purchase_request.php',
-    // MAKE DEPOSIT
-    'accounting_make_deposit_list' => 'views/accounting/make_deposit/make_deposit_list.php',
-    // BANK TRANSFER
-    'accounting_bank_transfer_list' => 'views/accounting/bank_transfer/bank_transfer_list.php',
-    // RECONCILE
-    'accounting_reconcile_list' => 'views/accounting/reconcile/reconcile_list.php',
-    // DASHBOARDS
-    'accounting_customer_center' => 'views/accounting/dashboards/customer_center.php',
-    'accounting_vendor_center' => 'views/accounting/dashboards/vendor_center.php',
-    'accounting_banking' => 'views/accounting/dashboards/banking.php',
-    'accounting_purchasing' => 'views/accounting/dashboards/purchasing.php',
-    'accounting_warehouse_dashboard' => 'views/accounting/dashboards/warehouse_dashboard.php',
-    'accounting_accounting_dashboard' => 'views/accounting/dashboards/accounting.php',
-    'accounting_masterlist' => 'views/accounting/dashboards/masterlist.php',
-    // GENERAL JOURNAL
-    'accounting_general_journal_list' => 'views/accounting/general_journal/general_journal_list.php',
-    'accounting_create_general_journal' => 'views/accounting/general_journal/create_general_journal.php',
-    'accounting_view_general_journal' => 'views/accounting/general_journal/view_general_journal.php',
-    'accounting_print_general_journal' => 'views/accounting/general_journal/print_general_journal.php',
-    'accounting_draft_general_journal' => 'views/accounting/general_journal/draft_general_journal.php',
-    'accounting_void_general_journal' => 'views/accounting/general_journal/void_general_journal.php',
-    // TRANSACTION ENTRIES
-    'accounting_transaction_entries_list' => 'views/accounting/transaction_entries/transaction_entries_list.php',
-    // TRIAL BALANCE
-    'accounting_trial_balance_list' => 'views/accounting/trial_balance/trial_balance_list.php',
-    // AUDIT TRAIL
-    'accounting_audit_trail_list' => 'views/accounting/audit_trail/audit_trail_list.php',
-    // PROFIT LOSS
-    'accounting_profit_loss_list' => 'views/accounting/profit_loss/profit_loss_list.php',
-    // BALANCE SHEET
-    'accounting_balance_sheet_list' => 'views/accounting/balance_sheet/balance_sheet_list.php',
-    'accounting_chart_of_accounts_list' => 'views/accounting/chart_of_accounts/chart_of_accounts_list.php',
-    'accounting_create_chart_of_accounts' => 'views/accounting/chart_of_accounts/create_chart_of_accounts.php',
-    'accounting_edit_chart_of_accounts' => 'views/accounting/chart_of_accounts/edit_chart_of_accounts.php',
-    // VENDOR PAYMENTS
-    'accounting_vendor_payment_list' => 'views/accounting/vendor_payment/vendor_payment_list.php',
-    // INVENTORY ITEMS
-    'accounting_inventory_item_list' => 'views/accounting/inventory_item/inventory_item_list.php',
-    'accounting_create_inventory_item' => 'views/accounting/inventory_item/create_inventory_item.php',
-    'accounting_edit_inventory_item' => 'views/accounting/inventory_item/edit_inventory_item.php',
-    // VENDORS
-    'accounting_vendor_list' => 'views/accounting/vendors/vendor_list.php',
-    'accounting_create_vendor' => 'views/accounting/vendors/create_vendor.php',
-    'accounting_edit_vendor' => 'views/accounting/vendors/edit_vendor.php',
-    'accounting_view_vendor' => 'views/accounting/vendors/view_vendor.php',
-    // CUSTOMERS
-    'accounting_customer_list' => 'views/accounting/customers/customer_list.php',
-    'accounting_create_customer' => 'views/accounting/customers/create_customer.php',
-    'accounting_edit_customer' => 'views/accounting/customers/edit_customer.php',
-    'accounting_view_customer' => 'views/accounting/customers/view_customer.php',
-    // TAXES
-    'accounting_tax_list' => 'views/accounting/taxes/tax_list.php',
-    'accounting_create_tax' => 'views/accounting/taxes/create_tax.php',
-    'accounting_edit_tax' => 'views/accounting/taxes/edit_tax.php',
-    // SETTINGS
-    'accounting_settings' => 'views/accounting/settings/settings.php',
-    // LOGOUT
-    'accounting_logout' => 'views/accounting/logout.php',
-
-    // END ACCOUNTING ROUTE ==========================================================
-
     // START PURCHASING ROUTE ====================================================================
+    'purchasing_purchase_request' => 'views/purchasing/purchase_request/purchasing_purchase_request_list.php',
+    'purchasing_create_purchase_request' => 'views/purchasing/purchase_request/purchasing_create_purchase_request.php',
+    'purchasing_view_purchase_request' => 'views/purchasing/purchase_request/purchasing_view_purchase_request.php',
+    'purchasing_print_purchase_request' => 'views/purchasing/purchase_request/purchasing_print_purchase_request.php',
+    'purchasing_draft_purchase_request' => 'views/purchasing/purchase_request/purchasing_draft_purchase_request.php',
+    'purchasing_void_purchase_request' => 'views/purchasing/purchase_request/purchasing_void_purchase_request.php',
 
-    // END PURCHASING ROUTE ====================================================================
 
+    'purchasing_purchase_order' => 'views/purchasing/purchase_order/purchasing_purchase_order_list.php',
+    'purchasing_create_purchase_order' => 'views/purchasing/purchase_order/purchasing_create_purchase_order.php',
+    'purchasing_view_purchase_order' => 'views/purchasing/purchase_order/purchasing_view_purchase_order.php',
+    'purchasing_draft_purchase_order' => 'views/purchasing/purchase_order/purchasing_draft_purchase_order.php',
+    'purchasing_void_purchase_order' => 'views/purchasing/purchase_order/purchasing_void_purchase_order.php',
+
+    // END PURCHASING ROUTE ===================================================================
 
     // START WAAREHOUSE ROUTE ====================================================================
+
+    // INVENTORY
+
+    'inventory_list' => 'views/admin/inventory/inventory_list.php',
+
     // RECEIVE ITEMS WAREHOUSE
     'warehouse_receive_items' => 'views/warehouse/receive_items/receive_item_list.php',
     'create_receive_item_warehouse' => 'views/warehouse/receive_items/create_receive_item.php',
@@ -383,10 +283,17 @@ $pages = [
 
 
     // MAINTENANCE
+    'user_list' => 'views/admin/user/user_list.php',
+    'account_types' => 'views/admin/account_types/account_types_list.php',
+    'role_list' => 'views/admin/user/role_list.php',
+    'create_user' => 'views/admin/user/create_user.php',
+    'company_settings' => 'views/admin/company/company_settings.php',
     'main/clean_database' => 'main/Developer/clean_database.view.php',
     'main/backup_database' => 'main/Developer/backup_database.view.php',
     'logout' => 'logout.php',
     'notfound' => '404.php',
+
+    'database' => 'qwe.php'
 ];
 
 // Get the requested page from the rewritten URL

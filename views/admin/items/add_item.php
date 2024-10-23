@@ -1,8 +1,12 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
-
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('item_list');
 $categories = Category::all();
 $vendors = Vendor::all();
 $uoms = Uom::all();
@@ -55,7 +59,7 @@ sort($itemTypes);
                                     <label for="item_code" class="col-sm-2 col-form-label">Item Code</label>
                                     <div class="col-sm-4">
                                         <input type="text" class="form-control" id="item_code" name="item_code"
-                                            placeholder="Enter Item Code" required>
+                                            placeholder="Enter Item Code">
                                     </div>
                                 </div>
 
@@ -102,8 +106,7 @@ sort($itemTypes);
                                 <div class="row mb-3">
                                     <label for="item_category_id" class="col-sm-2 col-form-label">Category</label>
                                     <div class="col-sm-4">
-                                        <select id="item_category_id" class="form-control" name="item_category_id"
-                                            required>
+                                        <select id="item_category_id" class="form-control" name="item_category_id">
                                             <?php foreach ($categories as $category): ?>
                                                 <option value="<?= $category->id ?>"><?= $category->name ?></option>
                                             <?php endforeach; ?>
@@ -112,7 +115,7 @@ sort($itemTypes);
                                     <label for="item_quantity" class="col-sm-2 col-form-label">Initial Quantity</label>
                                     <div class="col-sm-4">
                                         <input type="number" class="form-control" id="item_quantity"
-                                            name="item_quantity" required min="0" value="0" readonly>
+                                            name="item_quantity" min="0" value="0" readonly>
                                     </div>
 
                                 </div>
@@ -227,8 +230,7 @@ sort($itemTypes);
 
 
 <script>
-
-    $(document).ready(function () {
+    $(document).ready(function() {
 
         $('#item_cogs_account_id', '#item_income_account_id', '#item_asset_account_id').select2({
             theme: 'classic',

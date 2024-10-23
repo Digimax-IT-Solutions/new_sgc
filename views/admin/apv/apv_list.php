@@ -1,7 +1,12 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('accounts_payable_voucher');
 
 $apv = Apv::all();
 ?>
@@ -27,24 +32,18 @@ $apv = Apv::all();
                 <?php displayFlashMessage('delete_apv') ?>
                 <?php displayFlashMessage('update_apv') ?>
                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 fw-bold text-primary"></h6>
                     <div>
-                        <a href="upload" class="btn btn-sm btn-outline-secondary me-2">
-                            <i class="fas fa-upload"></i> Upload
+                        <a href="draft_apv" class="btn btn-lg btn-outline-secondary me-2 mb-2">
+                            <i class="fab fa-firstdraft fa-lg me-2"></i> Drafts
                         </a>
-
-                        <a href="draft_apv" class="btn btn-sm btn-danger">
-                            <i class="fab fa-firstdraft"></i> Draft
-                        </a>
-                        
-                        <a href="void_apv" class="btn btn-sm btn-secondary">
-                            <i class="fas fa-ban"></i> Void
+                        <a href="void_apv" class="btn btn-lg btn-outline-danger me-2 mb-2">
+                            <i class="fas fa-file-excel fa-lg me-2"></i> Voids
                         </a>
                         <div class="dropdown d-inline-block">
-                            <button class="btn btn-sm btn-primary dropdown-toggle" type="button" id="apvDropdown"
-                                data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-plus"></i> Create APV
-                            </button>
+                            <a href="create_invoice" class="btn btn-lg btn-outline-success me-2 mb-2 dropdown-toggle" id="apvDropdown"
+                            role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-plus fa-lg me-2"></i> Create APV
+                            </a>
                             <ul class="dropdown-menu" aria-labelledby="apvDropdown">
                                 <li><a class="dropdown-item" href="create_apv_expense">Expenses</a></li>
                                 <li><a class="dropdown-item" href="create_apv_item">Items and Services</a></li>
@@ -108,7 +107,7 @@ $apv = Apv::all();
     $(document).ready(function () {
         $('#apvTable').DataTable({
             "order": [
-                [2, "desc"]
+                [0, "desc"]
             ],
             "pageLength": 25,
             "language": {
@@ -129,3 +128,5 @@ $apv = Apv::all();
         });
     });
 </script>
+
+

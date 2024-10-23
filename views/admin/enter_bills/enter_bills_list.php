@@ -1,7 +1,13 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('enter_bills');
+
 $accounts = ChartOfAccount::all();
 $customers = Customer::all();
 $products = Product::all();
@@ -151,7 +157,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
 
                             <div class="row">
                                 <div class="col-sm-12">
-                                 
+
                                 </div>
                             </div>
                         </div>

@@ -1,21 +1,26 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::purchasingOnly();
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('purchasing_purchase_request');
 
 $purchase_requests = PurchaseRequest::all();
 
-$page = 'purchase_request';
+$page = 'purchasing_purchase_request';
 ?>
 
 <?php require 'views/templates/header.php' ?>
-<?php require 'views/templates/purchasing_sidebar.php' ?>
+<?php require 'views/templates/sidebar.php' ?>
 <div class="main">
-    <?php require 'views/templates/purchasing_navbar.php' ?>
+    <?php require 'views/templates/navbar.php' ?>
     <main class="content">
         <div class="container-fluid p-0">
             <div class="mb-3">
-                <h1 class="h3 d-inline align-middle"><strong>Purchase</strong> Requests</h1>
+                <h1 class="h3 d-inline align-middle"><strong>Purchasing Purchase</strong> Requests</h1>
                 <nav aria-label="breadcrumb" class="float-end">
                     <ol class="breadcrumb">
                         <li class="breadcrumb-item"><a href="dashboard">Dashboard</a></li>
@@ -103,9 +108,12 @@ $page = 'purchase_request';
 
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">Purchase Requests</h6>
+                    <h6 class="m-0 font-weight-bold text-primary">Purchasing Purchase Requests</h6>
                     <div>
-                        <a href="void_purchase_request" class="btn btn-sm btn-secondary">
+                        <a href="purchasing_draft_purchase_request" class="btn btn-sm btn-danger">
+                            <i class="fab fa-firstdraft"></i> Draft
+                        </a>
+                        <a href="purchasing_void_purchase_request" class="btn btn-sm btn-secondary">
                             <i class="fas fa-ban"></i> Void
                         </a>
                         <a href="purchasing_create_purchase_request" class="btn btn-sm btn-primary">
@@ -128,6 +136,7 @@ $page = 'purchase_request';
                             </thead>
                             <tbody>
                                 <?php foreach ($purchase_requests as $request): ?>
+                                    <?php if ($request->status != 3 && $request->status != 4): ?>
                                     <tr>
                                         <td><?= $request->pr_no ?></td>
                                         <td><?= $request->location ?></td>
@@ -137,13 +146,13 @@ $page = 'purchase_request';
                                             <?php
                                             switch ($request->status) {
                                                 case 0:
-                                                    echo '<span class="badge bg-warning">Waiting to be PO</span>';
+                                                    echo '<span class="badge bg-warning">Open</span>';
                                                     break;
                                                 case 1:
-                                                    echo '<span class="badge bg-success">Received</span>';
+                                                    echo '<span class="badge bg-success">Closed</span>';
                                                     break;
                                                 case 2:
-                                                    echo '<span class="badge bg-info">Partially Received</span>';
+                                                    echo '<span class="badge bg-info">Partially Ordered</span>';
                                                     break;
                                                 default:
                                                     echo '<span class="badge bg-secondary">Unknown</span>';
@@ -157,6 +166,7 @@ $page = 'purchase_request';
                                             </a>
                                         </td>
                                     </tr>
+                                    <?php endif; ?>
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
@@ -172,7 +182,7 @@ $page = 'purchase_request';
 <script>
     $(document).ready(function () {
         $('#dataTable').DataTable({
-            "order": [[2, "desc"]],
+            "order": [[0, "desc"]], // Set the column index to 0 for pr_no and order to ascending
             "pageLength": 25
         });
     });

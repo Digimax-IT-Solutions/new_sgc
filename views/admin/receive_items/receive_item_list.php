@@ -1,8 +1,12 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
-
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('receive_items');
 $receiveItems = ReceivingReport::all();
 
 // Calculate summary statistics
@@ -16,6 +20,25 @@ $page = 'receive_items';
 
 <?php require 'views/templates/header.php' ?>
 <?php require 'views/templates/sidebar.php' ?>
+<style>
+    .btn-lg {
+
+        border-radius: 8px;
+    }
+
+    .btn-outline-primary,
+    .btn-outline-danger,
+    .btn-outline-secondary {
+        transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .btn-outline-success:hover,
+    .btn-outline-danger:hover,
+    .btn-outline-secondary:hover {
+        color: #fff !important;
+        box-shadow: 0px 4px 12px rgba(0, 123, 255, 0.3);
+    }
+</style>
 <div class="main">
     <?php require 'views/templates/navbar.php' ?>
     <main class="content">
@@ -107,13 +130,9 @@ $page = 'receive_items';
 
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">Received Items</h6>
                     <div>
-                        <a href="upload" class="btn btn-sm btn-outline-secondary me-2">
-                            <i class="fas fa-upload"></i> Upload
-                        </a>
-                        <a href="create_receive_item" class="btn btn-sm btn-primary">
-                            <i class="fas fa-file-alt"></i> Receive Items w/ Bill
+                        <a href="create_receive_item" class="btn btn-lg btn-outline-success me-2 mb-2">
+                            <i class="fas fa-file-alt fa-lg me-2"></i> Receive Items w/ Bill
                         </a>
                     </div>
                 </div>
@@ -173,10 +192,13 @@ $page = 'receive_items';
 
 <?php require 'views/templates/footer.php' ?>
 
+
 <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
         $('#dataTable').DataTable({
-            "ordering": false,
+            "order": [
+                [0, "desc"]
+            ], // Set the column index to 0 for pr_no and order to ascending
             "pageLength": 25
         });
     });

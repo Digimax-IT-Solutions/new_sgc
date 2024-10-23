@@ -18,6 +18,8 @@ class Payment
     public $account_type_name;
     public $summary_applied_amount;
     public $summary_amount_due;
+    public $applied_credits_discount;
+
     public $balance_due;
     public $credit_balance;
     public $memo;
@@ -43,6 +45,7 @@ class Payment
         $this->account_description = $data['account_description'] ?? null;
         $this->account_type_name = $data['account_type_name'] ?? null;
         $this->summary_applied_amount = $data['summary_applied_amount'] ?? null;
+        $this->applied_credits_discount = $data['applied_credits_discount'] ?? null;
         $this->balance_due = $data['balance_due'] ?? null;
         $this->credit_balance = $data['credit_balance'] ?? null;
         $this->account_id = $data['account_id'] ?? null;
@@ -70,7 +73,7 @@ class Payment
     }
 
 
-    public static function add($customer_id, $payment_date, $payment_method_id, $account_id, $ref_no, $cr_no, $customer_name, $memo, $summary_amount_due, $summary_applied_amount, $selected_invoices, $created_by)
+    public static function add($customer_id, $payment_date, $payment_method_id, $account_id, $ref_no, $cr_no, $customer_name, $memo, $summary_amount_due, $summary_applied_amount, $selected_invoices, $created_by, $applied_credits_discount)
     {
         global $connection;
     
@@ -80,8 +83,8 @@ class Payment
             $transaction_type = 'Payment';
     
             // Insert main payment record
-            $sql = "INSERT INTO payments (customer_id, payment_date, payment_method_id, account_id, ref_no, cr_no, memo, summary_amount_due, summary_applied_amount) 
-                    VALUES (:customer_id, :payment_date, :payment_method_id, :account_id, :ref_no, :cr_no, :memo, :summary_amount_due, :summary_applied_amount)";
+            $sql = "INSERT INTO payments (customer_id, payment_date, payment_method_id, account_id, ref_no, cr_no, memo, summary_amount_due, summary_applied_amount, applied_credits_discount) 
+                    VALUES (:customer_id, :payment_date, :payment_method_id, :account_id, :ref_no, :cr_no, :memo, :summary_amount_due, :summary_applied_amount, :applied_credits_discount)";
             $stmt = $connection->prepare($sql);
             $stmt->execute([
                 'customer_id' => $customer_id,
@@ -92,14 +95,13 @@ class Payment
                 'cr_no' => $cr_no,
                 'memo' => $memo,
                 'summary_amount_due' => $summary_amount_due,
-                'summary_applied_amount' => $summary_applied_amount
+                'summary_applied_amount' => $summary_applied_amount,
+                'applied_credits_discount' => $applied_credits_discount
             ]);
     
-            // GET LAST INSERT PAYMENT ID
             $payment_id = $connection->lastInsertId();
     
-            // LOG AUDIT TRAIL
-            // Log Undeposited funds for this item
+            // Log audit trails
             self::logAuditTrail(
                 $payment_id,
                 $transaction_type,
@@ -111,50 +113,109 @@ class Payment
                 0.00,
                 $created_by
             );
+            
+            self::logAuditTrail(
+                $payment_id,
+                $transaction_type,
+                $payment_date,
+                $cr_no,
+                $customer_name,
+                $account_id,
+                $applied_credits_discount,
+                0.00,
+                $created_by
+            );
     
             $total_amount_applied = 0;
+            $total_discount_amount = 0;
+            $total_credit_amount = 0;
     
             // Insert payment details and update invoice balances
             foreach ($selected_invoices as $invoice) {
+                $amount_applied = floatval($invoice['amount_applied']);
+                $discount_amount = floatval($invoice['discount_amount']);
+                $discount_amount = isset($invoice['discount_amount']) ? floatval($invoice['discount_amount']) : 0;
+                $credit_amount = 0;
+    
                 // Insert payment detail
-                $sql = "INSERT INTO payment_details (payment_id, invoice_id, amount_applied, discount_amount, credit_amount) 
-                        VALUES (:payment_id, :invoice_id, :amount_applied, :discount_amount, :credit_amount)";
+                $sql = "INSERT INTO payment_details (payment_id, invoice_id, amount_applied, discount_amount, credit_amount, discount_account_id) 
+                        VALUES (:payment_id, :invoice_id, :amount_applied, :discount_amount, :credit_amount, :discount_account_id)";
                 $stmt = $connection->prepare($sql);
                 $stmt->execute([
                     'payment_id' => $payment_id,
                     'invoice_id' => $invoice['invoice_id'],
-                    'amount_applied' => $invoice['amount_applied'],
-                    'discount_amount' => $invoice['discount_amount'],
-                    'credit_amount' => $invoice['credit_amount']
+                    'amount_applied' => $amount_applied,
+                    'discount_amount' => $discount_amount,
+                    'credit_amount' => 0, // We'll update this after processing credits
+                    'discount_account_id' => isset($invoice['discount_account_id']) && $discount_amount > 0 ? $invoice['discount_account_id'] : null
                 ]);
     
-                // First update the balance_due
+                $payment_detail_id = $connection->lastInsertId();
+
+                // Process credits
+                if (isset($invoice['credits']) && is_array($invoice['credits'])) {
+                foreach ($invoice['credits'] as $credit) {
+                    $credit_amount += floatval($credit['amount']);
+    
+                    // Insert credit detail
+                    $sql = "INSERT INTO payment_credit_details (payment_detail_id, credit_no, credit_amount) 
+                            VALUES (:payment_detail_id, :credit_no, :credit_amount)";
+                    $stmt = $connection->prepare($sql);
+                    $stmt->execute([
+                        'payment_detail_id' => $payment_detail_id,
+                        'credit_no' => $credit['credit_no'],
+                        'credit_amount' => $credit['amount']
+                    ]);
+    
+                    // Update credit memo
+                    $sql = "UPDATE credit_memo 
+                            SET total_amount_due = total_amount_due - :credit_amount
+                            WHERE customer_id = :customer_id AND credit_no = :credit_no";
+                    $stmt = $connection->prepare($sql);
+                    $stmt->execute([
+                        'credit_amount' => $credit['amount'],
+                        'customer_id' => $customer_id,
+                        'credit_no' => $credit['credit_no']
+                    ]);
+                }
+            }
+            // Update payment detail with credit amount
+                $sql = "UPDATE payment_details 
+                        SET credit_amount = :credit_amount 
+                        WHERE id = :payment_detail_id";
+                $stmt = $connection->prepare($sql);
+                $stmt->execute([
+                    'credit_amount' => $credit_amount,
+                    'payment_detail_id' => $payment_detail_id
+                ]);
+    
+                // Update the balance_due and invoice_status
                 $sql1 = "UPDATE sales_invoice
-                         SET balance_due = balance_due - :amount_applied
+                         SET balance_due = balance_due - :amount_applied - :discount_amount - :credit_amount,
+                             invoice_status = CASE
+                                 WHEN balance_due <= 0 THEN 1
+                                 WHEN balance_due > 0 THEN 2
+                                 ELSE invoice_status
+                             END
                          WHERE id = :invoice_id";
                 $stmt1 = $connection->prepare($sql1);
                 $stmt1->execute([
-                    'amount_applied' => $invoice['amount_applied'],
+                    'amount_applied' => $amount_applied,
+                    'discount_amount' => $discount_amount,
+                    'credit_amount' => $credit_amount,
                     'invoice_id' => $invoice['invoice_id']
                 ]);
     
-                // Then update the invoice_status based on the new balance_due
-                $sql2 = "UPDATE sales_invoice
-                         SET invoice_status = CASE
-                             WHEN balance_due <= 0 THEN 1
-                             WHEN balance_due > 0 THEN 2
-                             ELSE invoice_status
-                         END
-                         WHERE id = :invoice_id";
-                $stmt2 = $connection->prepare($sql2);
-                $stmt2->execute([
-                    'invoice_id' => $invoice['invoice_id']
-                ]);
-    
-                $total_amount_applied += $invoice['amount_applied'];
-    
+
+            $total_amount_applied += $invoice['amount_applied'];
+
+                $total_amount_applied += $amount_applied;
+                $total_discount_amount += $discount_amount;
+                $total_credit_amount += $credit_amount;
+
                 // Log Accounts Receivable for this item
-                self::logAuditTrail(
+                 // Log Accounts Receivable for this item
+                 self::logAuditTrail(
                     $payment_id,
                     $transaction_type,
                     $payment_date,
@@ -165,15 +226,49 @@ class Payment
                     $invoice['amount_applied'],
                     $created_by
                 );
+
+                // Log discount if applicable
+                if ($discount_amount > 0 && isset($invoice['discount_account_id'])) {
+                    self::logAuditTrail(
+                        $payment_id,
+                        $transaction_type,
+                        $payment_date,
+                        $cr_no,
+                        $customer_name,
+                        $invoice['discount_account_id'],
+                        0.00,
+                        $discount_amount,
+                        $created_by
+                    );
+                }
+
+                // Log credit if applicable
+                if ($credit_amount > 0) {
+                    self::logAuditTrail(
+                        $payment_id,
+                        $transaction_type,
+                        $payment_date,
+                        $cr_no,
+                        $customer_name,
+                        $invoice['invoice_account_id'],
+                        0.00,
+                        $credit_amount,
+                        $created_by
+                    );
+                }
             }
+    
+            $total_combined_amount = $total_amount_applied + $total_discount_amount + $total_credit_amount;
     
             // Update customer's credit balance
             $sql = "UPDATE customers 
-                    SET credit_balance = credit_balance - :total_amount_applied 
+                    SET credit_balance = credit_balance - :total_combined_amount,
+                        total_credit_memo = total_credit_memo - :total_credit_amount
                     WHERE id = :customer_id";
             $stmt = $connection->prepare($sql);
             $stmt->execute([
-                'total_amount_applied' => $total_amount_applied,
+                'total_combined_amount' => $total_combined_amount,
+                'total_credit_amount' => $total_credit_amount,
                 'customer_id' => $customer_id
             ]);
     
@@ -184,6 +279,7 @@ class Payment
             throw $e;
         }
     }
+    
     
     // ACCOUNTING LOGS
     private static function logAuditTrail($general_journal_id, $transaction_type, $transaction_date, $ref_no, $customer_name, $account_id, $debit, $credit, $created_by)
@@ -330,6 +426,7 @@ class Payment
                 p.memo,
                 p.summary_amount_due,
                 p.summary_applied_amount,
+                p.applied_credits_discount,
                 p.cr_no,
                 p.status,
                 p.print_status,
@@ -494,7 +591,7 @@ class Payment
         }
     }
 
-    public static function addDraft($customer_id, $payment_date, $payment_method_id, $account_id, $ref_no,  $memo, $summary_amount_due, $summary_applied_amount, $selected_invoices, $created_by)
+    public static function addDraft($customer_id, $payment_date, $payment_method_id, $account_id, $ref_no, $memo, $summary_amount_due, $summary_applied_amount, $selected_invoices, $applied_credits_discount)
     {
         global $connection;
     
@@ -502,8 +599,8 @@ class Payment
             $connection->beginTransaction();
     
             // Insert main payment record as draft
-            $sql = "INSERT INTO payments (customer_id, payment_date, payment_method_id, account_id, ref_no, memo, summary_amount_due, summary_applied_amount, status) 
-                    VALUES (:customer_id, :payment_date, :payment_method_id, :account_id, :ref_no, :memo, :summary_amount_due, :summary_applied_amount, :status)";
+            $sql = "INSERT INTO payments (customer_id, payment_date, payment_method_id, account_id, ref_no, memo, summary_amount_due, summary_applied_amount, applied_credits_discount, status) 
+                    VALUES (:customer_id, :payment_date, :payment_method_id, :account_id, :ref_no, :memo, :summary_amount_due, :summary_applied_amount, :applied_credits_discount, :status)";
             $stmt = $connection->prepare($sql);
             $stmt->execute([
                 'customer_id' => $customer_id,
@@ -514,23 +611,41 @@ class Payment
                 'memo' => $memo,
                 'summary_amount_due' => $summary_amount_due,
                 'summary_applied_amount' => $summary_applied_amount,
-                'status' => '4'
+                'applied_credits_discount' => $applied_credits_discount,
+                'status' => '4', // Assuming '4' is the status code for drafts
             ]);
     
             $payment_id = $connection->lastInsertId();
     
-            // Insert payment details
+            // Insert payment details and credit details
             foreach ($selected_invoices as $invoice) {
-                $sql = "INSERT INTO payment_details (payment_id, invoice_id, amount_applied, discount_amount, credit_amount) 
-                        VALUES (:payment_id, :invoice_id, :amount_applied, :discount_amount, :credit_amount)";
+                // Insert payment detail
+                $sql = "INSERT INTO payment_details (payment_id, invoice_id, amount_applied, discount_amount, discount_account_id) 
+                        VALUES (:payment_id, :invoice_id, :amount_applied, :discount_amount, :discount_account_id)";
                 $stmt = $connection->prepare($sql);
                 $stmt->execute([
                     'payment_id' => $payment_id,
                     'invoice_id' => $invoice['invoice_id'],
                     'amount_applied' => $invoice['amount_applied'],
-                    'discount_amount' => $invoice['discount_amount'],
-                    'credit_amount' => $invoice['credit_amount']
+                    'discount_amount' => $invoice['discount_amount'] ?? 0,
+                    'discount_account_id' => $invoice['discount_account_id'] ?? null
                 ]);
+    
+                $payment_detail_id = $connection->lastInsertId();
+    
+                // Insert credit details if present
+                if (isset($invoice['credits']) && is_array($invoice['credits'])) {
+                    foreach ($invoice['credits'] as $credit) {
+                        $sql = "INSERT INTO payment_credit_details (payment_detail_id, credit_no, credit_amount) 
+                                VALUES (:payment_detail_id, :credit_no, :credit_amount)";
+                        $stmt = $connection->prepare($sql);
+                        $stmt->execute([
+                            'payment_detail_id' => $payment_detail_id,
+                            'credit_no' => $credit['credit_no'],
+                            'credit_amount' => $credit['amount']
+                        ]);
+                    }
+                }
             }
     
             $connection->commit();
@@ -551,6 +666,7 @@ class Payment
                 pmd.payment_id,
                 pmd.invoice_id,
                 pmd.amount_applied,
+                pmd.discount_account_id,
                 pmd.discount_amount,
                 pmd.credit_amount,
                 si.invoice_number,
@@ -589,106 +705,189 @@ class Payment
         return $stmt->fetchAll(); // Return the fetched data
     }
     
-    public static function updateDraft($payment_id, $customer_id, $payment_date, $payment_method_id, $account_id, $ref_no, $cr_no, $customer_name, $memo, $summary_amount_due, $summary_applied_amount, $selected_invoices, $created_by)
-    {
-        global $connection;
+    public static function updateDraft($payment_id, $customer_id, $payment_date, $payment_method_id, $account_id, $ref_no, $cr_no, $customer_name, $memo, $summary_amount_due, $summary_applied_amount, $selected_invoices, $created_by, $applied_credits_discount)
+{
+    global $connection;
+
+    try {
+        $connection->beginTransaction();
+
+        $transaction_type = 'Payment';
+
+        // Fetch existing payment details
+        $existingDetails = self::updateDraftDetails($payment_id);
+           
+        // Fetch the credit_account_id and total_amount_due from the database
+        $stmt = $connection->prepare("SELECT payment_date, cr_no, account_id, summary_applied_amount, applied_credits_discount FROM payments WHERE id = ?");
+        $stmt->execute([$payment_id]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($result) {
+            $payment_date = $result['payment_date'];
+            $cr_no = $result['cr_no'];
+            $account_id = $result['account_id'];
+            $applied_credits_discount = $result['applied_credits_discount'];
+            $summary_applied_amount = $result['summary_applied_amount'];
 
 
-        try {
-            $connection->beginTransaction();
 
-            $transaction_type = 'Payment';
+        } else {
+            throw new Exception("Credit memo not found.");
+        }
 
-            // Fetch existing credit memo details
-            $existingDetails = self::updateDraftDetails($payment_id);
 
-            // Fetch the credit_account_id and total_amount_due from the database
-            $stmt = $connection->prepare("SELECT payment_date, cr_no, account_id FROM payments WHERE id = ?");
-            $stmt->execute([$payment_id]);
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $total_amount_applied = 0;
+        $total_discount_amount = 0;
+        $total_credit_amount = 0;
+
+        foreach ($existingDetails as $invoice) {
+            $amount_applied = floatval($invoice['amount_applied']);
+            $discount_amount = floatval($invoice['discount_amount']);
+            $credit_amount = 0;
+
+            self::logAuditTrail(
+                $payment_id,
+                $transaction_type,
+                $payment_date,
+                $cr_no,
+                $customer_name,
+                $account_id,
+                $summary_applied_amount,
+                0.00,
+                $created_by
+            );
             
-            if ($result) {
-                $payment_date = $result['payment_date'];
-                $cr_no = $result['cr_no'];
-                $account_id = $result['account_id'];
+            self::logAuditTrail(
+                $payment_id,
+                $transaction_type,
+                $payment_date,
+                $cr_no,
+                $customer_name,
+                $account_id,
+                $applied_credits_discount,
+                0.00,
+                $created_by
+            );
 
-            } else {
-                throw new Exception("Credit memo not found.");
+            // Select all columns from payment_credit_details for the current payment detail
+            $sql = "SELECT credit_no, credit_amount FROM payment_credit_details WHERE payment_detail_id = :payment_detail_id";
+            $stmt = $connection->prepare($sql);
+            $stmt->execute(['payment_detail_id' => $invoice['id']]);
+            $paymentCreditDetails = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Process the credits from payment_credit_details
+            if (isset($paymentCreditDetails['credits']) && is_array($invoice['credits'])) {
+            foreach ($paymentCreditDetails as $credit) {
+                $credit_amount += floatval($credit['credit_amount']);
+
+                // Update credit memo using the credit_no and credit_amount
+                $sql = "UPDATE credit_memo 
+                        SET total_amount_due = total_amount_due - :credit_amount
+                        WHERE customer_id = :customer_id AND credit_no = :credit_no";
+                $stmt = $connection->prepare($sql);
+                $stmt->execute([
+                    'credit_amount' => $credit['credit_amount'],
+                    'customer_id' => $customer_id,
+                    'credit_no' => $credit['credit_no']
+                ]);
             }
+        }
+
+            // Update payment detail with total credit amount
+            $sql = "UPDATE payment_details 
+                    SET credit_amount = :credit_amount 
+                    WHERE id = :payment_detail_id";
+            $stmt = $connection->prepare($sql);
+            $stmt->execute([
+                'credit_amount' => $credit_amount,
+                'payment_detail_id' => $invoice['id'] // Use the correct ID from invoice
+            ]);
+
+            // Update the balance_due and invoice_status
+            $sql1 = "UPDATE sales_invoice
+                     SET balance_due = balance_due - :amount_applied - :discount_amount - :credit_amount,
+                         invoice_status = CASE
+                             WHEN balance_due <= 0 THEN 1
+                             WHEN balance_due > 0 THEN 2
+                             ELSE invoice_status
+                         END
+                     WHERE id = :invoice_id";
+            $stmt1 = $connection->prepare($sql1);
+            $stmt1->execute([
+                'amount_applied' => $amount_applied,
+                'discount_amount' => $discount_amount,
+                'credit_amount' => $credit_amount,
+                'invoice_id' => $invoice['invoice_id']
+            ]);
+
+            $total_amount_applied += $amount_applied;
+            $total_discount_amount += $discount_amount;
+            $total_credit_amount += $credit_amount;
 
 
-            $total_amount_applied = 0;
-
-            // Insert updated payment details and update invoice balances
-            foreach ($existingDetails as $invoice) {
-                // First update the balance_due
-                $sql1 = "UPDATE sales_invoice
-                        SET balance_due = balance_due - :amount_applied
-                        WHERE id = :invoice_id";
-                $stmt1 = $connection->prepare($sql1);
-                $stmt1->execute([
-                    'amount_applied' => $invoice['amount_applied'],
-                    'invoice_id' => $invoice['invoice_id']
-                ]);
-
+               // Log Accounts Receivable for this item
                 self::logAuditTrail(
                     $payment_id,
                     $transaction_type,
                     $payment_date,
                     $cr_no,
                     $customer_name,
-                    $account_id,
-                    $summary_applied_amount,
-                    0.00,
-                    $created_by
-                );
-                
-                // Then update the invoice_status based on the new balance_due
-                $sql2 = "UPDATE sales_invoice
-                        SET invoice_status = CASE
-                            WHEN balance_due <= 0 THEN 1
-                            WHEN balance_due > 0 THEN 2
-                            ELSE invoice_status
-                        END
-                        WHERE id = :invoice_id";
-                $stmt2 = $connection->prepare($sql2);
-                $stmt2->execute([
-                    'invoice_id' => $invoice['invoice_id']
-                ]);
-
-                $total_amount_applied += $invoice['amount_applied'];
-
-                // Log Accounts Receivable for this item
-                self::logAuditTrail(
-                    $payment_id,
-                    $transaction_type,
-                    $payment_date,
-                    $cr_no,
-                    $customer_name,
-                    $account_id,
+                    $invoice['invoice_account_id'],
                     0.00,
                     $invoice['amount_applied'],
                     $created_by
                 );
-            }
-
-            // Update customer's credit balance
-            $sql = "UPDATE customers 
-                    SET credit_balance = credit_balance - :total_amount_applied 
-                    WHERE id = :customer_id";
-            $stmt = $connection->prepare($sql);
-            $stmt->execute([
-                'total_amount_applied' => $total_amount_applied,
-                'customer_id' => $customer_id
-            ]);
-
-            $connection->commit();
-            return $payment_id;
-        } catch (Exception $e) {
-            $connection->rollBack();
-            throw $e;
+                if ($discount_amount > 0 && isset($invoice['discount_account_id'])) {
+                    self::logAuditTrail(
+                        $payment_id,
+                        $transaction_type,
+                        $payment_date,
+                        $cr_no,
+                        $customer_name,
+                        $invoice['discount_account_id'],
+                        0.00,
+                        $discount_amount,
+                        $created_by
+                    );
+                }
+    
+                // Log credit if applicable
+                if ($credit_amount > 0) {
+                    self::logAuditTrail(
+                        $payment_id,
+                        $transaction_type,
+                        $payment_date,
+                        $cr_no,
+                        $customer_name,
+                        $invoice['invoice_account_id'],
+                        0.00,
+                        $credit_amount,
+                        $created_by
+                    );
+                }
         }
+
+        $total_combined_amount = $total_amount_applied + $total_discount_amount + $total_credit_amount;
+
+        // Update customer's credit balance
+        $sql = "UPDATE customers 
+                SET credit_balance = credit_balance - :total_combined_amount,
+                    total_credit_memo = total_credit_memo - :total_credit_amount
+                WHERE id = :customer_id";
+        $stmt = $connection->prepare($sql);
+        $stmt->execute([
+            'total_combined_amount' => $total_combined_amount,
+            'total_credit_amount' => $total_credit_amount,
+            'customer_id' => $customer_id
+        ]);
+
+        $connection->commit();
+        return $payment_id;
+    } catch (Exception $e) {
+        $connection->rollBack();
+        throw $e;
     }
+}
 
     public static function void($id)
     {

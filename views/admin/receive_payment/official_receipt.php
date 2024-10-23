@@ -1,7 +1,13 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('receive_payment');
+
 $accounts = ChartOfAccount::all();
 $customers = Customer::all();
 $products = Product::all();
@@ -13,7 +19,7 @@ $discounts = Discount::all();
 $input_vats = InputVat::all();
 $sales_taxes = SalesTax::all();
 
-$newInvoiceNo = Invoice::getLastInvoiceNo();
+$neworNo = OfficialReceipt::getLastOrNo();
 
 
 $page = 'sales_invoice'; // Set the variable corresponding to the current page
@@ -98,12 +104,12 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
             <div class="row mb-4">
                 <div class="col-12 d-flex justify-content-between align-items-center">
                     <div>
-                        <h1 class="h3"><strong>Official Receipt</strong></h1>
+                        <h1 class="h3"><strong> Cash Invoice</strong></h1>
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb">
                                 <li class="breadcrumb-item"><a href="dashboard">Dashboard</a></li>
                                 <li class="breadcrumb-item"><a href="receive_payment">Payments</a></li>
-                                <li class="breadcrumb-item active" aria-current="page">Create Official Receipt</li>
+                                <li class="breadcrumb-item active" aria-current="page">Create Cash Invoice</li>
                             </ol>
                         </nav>
                     </div>
@@ -170,7 +176,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                                             required>
                                             <option value="">Select Location</option>
                                             <?php foreach ($locations as $location): ?>
-                                                <option value="<?= $location->name ?>"><?= $location->name ?>
+                                                <option value="<?= $location->id ?>"><?= $location->name ?>
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
@@ -324,7 +330,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                                     <div class="col-sm-6">
                                         <select class="form-select form-select-sm" id="tax_withheld_percentage"
                                             name="tax_withheld_percentage">
-                                       
+
                                             <?php foreach ($wtaxes as $wtax): ?>
                                                 <option value="<?= $wtax->id ?>" data-rate="<?= $wtax->wtax_rate ?>"
                                                     data-account-id="<?= $wtax->wtax_account_id ?>"
@@ -418,13 +424,14 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
 
 <iframe id="printFrame" style="display:none;"></iframe>
 
+
 <script>
-    document.getElementById('cash_sales').addEventListener('change', function () {
+    document.getElementById('cash_sales').addEventListener('change', function() {
         var labelText = this.checked ? "Cash Sales - Sales Receipt" : "Sales Invoice";
         document.getElementById('cash_sales_text').innerHTML = '&nbsp;&nbsp;' + labelText;
     });
 
-    document.getElementById('officialReceiptFrom').addEventListener('submit', function () {
+    document.getElementById('officialReceiptFrom').addEventListener('submit', function() {
         const selectElement = document.getElementById('customer_id');
         const selectedOption = selectElement.options[selectElement.selectedIndex];
         const customerName = selectedOption.getAttribute('data-customer-name');
@@ -433,7 +440,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
         console.log(customerName);
     });
 
-    document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", function() {
         var cashSalesSwitch = document.getElementById('cash_sales');
         var invoiceAccountSelect = document.getElementById('or_account_id');
         var accounts = <?php echo json_encode($accounts); ?>;
@@ -445,7 +452,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
             invoiceAccountSelect.innerHTML = '';
 
             // Add options based on the state of the cashSalesSwitch
-            accounts.forEach(function (account) {
+            accounts.forEach(function(account) {
                 var option = document.createElement('option');
                 option.value = account.id;
                 option.setAttribute('data-account-type', account.account_type);
@@ -474,7 +481,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
         const taxWithheldSelect = document.getElementById('tax_withheld_percentage');
         const taxWithheldAccountIdInput = document.getElementById('tax_withheld_account_id');
 
-        taxWithheldSelect.addEventListener('change', function () {
+        taxWithheldSelect.addEventListener('change', function() {
             const selectedOption = this.options[this.selectedIndex];
             const accountId = selectedOption.getAttribute('data-account-id');
             taxWithheldAccountIdInput.value = accountId;
@@ -483,21 +490,17 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
     });
 </script>
 
-
-
-
 <script>
+    $(document).ready(function() {
 
-    $(document).ready(function () {
-
-        $('button[type="reset"]').on('click', function (e) {
+        $('button[type="reset"]').on('click', function(e) {
             e.preventDefault(); // Prevent default reset behavior
 
             // Clear all input fields
             $('input').val('');
 
             // Reset all select elements to their default option
-            $('select').each(function () {
+            $('select').each(function() {
                 $(this).val($(this).find("option:first").val()).trigger('change');
             });
 
@@ -526,7 +529,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
             });
         });
 
-        $('#saveDraftBtn').click(function (e) {
+        $('#saveDraftBtn').click(function(e) {
             e.preventDefault();
             saveDraft();
         });
@@ -535,11 +538,12 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
             const items = gatherTableItems();
 
             // Check if there are any items
-            if (items.length === 0) {
+            if (items === false || items.length === 0) {
+                if (items === false) return;
                 Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Please add items before saving as draft'
+                    icon: 'warning',
+                    title: 'Warning',
+                    text: 'Please add items first'
                 });
                 return;
             }
@@ -561,13 +565,13 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
 
             // Use AJAX to submit the form
             $.ajax({
-                url: 'api/invoice_controller.php',
+                url: 'api/or_payment_controller.php',
                 type: 'POST',
                 dataType: 'json',
                 data: formData,
                 processData: false,
                 contentType: false,
-                success: function (response) {
+                success: function(response) {
                     document.getElementById('loadingOverlay').style.display = 'none';
 
                     if (response.success) {
@@ -589,7 +593,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                         });
                     }
                 },
-                error: function (jqXHR, textStatus, errorThrown) {
+                error: function(jqXHR, textStatus, errorThrown) {
                     document.getElementById('loadingOverlay').style.display = 'none';
                     console.error('AJAX error:', textStatus, errorThrown);
                     console.log('Response Text:', jqXHR.responseText);
@@ -645,7 +649,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
         //     allowClear: false
         // });
 
-        $('#customer_id').change(function () {
+        $('#customer_id').change(function() {
             var customerId = $(this).val();
             if (customerId === '') {
                 $('#customer_tin').val('');
@@ -654,7 +658,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
             }
 
             // Find the selected customer object by customerId
-            var selectedCustomer = <?= json_encode($customers); ?>.find(function (customer) {
+            var selectedCustomer = <?= json_encode($customers); ?>.find(function(customer) {
                 return customer.id == customerId;
             });
 
@@ -697,6 +701,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
 
         // Initialize dropdowns
         const initDropdowns = (data, template) => data.reduce((acc, item) => acc + template(item), '');
+
 
         const itemDropdownOptions = initDropdowns(<?php echo json_encode($products); ?>,
             product => `<option value="${product.id}"
@@ -763,7 +768,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
             });
 
 
-            $newRow.find('.quantity, .cost, .discount_percentage, .sales_tax_percentage, .sales_tax_amount').on('input', function () {
+            $newRow.find('.quantity, .cost, .discount_percentage, .sales_tax_percentage, .sales_tax_amount').on('input', function() {
                 calculateRowValues($(this).closest('tr'));
                 calculateTotalAmount();
             });
@@ -794,72 +799,97 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
 
         function calculateTotalAmount() {
             const totals = {
-                totalAmount: 0, totalDiscountAmount: 0, totalNetAmountBeforeTax: 0, totalInputVatAmount: 0,
-                vatableAmount: 0, zeroRatedAmount: 0, vatExemptAmount: 0
+                totalAmount: 0,
+                totalDiscountAmount: 0,
+                totalNetAmountBeforeTax: 0,
+                totalInputVatAmount: 0,
+                vatableAmount: 0,
+                zeroRatedAmount: 0,
+                vatExemptAmount: 0,
+                notApplicable: 0,
+                nonVatable: 0
             };
 
-            $('.amount, .discount_amount, .net_amount_before_sales_tax, .sales_tax_amount, .net_amount').each(function () {
+            $('.amount, .discount_amount, .net_amount_before_sales_tax, .sales_tax_amount, .net_amount').each(function() {
                 const value = parseFloat($(this).val()) || 0;
                 const inputVatName = $(this).closest('tr').find('.sales_tax_percentage option:selected').text();
 
-                if ($(this).hasClass('amount')) totals.totalAmount += value;
-                else if ($(this).hasClass('discount_amount')) totals.totalDiscountAmount += value;
-                else if ($(this).hasClass('net_amount_before_sales_tax')) totals.totalNetAmountBeforeTax += value;
-                else if ($(this).hasClass('sales_tax_amount')) totals.totalInputVatAmount += value;
-                else if ($(this).hasClass('net_amount')) {
-                    if (inputVatName === '12%') totals.vatableAmount += value;
-                    else if (inputVatName === 'E') totals.vatExemptAmount += value;
-                    else if (inputVatName === 'Z') totals.zeroRatedAmount += value;
+                if ($(this).hasClass('amount')) {
+                    totals.totalAmount += value;
+                } else if ($(this).hasClass('discount_amount')) {
+                    totals.totalDiscountAmount += value;
+                } else if ($(this).hasClass('net_amount_before_sales_tax')) {
+                    totals.totalNetAmountBeforeTax += value;
+                } else if ($(this).hasClass('sales_tax_amount')) {
+                    totals.totalInputVatAmount += value;
+                } else if ($(this).hasClass('net_amount')) {
+                    // Calculate amounts based on the selected VAT type
+                    if (inputVatName === '12%') {
+                        totals.vatableAmount += value;
+                    } else if (inputVatName === 'E') {
+                        totals.vatExemptAmount += value;
+                    } else if (inputVatName === 'Z') {
+                        totals.zeroRatedAmount += value;
+                    } else if (inputVatName === 'NA' || inputVatName === 'NV') {
+                        // For 'NA' and 'NV', the value is calculated but not added to any category
+                        // No operation needed, just skip adding to any total
+                    } else {
+                        // Fallback: if no VAT type is selected, add to vatable by default
+                        totals.vatableAmount += value;
+                    }
                 }
             });
 
-            // Update form fields
-            $("#gross_amount").val(totals.totalAmount.toFixed(2));
-            $("#total_discount_amount").val(totals.totalDiscountAmount.toFixed(2));
-            $("#net_amount_due").val(totals.totalNetAmountBeforeTax.toFixed(2));
-            $("#total_vat_amount").val(totals.totalInputVatAmount.toFixed(2));
-            $("#vatable_amount").val(totals.vatableAmount.toFixed(2));
-            $("#zero_rated_amount").val(totals.zeroRatedAmount.toFixed(2));
-            $("#vat_exempt_amount").val(totals.vatExemptAmount.toFixed(2));
+            const taxableBase = totals.vatableAmount + totals.zeroRatedAmount + totals.vatExemptAmount;
 
-            // Get the selected tax withheld option
+            $("#gross_amount").val(formatNumber(totals.totalAmount)).data('raw-value', totals.totalAmount);
+            $("#total_discount_amount").val(formatNumber(totals.totalDiscountAmount)).data('raw-value', totals.totalDiscountAmount);
+            $("#net_amount_due").val(formatNumber(totals.totalNetAmountBeforeTax)).data('raw-value', totals.totalNetAmountBeforeTax);
+            $("#total_vat_amount").val(formatNumber(totals.totalInputVatAmount)).data('raw-value', totals.totalInputVatAmount);
+            $("#vatable_amount").val(formatNumber(totals.vatableAmount)).data('raw-value', totals.vatableAmount);
+            $("#zero_rated_amount").val(formatNumber(totals.zeroRatedAmount)).data('raw-value', totals.zeroRatedAmount);
+            $("#vat_exempt_amount").val(formatNumber(totals.vatExemptAmount)).data('raw-value', totals.vatExemptAmount);
+
             const selectedTaxWithheld = $("#tax_withheld_percentage option:selected");
             const taxWithheldPercentage = parseFloat(selectedTaxWithheld.data('rate')) || 0;
-            const taxWithheldName = selectedTaxWithheld.text();
-            const taxWithheldId = selectedTaxWithheld.val();
+            const taxWithheldAccountId = selectedTaxWithheld.data('account-id') || '';
 
-            // Calculate tax withheld amount based on the sum of vatable, zero-rated, and vat-exempt amounts
-            const taxableBase = totals.vatableAmount + totals.zeroRatedAmount + totals.vatExemptAmount;
             const taxWithheldAmount = (taxWithheldPercentage / 100) * taxableBase;
 
-            $("#tax_withheld_amount").val(taxWithheldAmount.toFixed(2));
-            $("#tax_withheld_account_id").val(selectedTaxWithheld.data('account-id'));
+            $("#tax_withheld_amount").val(formatNumber(taxWithheldAmount)).data('raw-value', taxWithheldAmount);
+            $("#tax_withheld_account_id").val(taxWithheldAccountId);
 
-            // Store the tax withheld ID
-            $("#tax_withheld_percentage").data('selected-id', taxWithheldId);
-
-            // Calculate total amount due
-            const subtotal = totals.totalInputVatAmount + taxableBase;
+            // Include notApplicable in the subtotal calculation
+            const subtotal = totals.totalInputVatAmount + taxableBase + totals.notApplicable + totals.nonVatable;
             const totalAmountDue = subtotal - taxWithheldAmount;
 
-            $("#total_amount_due").val(totalAmountDue.toFixed(2));
+            $("#total_amount_due").val(formatNumber(totalAmountDue)).data('raw-value', totalAmountDue);
         }
+
+        function formatNumber(value) {
+            return parseFloat(value).toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+
         // REMOVE ITEM
-        $(document).on('click', '.removeRow', function () {
+        $(document).on('click', '.removeRow', function() {
             $(this).closest('tr').remove();
             calculateRowValues($(this).closest('tr'));
             calculateTotalAmount();
         });
 
         // Event listener for tax withheld percentage change
-        $('#tax_withheld_percentage').on('change', function () {
+        $('#tax_withheld_percentage').on('change', function() {
             calculateTotalAmount();
         });
 
         // Function to get unique discount account IDs
         function getUniqueDiscountAccountIds() {
             const uniqueIds = new Set();
-            $('#itemTableBody tr').each(function () {
+            $('#itemTableBody tr').each(function() {
                 const discountAccountId = $(this).find('.discount_percentage option:selected').data('account-id');
                 if (discountAccountId) {
                     uniqueIds.add(discountAccountId);
@@ -871,7 +901,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
         // Function to get unique output VAT IDs
         function getUniqueOutputVatIds() {
             const uniqueIds = new Set();
-            $('#itemTableBody tr').each(function () {
+            $('#itemTableBody tr').each(function() {
                 const outputVatId = $(this).find('.sales_tax_percentage option:selected').data('account-id');
                 if (outputVatId) {
                     uniqueIds.add(outputVatId);
@@ -883,12 +913,48 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
         // Gather table items function (unchanged)
         function gatherTableItems() {
             const items = [];
-            $('#itemTableBody tr').each(function (index) {
+            let hasEmptyItem = false;
+            let hasEmptyQuantity = false;
+            let hasEmptySellingPrice = false;
+            let firstEmptyItemRow;
+            let firstEmptyQuantityRow;
+            let firstEmptySellingPriceRow;
+
+            $('#itemTableBody tr').each(function(index) {
+                const item_id = $(this).find('select[name="item_id[]"]').val();
+                const quantity = $(this).find('input[name="quantity[]"]').val();
+                const cost = $(this).find('input[name="cost[]"]').val();
+
+                // Check if item_id or quantity is empty
+                if (!item_id) {
+                    hasEmptyItem = true;
+                    if (!firstEmptyItemRow) {
+                        firstEmptyItemRow = $(this); // Store the first row with empty item_id
+                    }
+                    return true; // Continue to the next row
+                }
+
+                if (!quantity) {
+                    hasEmptyQuantity = true;
+                    if (!firstEmptyQuantityRow) {
+                        firstEmptyQuantityRow = $(this); // Store the first row with empty quantity
+                    }
+                    return true; // Continue to the next row
+                }
+
+                if (!cost) {
+                    hasEmptySellingPrice = true;
+                    if (!firstEmptySellingPriceRow) {
+                        firstEmptySellingPriceRow = $(this); // Store the first row with empty quantity
+                    }
+                    return true; // Continue to the next row
+                }
+
                 const item = {
                     item_id: $(this).find('select[name="item_id[]"]').val(),
                     item_name: $(this).find('.item-name').val(),
-                    quantity: $(this).find('input[name="quantity[]"]').val(),
-                    cost: $(this).find('input[name="cost[]"]').val(),
+                    quantity: quantity,
+                    cost: cost,
                     cost_price: $(this).find('input[name="cost_price[]"]').val(),
                     amount: $(this).find('input[name="amount[]"]').val(),
                     discount_percentage: $(this).find('select[name="discount_percentage[]"]').val(),
@@ -905,30 +971,77 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                 };
                 items.push(item);
             });
+
+            // Show warnings based on which validation failed
+            if (hasEmptyItem) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Warning',
+                    text: 'Please select an item.'
+                }).then(() => {
+                    // Highlight the first row with an empty item
+                    firstEmptyItemRow.find('select[name="item_id[]"]').focus().css('border', '2px solid red');
+                });
+                return false;
+            }
+
+            if (hasEmptyQuantity) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Warning',
+                    text: 'Please enter a quantity for every item.'
+                }).then(() => {
+                    // Highlight the first row with an empty quantity
+                    firstEmptyQuantityRow.find('input[name="quantity[]"]').focus().css('border', '2px solid red');
+                });
+                return false;
+            }
+
+            if (hasEmptySellingPrice) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Warning',
+                    text: 'Please enter a selling price for every item.'
+                }).then(() => {
+                    // Highlight the first row with an empty quantity
+                    firstEmptySellingPriceRow.find('input[name="cost[]"]').focus().css('border', '2px solid red');
+                });
+                return false;
+            }
+
+
             return items;
         }
 
-        $('#officialReceiptFrom').submit(function (event) {
+        $('#officialReceiptFrom').submit(function(event) {
             event.preventDefault();
             const items = gatherTableItems();
 
-            // Log the invoice_account_id value
-            console.log('Submitting invoice_account_id:', $('#invoice_account_id').val());
-            console.log('Submitting tax_withheld_account_id:', $('#tax_withheld_account_id').val());
-
-            // Show the loading overlay
-            document.getElementById('loadingOverlay').style.display = 'flex';
-
-            // Check if there are any items
-            if (items.length === 0) {
+            if (items === false || items.length === 0) {
+                if (items === false) return;
                 Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
+                    icon: 'warning',
+                    title: 'Warning',
                     text: 'Please add items first'
                 });
-                document.getElementById('loadingOverlay').style.display = 'none';
                 return;
             }
+
+            const getNumericValue = (selector) => {
+                const value = $(selector).data('raw-value') || unformatNumber($(selector).val());
+                return Number(value.toFixed(2));
+            };
+
+            // Use raw values for form submission
+            $('#gross_amount').val($('#gross_amount').data('raw-value'));
+            $('#total_discount_amount').val($('#total_discount_amount').data('raw-value'));
+            $('#net_amount_due').val($('#net_amount_due').data('raw-value'));
+            $('#total_vat_amount').val($('#total_vat_amount').data('raw-value'));
+            $('#vatable_amount').val($('#vatable_amount').data('raw-value'));
+            $('#zero_rated_amount').val($('#zero_rated_amount').data('raw-value'));
+            $('#vat_exempt_amount').val($('#vat_exempt_amount').data('raw-value'));
+            $('#tax_withheld_amount').val($('#tax_withheld_amount').data('raw-value'));
+            $('#total_amount_due').val($('#total_amount_due').data('raw-value'));
 
             $('#item_data').val(JSON.stringify(items));
 
@@ -940,30 +1053,27 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
             $(this).append(`<input type="hidden" name="discount_account_ids" value="${discountAccountIds.join(',')}">`);
             $(this).append(`<input type="hidden" name="output_vat_ids" value="${outputVatIds.join(',')}">`);
 
-            // Log the invoice_account_id value
-            console.log('Submitting or_account_id:', $('#or_account_id').val());
-            // Log the invoice_account_id value
-            console.log('Submitting outout_vat_ids:', $('#output_vat_ids').val());
-            // Use AJAX to submit the form
+            // Show the loading overlay
+            document.getElementById('loadingOverlay').style.display = 'flex';
             $.ajax({
                 url: $(this).attr('action'),
                 type: 'POST',
                 dataType: 'json',
                 data: $(this).serialize(),
-                success: function (response) {
+                success: function(response) {
                     document.getElementById('loadingOverlay').style.display = 'none';
 
                     if (response.success) {
                         Swal.fire({
                             icon: 'success',
                             title: 'Success',
-                            text: 'Official Receive Submitted!',
+                            text: 'Official Receipt Submitted!',
                             showCancelButton: true,
                             confirmButtonText: 'Print',
                             cancelButtonText: 'Save as PDF'
                         }).then((result) => {
-                            if (result.isConfirmed && response.invoiceId) {
-                                printInvoice(response.invoiceId, 1);  // Pass 1 for initial print
+                            if (result.isConfirmed && response.id) {
+                                printMethod(response.id, 1); // Pass 1 for initial print
                             } else {
                                 location.reload();
                             }
@@ -972,11 +1082,11 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
-                            text: 'Error saving invoice: ' + (response.message || 'Unknown error')
+                            text: 'Error saving receipt: ' + (response.message || 'Unknown error')
                         });
                     }
                 },
-                error: function (jqXHR, textStatus, errorThrown) {
+                error: function(jqXHR, textStatus, errorThrown) {
                     document.getElementById('loadingOverlay').style.display = 'none';
                     console.error('AJAX error:', textStatus, errorThrown);
                     console.log('Response Text:', jqXHR.responseText);
@@ -989,28 +1099,25 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
             });
         });
 
-        function printInvoice(invoiceId, printStatus) {
-            // First, update the print status
+        function printMethod(id, printStatus) {
             $.ajax({
                 url: 'api/or_payment_controller.php',
                 type: 'POST',
                 dataType: 'json',
                 data: {
                     action: 'update_print_status',
-                    invoice_id: invoiceId,
+                    id: id,
                     print_status: printStatus
                 },
-                success: function (response) {
+                success: function(response) {
                     if (response.success) {
-                        // If the status was updated successfully, proceed with printing
-                        console.log('Print status updated, now printing invoice:', invoiceId);
-                        // Open a new window with the print view
+                        console.log('Print status updated, now printing receipt:', id);
                         const printFrame = document.getElementById('printFrame');
-                        const printContentUrl = `print_or?action=print&id=${invoiceId}`;
+                        const printContentUrl = `print_or?action=print&id=${id}`;
 
                         printFrame.src = printContentUrl;
 
-                        printFrame.onload = function () {
+                        printFrame.onload = function() {
                             printFrame.contentWindow.focus();
                             printFrame.contentWindow.print();
                         };
@@ -1022,7 +1129,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                         });
                     }
                 },
-                error: function (jqXHR, textStatus, errorThrown) {
+                error: function(jqXHR, textStatus, errorThrown) {
                     console.error('AJAX error:', textStatus, errorThrown);
                     Swal.fire({
                         icon: 'error',
@@ -1041,7 +1148,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
         const description = selectedOption.data('description');
         const uom = selectedOption.data('uom');
         const costPrice = selectedOption.data('cost-price');
-        const cogsAccountId = selectedOption.data('cogs-accou   nt-id');
+        const cogsAccountId = selectedOption.data('cogs-account-id');
         const incomeAccountId = selectedOption.data('income-account-id');
         const assetAccountId = selectedOption.data('asset-account-id');
 
@@ -1060,6 +1167,4 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
         console.log("INCOME:" + incomeAccountId);
         console.log("ASSET:" + assetAccountId);
     }
-
-
 </script>

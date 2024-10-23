@@ -4,7 +4,58 @@ require_once '_init.php';
 // Include FPDF library
 require_once 'plugins/fpdf186/fpdf.php';
 
+function numberToWords($number) {
+    $ones = array(
+        1 => "One", 2 => "Two", 3 => "Three", 4 => "Four", 5 => "Five", 
+        6 => "Six", 7 => "Seven", 8 => "Eight", 9 => "Nine", 10 => "Ten", 
+        11 => "Eleven", 12 => "Twelve", 13 => "Thirteen", 14 => "Fourteen", 
+        15 => "Fifteen", 16 => "Sixteen", 17 => "Seventeen", 18 => "Eighteen", 
+        19 => "Nineteen"
+    );
+    $tens = array(
+        2 => "Twenty", 3 => "Thirty", 4 => "Forty", 5 => "Fifty", 
+        6 => "Sixty", 7 => "Seventy", 8 => "Eighty", 9 => "Ninety"
+    );
+    $scales = array(
+        "", "Thousand", "Million", "Billion", "Trillion"
+    );
 
+    if ($number == 0) {
+        return "Zero";
+    }
+
+    $number = (int)$number;
+    $string = "";
+    $scaleCount = 0;
+
+    while ($number > 0) {
+        if ($number % 1000 != 0) {
+            $scaleKey = $scaleCount;
+            $groupWords = "";
+            $groupNumber = $number % 1000;
+
+            if ($groupNumber >= 100) {
+                $groupWords .= $ones[floor($groupNumber / 100)] . " Hundred ";
+                $groupNumber %= 100;
+            }
+
+            if ($groupNumber >= 20) {
+                $groupWords .= $tens[floor($groupNumber / 10)] . " ";
+                $groupNumber %= 10;
+            }
+
+            if ($groupNumber > 0) {
+                $groupWords .= $ones[$groupNumber] . " ";
+            }
+
+            $string = trim($groupWords) . " " . $scales[$scaleKey] . " " . $string;
+        }
+        $number = floor($number / 1000);
+        $scaleCount++;
+    }
+
+    return trim($string);
+}
 
 try {
 
@@ -113,11 +164,24 @@ try {
                 $pdf->SetX($rightColumnX);
                 $pdf->Cell(0, $lineHeight, 'Bank: ' . $payment->account_description, 0, 1, 'L');
 
-                // Format the amount with the currency symbol and proper formatting
-                $amountInFigures = '₱ ' . number_format($payment->summary_applied_amount, 2); // Format amount with 2 decimal places
 
-                // Print the formatted amount in the PDF
-                $pdf->Cell(100, $lineHeight, 'Amount in Figures: ' . $amountInFigures, 0, 0, 'L');
+                // Format the amount without a thousands separator
+                $amountInFigures = number_format($payment->summary_applied_amount, 2, '.', '');
+
+                // Split the amount into whole and decimal parts
+                list($whole, $decimal) = explode('.', $amountInFigures);
+
+                // Convert the whole part to words
+                $amountInWords = numberToWords($whole) . ' Pesos';
+
+                // If there's a decimal part, convert it to words and append
+                if ($decimal > 0) {
+                    $amountInWords .= ' and ' . numberToWords($decimal) . ' Cents';
+                }
+
+                // Output the amount in words and figures
+                $pdf->Cell(100, $lineHeight, 'Amount in Words: ' . $amountInWords, 0, 1, 'L');
+                $pdf->Cell(100, $lineHeight, 'Amount in Figures: ' . $amountInFigures, 0, 1, 'L');
 
 
                 $pdf->SetX($rightColumnX);

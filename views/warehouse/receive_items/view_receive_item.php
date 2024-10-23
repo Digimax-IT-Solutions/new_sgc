@@ -1,7 +1,12 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::warehouseOnly();
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('warehouse_receive_items');
 $accounts = ChartOfAccount::all();
 $vendors = Vendor::all();
 $products = Product::all();
@@ -11,11 +16,13 @@ $wtaxes = WithholdingTax::all();
 $discounts = Discount::all();
 $input_vats = InputVat::all();
 $sales_taxes = SalesTax::all();
+$cost_centers = CostCenter::all();
+
 
 ?>
 
 <?php require 'views/templates/header.php' ?>
-<?php require 'views/templates/warehouse_sidebar.php' ?>
+<?php require 'views/templates/sidebar.php' ?>
 
 <style>
     .card {
@@ -119,7 +126,7 @@ $sales_taxes = SalesTax::all();
 </style>
 
 <div class="main">
-    <?php require 'views/templates/warehouse_navbar.php' ?>
+    <?php require 'views/templates/navbar.php' ?>
 
     <main class="content">
         <div class="container-fluid p-0">
@@ -339,61 +346,47 @@ $sales_taxes = SalesTax::all();
                                     </div>
                                     <div class="card-body">
                                         <div class="table-responsive">
-                                            <table class="table table-sm table-hover" id="itemTable">
+                                        <table class="table table-sm table-hover" id="itemTable">
                                                 <thead class="bg-light" style="font-size: 12px;">
                                                     <tr>
-                                                        <th><i class="fas fa-file-alt me-1"></i>PO #</th>
-                                                        <th><i class="far fa-calendar-alt me-1"></i>Date</th>
-                                                        <th><i class="far fa-calendar-alt me-1"></i>Delivery Date</th>
-                                                        <th><i class="fas fa-box me-1"></i>Item</th>
-                                                        <th><i class="fas fa-chart-pie me-1"></i>Cost Center</th>
-                                                        <th><i class="fas fa-info-circle me-1"></i>Desc</th>
-                                                        <th><i class="fas fa-balance-scale me-1"></i>U/M</th>
-                                                        <th style="width: 150px; background-color: #e6f3ff;"><i
-                                                                class="fas fa-truck-loading me-1"></i>Qty on PO</th>
-                                                        <th style="width: 150px; background-color: #e6f3ff;"><i
-                                                                class="fas fa-truck-loading me-1"></i>Delivered</th>
-                                                        <th style="width: 150px; background-color: #e6f3ff;"><i
-                                                                class="fas fa-truck-loading me-1"></i>Quantity Received</th>
-                                                        <th style="text-align: center"><i
-                                                                class="fas fa-closed-loading me-1"></i>Closed</th>
-                                                        <th hidden>Cost</th>
-                                                        <th class="text-right" hidden>Amount</th>
-                                                        <th class="text-right" hidden>Disc Type</th>
-                                                        <th class="text-right" hidden>Discount</th>
-                                                        <th class="text-right" hidden>Net</th>
-                                                        <th class="text-right" hidden>Tax Amt</th>
-                                                        <th class="text-right" hidden>Tax Type</th>
-                                                        <th class="text-right" hidden>VAT</th>
+                                                        <th>PO #</th>
+                                                        <th>Item</th>
+                                                        <th>Cost Center</th>
+                                                        <th>PO Quantity</th>
+                                                        <th>Delivered</th>
+                                                        <th>Receive Quantity</th>
+                                                        <th>Cost</th>
+                                                        <th>Amount</th>
+                                                        <th>Discount Type</th>
+                                                        <th>Discount</th>
+                                                        <th>Net</th>
+                                                        <th>Tax Amount</th>
+                                                        <th>Tax Type</th>
+                                                        <th>VAT</th>
+                                                        <th style="width: 80px; text-align: center">Closed</th>
                                                     </tr>
                                                 </thead>
-                                                <tbody>
+                                                <tbody id="itemTableBody" style="font-size: 14px;">
+                                                    <!-- Existing rows or dynamically added rows will be appended here -->
                                                     <?php
                                                     if ($receive_items) {
                                                         foreach ($receive_items->details as $detail) {
-                                                            ?>
+                                                    ?>
                                                             <tr>
-                                                                <td>
-                                                                    <input type="text" class="form-control form-control-sm memo"
-                                                                        name="po_id[]" value="<?= htmlspecialchars($detail['po_no']) ?>"
-                                                                        disabled>
-                                                                </td>
-
-                                                                <td>
-                                                                    <input type="date" class="form-control form-control-sm memo"
-                                                                        name="po_id[]" value="<?= htmlspecialchars($detail['date']) ?>"
-                                                                        disabled>
-                                                                </td>
-
-                                                                <td>
-                                                                    <input type="date" class="form-control form-control-sm memo"
+                                                                <td hidden>
+                                                                    <input type="text" class="form-control form-control-sm po_id"
                                                                         name="po_id[]"
-                                                                        value="<?= htmlspecialchars($detail['delivery_date']) ?>"
-                                                                        disabled>
+                                                                        value="<?= htmlspecialchars($detail['po_id']) ?>" disabled>
                                                                 </td>
 
                                                                 <td>
-                                                                    <select class="form-control form-control-sm item-dropdown"
+                                                                    <input type="text" class="form-control form-control-sm po_no"
+                                                                        name="po_no[]"
+                                                                        value="<?= htmlspecialchars($detail['po_no']) ?>" disabled>
+                                                                </td>
+
+                                                                <td>
+                                                                    <select class="form-control form-control-sm item-dropdown select2"
                                                                         name="item_id[]" disabled>
 
                                                                         <?php foreach ($products as $product): ?>
@@ -406,25 +399,21 @@ $sales_taxes = SalesTax::all();
                                                                     </select>
                                                                 </td>
 
-                                                                <td>
-                                                                    <input type="text"
-                                                                        class="form-control form-control-sm cost_center_id"
-                                                                        name="cost_center_id[]"
-                                                                        value="<?= htmlspecialchars($detail['particular']) ?>" disabled>
-                                                                </td>
 
                                                                 <td>
-                                                                    <input type="text" class="form-control form-control-sm memo"
-                                                                        name="memo[]" placeholder="Enter memo"
-                                                                        value="<?= htmlspecialchars($detail['item_sales_description']) ?>"
-                                                                        disabled>
+                                                                    <select class="form-control form-control-sm cost-center-dropdown select2"
+                                                                        name="cost_center[]">
+
+                                                                        <?php foreach ($cost_centers as $cost_center): ?>
+                                                                            <option value="<?= htmlspecialchars($cost_center->id) ?>"
+                                                                                <?= ($cost_center->id == $detail['cost_center_id']) ? 'selected' : '' ?>>
+                                                                                <?= htmlspecialchars($cost_center->particular) ?>
+                                                                            </option>
+                                                                        <?php endforeach; ?>
+
+                                                                    </select>
                                                                 </td>
 
-                                                                <td>
-                                                                    <input type="text" class="form-control form-control-sm uom"
-                                                                        name="uom[]" placeholder="Enter UOM"
-                                                                        value="<?= htmlspecialchars($detail['uom_name']) ?>" disabled>
-                                                                </td>
 
                                                                 <td>
                                                                     <input type="text" class="form-control form-control-sm memo"
@@ -434,14 +423,74 @@ $sales_taxes = SalesTax::all();
 
                                                                 <td>
                                                                     <input type="text" class="form-control form-control-sm memo"
-                                                                        value="<?= htmlspecialchars($detail['last_received_qty']) ?>"
-                                                                        disabled>
+                                                                        value="<?= htmlspecialchars($detail['last_received_qty']) ?>" disabled>
                                                                 </td>
 
                                                                 <td>
                                                                     <input type="text" class="form-control form-control-sm memo"
                                                                         name="quantity[]"
                                                                         value="<?= htmlspecialchars($detail['quantity']) ?>" disabled>
+                                                                </td>
+
+                                                                <td>
+                                                                    <input type="text" class="form-control form-control-sm amount"
+                                                                        name="amount[]" placeholder="Enter amount"
+                                                                        value="<?= htmlspecialchars($detail['cost']) ?>" disabled>
+                                                                </td>
+
+                                                                <td>
+                                                                    <input type="text" class="form-control form-control-sm amount"
+                                                                        name="amount[]" placeholder="Enter amount"
+                                                                        value="<?= htmlspecialchars($detail['amount']) ?>" disabled>
+                                                                </td>
+
+                                                                <td>
+                                                                    <select class="form-control form-control-sm discount-dropdown select2" name="discount_percentage[]" disabled>
+                                                                        <?php foreach ($discounts as $discount) : ?>
+                                                                            <option value="<?= htmlspecialchars($discount->discount_rate) ?>" <?= ($discount->discount_rate == $detail['discount_percentage']) ? 'selected' : '' ?>>
+                                                                                <?= htmlspecialchars($discount->discount_description) ?>
+                                                                            </option>
+                                                                        <?php endforeach; ?>
+                                                                    </select>
+                                                                </td>
+
+                                                                <td>
+                                                                    <input type="text"
+                                                                        class="form-control form-control-sm discount-amount"
+                                                                        name="discount[]" placeholder=""
+                                                                        value="<?= htmlspecialchars($detail['discount']) ?>"
+                                                                        disabled>
+                                                                </td>
+
+                                                                <td>
+                                                                    <input type="text"
+                                                                        class="form-control form-control-sm net-amount-before-vat"
+                                                                        name="net_amount_before_vat[]" placeholder=""
+                                                                        value="<?= htmlspecialchars($detail['net_amount_before_input_vat']) ?>"
+                                                                        disabled>
+                                                                </td>
+
+                                                                <td>
+                                                                    <input type="text" class="form-control form-control-sm net-amount"
+                                                                        name="net_amount[]" placeholder=""
+                                                                        value="<?= htmlspecialchars($detail['net_amount']) ?>" disabled>
+                                                                </td>
+
+                                                                <td>
+                                                                    <select class="form-control form-control-sm tax-dropdown select2"
+                                                                        name="tax_amount[]" disabled>
+                                                                        <?php foreach ($input_vats as $input_vat) : ?>
+                                                                            <option value="<?= htmlspecialchars($input_vat->input_vat_rate) ?>" <?= ($input_vat->input_vat_rate == $detail['input_vat_percentage']) ? 'selected' : '' ?>>
+                                                                                <?= htmlspecialchars($input_vat->input_vat_description) ?>
+                                                                            </option>
+                                                                        <?php endforeach; ?>
+                                                                    </select>
+                                                                </td>
+
+                                                                <td>
+                                                                    <input type="text" class="form-control form-control-sm input-vat"
+                                                                        name="vat_amount[]" placeholder=""
+                                                                        value="<?= htmlspecialchars($detail['input_vat_amount']) ?>" disabled>
                                                                 </td>
 
                                                                 <td style="text-align: center">
@@ -457,11 +506,12 @@ $sales_taxes = SalesTax::all();
                                                                     </style>
                                                                 </td>
                                                             </tr>
-                                                            <?php
+                                                    <?php
                                                         }
                                                     }
                                                     ?>
                                                 </tbody>
+                                            </table>
                                             </table>
                                         </div>
                                     </div>

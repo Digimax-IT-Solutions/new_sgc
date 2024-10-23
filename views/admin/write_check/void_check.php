@@ -1,7 +1,12 @@
 <?php
 // Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('write_check');
 
 // Fetch all checks
 $checks = WriteCheck::all();
@@ -24,21 +29,19 @@ $checks = WriteCheck::all();
 
                     <!-- Default box -->
                     <div class="card">
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                                <h6 class="m-0 font-weight-bold text-primary">Checks</h6>
-                                <div>
 
-                                        <a href="write_check" class="btn btn-sm btn-secondary">
-                                            <i class="fas fa-arrow-left"></i> Go Back
+
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <a href="write_check" class="btn btn-lg btn-outline-secondary me-2 mb-2">
+                                        <i class="fas fa-arrow-left"></i> Go Back
                                         </a>
-                                        <a href="create_check" class="btn btn-sm btn-primary">
-                                            <i class="fas fa-plus"></i> New Check
+                                        <a href="create_check" class="btn btn-lg btn-outline-success me-2 mb-2">
+                                            <i class="fas fa-plus fa-lg me-2"></i> Create Check Voucher
                                         </a>
                                     </div>
                                 </div>
-                            </div>
 
                             <div class="row">
                                 <div class="card-body">
@@ -57,40 +60,42 @@ $checks = WriteCheck::all();
                                             <tbody>
                                                 <?php foreach ($checks as $check): ?>
                                                     <?php if ($check->status == 3): // Only include invoices with status 3 ?>
-                                                    <tr>
-                                                        <td><?= htmlspecialchars($check->cv_no); ?></td>
-                                                        <td><?= htmlspecialchars($check->check_date); ?></td>
-                                                        <td><?= htmlspecialchars($check->check_no); ?></td>
-                                                        <td><b>₱<?= number_format($check->total_amount_due, 2, '.', ','); ?></b></td>
-                                                        <td class="text-center">
-                                                            <?php
-                                                            switch ($check->status) {
-                                                                case 4:
-                                                                    echo '<span class="badge bg-info text-dark">Draft</span>'; // Changed bg-warning to bg-secondary for better visibility
-                                                                    break;
-                                                                case 3:
+                                                        <tr>
+                                                            <td><?= htmlspecialchars($check->cv_no); ?></td>
+                                                            <td><?= htmlspecialchars($check->check_date); ?></td>
+                                                            <td><?= htmlspecialchars($check->check_no); ?></td>
+                                                            <td><b>₱<?= number_format($check->total_amount_due, 2, '.', ','); ?></b>
+                                                            </td>
+                                                            <td class="text-center">
+                                                                <?php
+                                                                switch ($check->status) {
+                                                                    case 4:
+                                                                        echo '<span class="badge bg-info text-dark">Draft</span>'; // Changed bg-warning to bg-secondary for better visibility
+                                                                        break;
+                                                                    case 3:
                                                                         echo '<span class="badge bg-secondary">Void</span>'; //
-                                                                    break;
-                                                                case 0:
-                                                                    echo '<span class="badge bg-danger">Unpaid</span>';
-                                                                    break;
-                                                                case 1:
-                                                                    echo '<span class="badge bg-success">Paid</span>';
-                                                                    break;
-                                                                case 2:
-                                                                    echo '<span class="badge bg-warning">Partially Paid</span>';
-                                                                    break;
-                                                                default:
-                                                                    echo '<span class="badge bg-secondary">Unknown</span>';
-                                                            }
-                                                            ?>
-                                                        </td>
-                                                        <td>
-                                                            <a href="view_check?action=update&id=<?= htmlspecialchars($check->id); ?>" class="btn btn-sm btn-info">
-                                                                <i class="fas fa-eye"></i> View
-                                                            </a>
-                                                        </td>
-                                                    </tr>
+                                                                        break;
+                                                                    case 0:
+                                                                        echo '<span class="badge bg-danger">Unpaid</span>';
+                                                                        break;
+                                                                    case 1:
+                                                                        echo '<span class="badge bg-success">Paid</span>';
+                                                                        break;
+                                                                    case 2:
+                                                                        echo '<span class="badge bg-warning">Partially Paid</span>';
+                                                                        break;
+                                                                    default:
+                                                                        echo '<span class="badge bg-secondary">Unknown</span>';
+                                                                }
+                                                                ?>
+                                                            </td>
+                                                            <td>
+                                                                <a href="view_check?action=update&id=<?= htmlspecialchars($check->id); ?>"
+                                                                    class="btn btn-sm btn-info">
+                                                                    <i class="fas fa-eye"></i> View
+                                                                </a>
+                                                            </td>
+                                                        </tr>
                                                     <?php endif; ?>
                                                 <?php endforeach; ?>
                                             </tbody>

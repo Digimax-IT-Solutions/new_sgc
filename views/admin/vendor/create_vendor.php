@@ -1,8 +1,12 @@
 <?php
 // Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
-
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('vendor_list');
 // Fetch all vendors
 $vendors = Vendor::all();
 $input_vats = InputVat::all();

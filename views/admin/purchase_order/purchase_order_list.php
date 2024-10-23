@@ -1,8 +1,12 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
-
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('purchase_order');
 $purchase_orders = PurchaseOrder::all();
 
 // Calculate summary statistics
@@ -16,6 +20,25 @@ $page = 'purchase_order';
 
 <?php require 'views/templates/header.php' ?>
 <?php require 'views/templates/sidebar.php' ?>
+<style>
+    .btn-lg {
+
+        border-radius: 8px;
+    }
+
+    .btn-outline-primary,
+    .btn-outline-danger,
+    .btn-outline-secondary {
+        transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .btn-outline-success:hover,
+    .btn-outline-danger:hover,
+    .btn-outline-secondary:hover {
+        color: #fff !important;
+        box-shadow: 0px 4px 12px rgba(0, 123, 255, 0.3);
+    }
+</style>
 <div class="main">
     <?php require 'views/templates/navbar.php' ?>
     <main class="content">
@@ -109,16 +132,15 @@ $page = 'purchase_order';
 
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">Purchase Orders</h6>
                     <div>
-                        <a href="draft_purchase_order" class="btn btn-sm btn-danger">
-                                <i class="fab fa-firstdraft"></i> Draft
-                            </a>
-                        <a href="void_purchase_order" class="btn btn-sm btn-secondary">
-                            <i class="fas fa-ban"></i> Void
+                        <a href="draft_purchase_order" class="btn btn-lg btn-outline-secondary me-2 mb-2">
+                            <i class="fab fa-firstdraft fa-lg me-2"></i> Drafts
                         </a>
-                        <a href="create_purchase_order" class="btn btn-sm btn-primary">
-                            <i class="fas fa-plus"></i> New Purchase Order
+                        <a href="void_purchase_order" class="btn btn-lg btn-outline-danger me-2 mb-2">
+                            <i class="fas fa-file-excel fa-lg me-2"></i> Voids
+                        </a>
+                        <a href="create_purchase_order" class="btn btn-lg btn-outline-success me-2 mb-2">
+                            <i class="fas fa-plus fa-lg me-2"></i> Create Purchase Order
                         </a>
                     </div>
                 </div>
@@ -139,35 +161,35 @@ $page = 'purchase_order';
                                 <?php foreach ($purchase_orders as $order): ?>
                                     <?php if ($order->po_status != 3 && $order->po_status != 4): // Exclude invoices with status 3 and 4 
                                     ?>
-                                    <tr>
-                                        <td><?= $order->po_no ?></td>
-                                        <td><?= $order->vendor_name ?></td>
-                                        <td><?= date('M d, Y', strtotime($order->date)) ?></td>
-                                        <td class="text-right">₱<?= number_format($order->total_amount, 2) ?></td>
-                                        <td class="text-center">
-                                            <?php
-                                            switch ($order->po_status) {
-                                                case 0:
-                                                    echo '<span class="badge bg-warning">Waiting for delivery</span>';
-                                                    break;
-                                                case 1:
-                                                    echo '<span class="badge bg-success">Received</span>';
-                                                    break;
-                                                case 2:
-                                                    echo '<span class="badge bg-info">Partially Received</span>';
-                                                    break;
-                                                default:
-                                                    echo '<span class="badge bg-secondary">Unknown</span>';
-                                            }
-                                            ?>
-                                        </td>
-                                        <td>
-                                            <a href="view_purchase_order?action=update&id=<?= $order->id ?>"
-                                                class="btn btn-sm btn-info">
-                                                <i class="fas fa-eye"></i> View
-                                            </a>
-                                        </td>
-                                    </tr>
+                                        <tr>
+                                            <td><?= $order->po_no ?></td>
+                                            <td><?= $order->vendor_name ?></td>
+                                            <td><?= date('M d, Y', strtotime($order->date)) ?></td>
+                                            <td class="text-right">₱<?= number_format($order->total_amount, 2) ?></td>
+                                            <td class="text-center">
+                                                <?php
+                                                switch ($order->po_status) {
+                                                    case 0:
+                                                        echo '<span class="badge bg-warning">Waiting for delivery</span>';
+                                                        break;
+                                                    case 1:
+                                                        echo '<span class="badge bg-success">Received</span>';
+                                                        break;
+                                                    case 2:
+                                                        echo '<span class="badge bg-info">Partially Received</span>';
+                                                        break;
+                                                    default:
+                                                        echo '<span class="badge bg-secondary">Unknown</span>';
+                                                }
+                                                ?>
+                                            </td>
+                                            <td>
+                                                <a href="view_purchase_order?action=update&id=<?= $order->id ?>"
+                                                    class="btn btn-sm btn-info">
+                                                    <i class="fas fa-eye"></i> View
+                                                </a>
+                                            </td>
+                                        </tr>
                                     <?php endif; ?>
                                 <?php endforeach; ?>
                             </tbody>
@@ -182,9 +204,11 @@ $page = 'purchase_order';
 <?php require 'views/templates/footer.php' ?>
 
 <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
         $('#dataTable').DataTable({
-            "order": [[2, "desc"]],
+            "order": [
+                [0, "desc"]
+            ], // Set the column index to 0 for pr_no and order to ascending
             "pageLength": 25
         });
     });

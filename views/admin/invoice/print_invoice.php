@@ -27,16 +27,16 @@ try {
                 $pdf = new FPDF();
                 $pdf->AddPage();
 
-            // Add a watermark based on the invoice status
-            if ($invoice->invoice_status == 3) {
-                // If invoice status is 3, add a "VOID" watermark
-                $pdf->SetFont('Arial', 'B', 190);
-                $pdf->RotatedText(55, 190, 'VOID', 45, array(192, 192, 192)); // Light gray color
-            } elseif ($invoice->invoice_status == 4) {
-                // If invoice status is 4, add a "DRAFT" watermark
-                $pdf->SetFont('Arial', 'B', 175);
-                $pdf->RotatedText(55, 190, 'DRAFT', 45, array(192, 192, 192)); // Light gray color
-            }
+                // Add a watermark based on the invoice status
+                if ($invoice->invoice_status == 3) {
+                    // If invoice status is 3, add a "VOID" watermark
+                    $pdf->SetFont('Arial', 'B', 190);
+                    $pdf->RotatedText(55, 190, 'VOID', 45, array(192, 192, 192)); // Light gray color
+                } elseif ($invoice->invoice_status == 4) {
+                    // If invoice status is 4, add a "DRAFT" watermark
+                    $pdf->SetFont('Arial', 'B', 175);
+                    $pdf->RotatedText(55, 190, 'DRAFT', 45, array(192, 192, 192)); // Light gray color
+                }
 
 
                 // Set margins
@@ -63,14 +63,15 @@ try {
                 $bannerX = ($pageWidth - $bannerWidth) / 2;
 
                 // Add banner image
-                $pdf->Image('photos/banner.png', 2, 15, $bannerWidth, 0, 'PNG');
+                $pdf->Image('photos/banner.png', 10, 15, $bannerWidth, 0, 'PNG');
 
                 // Move below banner
                 $pdf->SetY($pdf->GetY() + 8);
 
                 // Company details centered under banner
                 $pdf->SetFont('Arial', '', 10);
-                $pdf->Cell(0, 4, 'Montebello, Kanaga, Leyte, 6531', 0, 1, 'R');
+                $pdf->Cell(0, 4, '19/F Citibank Tower, 8741 Paseo De Roxas,', 0, 1, 'R');
+                $pdf->Cell(0, 4, '1Bel-Air, Makati City, Metro Manila, Philippines', 0, 1, 'R');
                 $pdf->Cell(0, 4, 'VAT Reg. TIN: 000-123-533-00000', 0, 1, 'R');
                 $pdf->Cell(0, 4, 'Tel. No: +63 (53) 553 0058', 0, 1, 'R');
 
@@ -138,29 +139,91 @@ try {
                         $totalCost += $detail['cost'];
                         $totalAmount += $detail['amount'];
 
+                        // Get the starting Y position and X position
                         $startY = $pdf->GetY();
                         $currentX = $pdf->GetX();
 
-                        // Item Name
-                        $pdf->Cell(40, 5, $detail['item_name'], 0, 0, 'L');
+                        // Define column widths
+                        $itemNameWidth = 40; // Width for Item Name
+                        $descriptionWidth = 60; // Width for Description
+
+                        // Measure the width of the item name
+                        $pdf->SetFont('Arial', '', 10);
+                        $itemName = $detail['item_name'];
+                        $itemNameWidthActual = $pdf->GetStringWidth($itemName);
+
+                        // Check if the item name exceeds the allowed width
+                        if ($itemNameWidthActual > $itemNameWidth) {
+                            // Truncate item name with ellipsis
+                            $charWidth = $pdf->GetStringWidth('M'); // Width of a single character (approximation)
+
+                            // Ensure that 10 characters are always visible before truncating
+                            $extraChars = -10; // Number of characters to keep before truncating
+                            $maxChars = floor($itemNameWidth / $charWidth) - 3 - $extraChars; // Reserve space for ellipsis
+
+                            if (strlen($itemName) > $maxChars) {
+                                $truncatedItemName = substr($itemName, 0, $maxChars) . '...';
+                            } else {
+                                $truncatedItemName = $itemName;
+                            }
+
+                            $itemName = $truncatedItemName;
+                        }
+
+                        // Item Name (using Cell to avoid wrapping)
+                        $pdf->SetXY($currentX, $startY);
+                        $pdf->Cell($itemNameWidth, 5, $itemName, 0, 0, 'L');
+                        $itemNameEndY = $pdf->GetY(); // Capture Y position after writing
+
+                        // Move to the X position for Description
+                        $pdf->SetXY($currentX + $itemNameWidth, $startY);
+
+                        // Truncate Description if needed
+                        $itemSalesDescription = $detail['item_sales_description'];
+                        $descriptionWidthActual = $pdf->GetStringWidth($itemSalesDescription);
+
+                        if ($descriptionWidthActual > $descriptionWidth) {
+                            $charWidth = $pdf->GetStringWidth('M'); // Width of a single character (approximation)
+
+                            // Ensure that 10 characters are always visible before truncating
+                            $extraChars = 10; // Number of characters to keep before truncating
+                            $maxChars = floor($descriptionWidth / $charWidth) - 3 - $extraChars; // Reserve space for ellipsis
+
+                            if (strlen($itemSalesDescription) > $maxChars) {
+                                $truncatedDescription = substr($itemSalesDescription, 0, $maxChars) . '...';
+                            } else {
+                                $truncatedDescription = $itemSalesDescription;
+                            }
+
+                            $itemSalesDescription = $truncatedDescription;
+                        }
 
                         // Description (using MultiCell)
-                        $pdf->SetXY($currentX + 40, $startY);
-                        $pdf->MultiCell(60, 5, $detail['item_sales_description'], 0, 'L');
+                        $pdf->MultiCell($descriptionWidth, 5, $itemSalesDescription, 0, 'L');
+                        $descriptionEndY = $pdf->GetY(); // Capture Y position after wrapping
 
-                        $endY = $pdf->GetY();
+                        // Determine the maximum Y position for the row
+                        $maxEndY = max($itemNameEndY, $descriptionEndY);
+
+                        // Move to the X position for other details
+                        $pdf->SetXY($currentX + $itemNameWidth + $descriptionWidth, $startY);
 
                         // Other details
-                        $pdf->SetXY($currentX + 100, $startY);
                         $pdf->Cell(20, 5, $detail['quantity'], 0, 0, 'C');
                         $pdf->Cell(20, 5, $detail['uom_name'], 0, 0, 'C');
                         $pdf->Cell(25, 5, number_format($detail['cost'], 2), 0, 0, 'C');
                         $pdf->Cell(25, 5, number_format($detail['amount'], 2), 0, 0, 'R');
 
-                        // Move to the next line, considering the height of the description
-                        $pdf->SetY($endY);
+                        // Move to the next line, considering the highest content height
+                        $pdf->SetY($maxEndY);
                     }
                 }
+
+
+
+
+
+
 
 
                 $pdf->Line($pdf->GetX(), $pdf->GetY(), $pdf->GetX() + 190, $pdf->GetY()); // Draw a line
@@ -173,9 +236,9 @@ try {
                 $pdf->Ln(4); // Move to the next line after the last row
                 $pdf->Cell(159, 10, 'Net Amount:', 0, 0, 'R');
                 $pdf->Cell(30, 10, number_format($invoice->net_amount_due, 2), 0, 0, 'R');
-                $pdf->Ln(4); // Move to the next line after the last row
-                $pdf->Cell(159, 10, 'VAT Sales:', 0, 0, 'R');
-                $pdf->Cell(30, 10, number_format($invoice->vatable_amount, 2), 0, 0, 'R');
+                // $pdf->Ln(4); // Move to the next line after the last row
+                // $pdf->Cell(159, 10, 'VAT Sales:', 0, 0, 'R');
+                // $pdf->Cell(30, 10, number_format($invoice->vatable_amount, 2), 0, 0, 'R');
                 $pdf->Ln(4); // Move to the next line after the last row
                 $pdf->Cell(159, 10, 'Vatable (12%):', 0, 0, 'R');
                 $pdf->Cell(30, 10, number_format($invoice->vat_amount, 2), 0, 0, 'R');
@@ -252,8 +315,6 @@ try {
 
                 // Output the PDF
                 $pdf->Output();
-
-
             } else {
                 // Handle the case where the check is not found
                 echo "Invoice not found.";

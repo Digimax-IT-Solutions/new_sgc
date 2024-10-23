@@ -1,8 +1,13 @@
 <?php
 //Guard
-include '_guards.php';
+//Guard
+require_once '_guards.php';
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('accounts_payable_voucher');
 
-Guard::adminOnly();
 $accounts = ChartOfAccount::all();
 $vendors = Vendor::all();
 $cost_centers = CostCenter::all();
@@ -10,6 +15,7 @@ $discounts = Discount::all();
 $wtaxes = WithholdingTax::all();
 $input_vats = InputVat::all();
 $terms = Term::all();
+$locations = Location::all();
 
 $newAPVoucherNo = Apv::getLastApvNo();
 
@@ -139,37 +145,50 @@ $newAPVoucherNo = Apv::getLastApvNo();
                                                 <!-- SELECT APV ACCOUNT -->
                                                 <div class="col-md-4 customer-details">
                                                     <div class="form-group">
-                                                        <label for="account_id">A/P Account</label>
-                                                        <select class="form-control form-control-sm select2" id="account_id" name="account_id" disabled>
-                                                            <option value="<?= $apv->account_id ?>">
-                                                                <?= $apv->account_name ?>
-                                                            </option>
-                                                            <?php foreach ($accounts as $account) : ?>
-                                                                <?php if ($account->account_type == 'Accounts Payable') : ?>
-                                                                    <option value="<?= $account->id ?>" <?= ($account->id == $apv->account_id) ? 'selected' : '' ?>>
-                                                                        <?= $account->account_code ?> -
-                                                                        <?= $account->account_description ?>
-                                                                    </option>
-                                                                <?php endif; ?>
-                                                            <?php endforeach; ?>
-                                                        </select>
+                                                    <label for="account_id" class="form-label">A/P Account</label>
+                                                    <select class="form-select form-select-sm select2" id="account_id" name="account_id" <?= ($apv->status != 4) ? 'disabled' : '' ?>>
+                                                        <?php
+                                                        // Array to prevent duplicates
+                                                        $used_accounts = [];
+                                                        $selected_account_id = $apv->account_id ?? ''; // Assuming this holds the selected account ID
+
+                                                        foreach ($accounts as $account):
+                                                            if ($account->account_type == 'Accounts Payable' && !in_array($account->id, $used_accounts)):
+                                                                $used_accounts[] = $account->id; // Track used account IDs
+                                                        ?>
+                                                                <option value="<?= htmlspecialchars($account->id) ?>" <?= $account->id == $selected_account_id ? 'selected' : '' ?>>
+                                                                    <?= htmlspecialchars($account->account_code) ?> - <?= htmlspecialchars($account->account_description) ?>
+                                                                </option>
+                                                        <?php
+                                                            endif;
+                                                        endforeach;
+                                                        ?>
+                                                    </select>
                                                     </div>
                                                 </div>
 
                                                 <!-- SELECT VENDOR -->
                                                 <div class="col-md-4 customer-details">
                                                     <div class="form-group">
-                                                        <label for="vendor_id">Vendor<span class="text-muted" id="payee_type_display"></span></label>
-                                                        <select class="form-control form-control-sm select2" id="vendor_id" name="vendor_id" disabled>
-                                                            <option value="<?= $apv->vendor_id ?>">
-                                                                <?= $apv->vendor_name ?>
-                                                            </option>
-                                                            <?php foreach ($vendors as $vendor) : ?>
-                                                                <option value="<?= $vendor->id ?>" data-name="<?= $vendor->vendor_name ?>">
-                                                                    <?= $vendor->vendor_name ?>
+                                                    <label for="vendor_id" class="form-label">Vendor<span class="text-muted" id="payee_type_display"></span></label>
+                                                    <select class="form-select form-select-sm select2" id="vendor_id" name="vendor_id" <?= ($apv->status != 4) ? 'disabled' : '' ?>>
+                                                        <?php
+                                                        // Array to prevent duplicates
+                                                        $used_vendors = [];
+                                                        $selected_vendor_id = $apv->vendor_id ?? ''; // Assuming this holds the selected vendor ID
+
+                                                        foreach ($vendors as $vendor):
+                                                            if (!in_array($vendor->id, $used_vendors)):
+                                                                $used_vendors[] = $vendor->id; // Track used vendor IDs
+                                                        ?>
+                                                                <option value="<?= htmlspecialchars($vendor->id) ?>" <?= $vendor->id == $selected_vendor_id ? 'selected' : '' ?>>
+                                                                    <?= htmlspecialchars($vendor->vendor_name) ?>
                                                                 </option>
-                                                            <?php endforeach; ?>
-                                                        </select>
+                                                        <?php
+                                                            endif;
+                                                        endforeach;
+                                                        ?>
+                                                    </select>
                                                     </div>
                                                 </div>
                                             </div>
@@ -183,52 +202,62 @@ $newAPVoucherNo = Apv::getLastApvNo();
                                         <div class="row">
                                             <div class="col-md-3 order-details">
                                                 <div class="form-group">
-                                                    <!-- PURCHASE ORDER NO -->
+                                                    <!-- Reference Document No -->
                                                     <label for="ref_no">Reference Doc No.</label>
-                                                    <input type="text" class="form-control form-control-md" id="ref_no"
-                                                        name="ref_no" value="<?= $apv->ref_no ?>" disabled>
+                                                    <input type="text" class="form-control form-control-md" id="ref_no" name="ref_no" value="<?= $apv->ref_no ?>" <?= ($apv->status == 4) ? '' : 'disabled' ?>>
                                                 </div>
                                             </div>
 
                                             <div class="col-md-3 order-details">
                                                 <div class="form-group">
-                                                    <!-- PURCHASE ORDER NO -->
+                                                    <!-- Purchase Order No -->
                                                     <label for="po_no">PO No.</label>
-                                                    <input type="text" class="form-control form-control-md" id="po_no"
-                                                        name="po_no" value="<?= $apv->po_no ?>" disabled>
+                                                    <input type="text" class="form-control form-control-md" id="po_no" name="po_no" value="<?= $apv->po_no ?>" <?= ($apv->status == 4) ? '' : 'disabled' ?>>
                                                 </div>
                                             </div>
 
                                             <div class="col-md-3 order-details">
                                                 <div class="form-group">
-                                                    <!-- PURCHASE ORDER NO -->
+                                                    <!-- Receiving Report No -->
                                                     <label for="rr_no">RR No.</label>
-                                                    <input type="text" class="form-control form-control-md" id="rr_no"
-                                                        name="rr_no" value="<?= $apv->rr_no ?>" disabled>
+                                                    <input type="text" class="form-control form-control-md" id="rr_no" name="rr_no" value="<?= $apv->rr_no ?>" <?= ($apv->status == 4) ? '' : 'disabled' ?>>
                                                 </div>
                                             </div>
                                         </div>
 
+
                                         <div class="row">
 
 
+                                        <div class="row">
                                             <div class="col-md-3">
                                                 <!-- SELECT DATE -->
                                                 <div class="form-group">
                                                     <label for="apv_date">Date</label>
-                                                    <input type="date" class="form-control form-control-md" id="apv_date" name="apv_date" value="<?= $apv->apv_date ?>" disabled>
+                                                    <input type="date" class="form-control form-control-md" id="apv_date" name="apv_date" value="<?= htmlspecialchars($apv->apv_date) ?>" <?= ($apv->status == 4) ? '' : 'disabled' ?>>
                                                 </div>
                                             </div>
 
                                             <div class="col-md-3">
                                                 <div class="form-group">
-                                                    <label for="terms_id">Terms</label>
-                                                    <select class="form-select form-select-md" id="terms_id" name="terms_id" disabled>
-                                                        <option value="<?= $apv->terms_id ?>">
-                                                            <?= $apv->terms_id ?>
+                                                <label for="terms_id">Terms</label>
+                                                    <select class="form-select form-select-md" id="terms_id" name="terms_id" <?= ($apv->status == 4) ? '' : 'disabled' ?>>
+                                                        <?php 
+                                                        // Find the selected term based on terms_id
+                                                        $selectedTerm = '';
+                                                        foreach ($terms as $term) {
+                                                            if ($term->id == $apv->terms_id) {
+                                                                $selectedTerm = $term->term_name;
+                                                            }
+                                                        }
+                                                        ?>
+                                                        <!-- Display the selected term_name as the value -->
+                                                        <option value="<?= htmlspecialchars($selectedTerm) ?>">
+                                                            <?= htmlspecialchars($selectedTerm) ?>
                                                         </option>
                                                         <?php foreach ($terms as $term) : ?>
-                                                            <option value="<?= $term->id ?>" data-days="<?= $term->term_days_due ?>"><?= $term->term_name ?>
+                                                            <option value="<?= htmlspecialchars($term->term_name) ?>" data-days="<?= htmlspecialchars($term->term_days_due) ?>" <?= ($term->id == $apv->terms_id) ? 'selected' : '' ?>>
+                                                                <?= htmlspecialchars($term->term_name) ?>
                                                             </option>
                                                         <?php endforeach; ?>
                                                     </select>
@@ -239,15 +268,47 @@ $newAPVoucherNo = Apv::getLastApvNo();
                                                 <!-- SELECT DATE -->
                                                 <div class="form-group">
                                                     <label for="apv_due_date">Due Date</label>
-                                                    <input type="date" class="form-control form-control-md" id="apv_due_date" name="apv_due_date" value="<?= htmlspecialchars($apv->apv_due_date) ?>" disabled>
+                                                    <input type="date" class="form-control form-control-md" id="apv_due_date" name="apv_due_date" value="<?= htmlspecialchars($apv->apv_due_date) ?>" <?= ($apv->status == 4) ? '' : 'disabled' ?>>
                                                 </div>
                                             </div>
+                                        </div>
 
-                                            <div class="col-md-8 order-details mt-5">
+                                        <div class="row order-details mt-5">
                                                 <!-- MEMO -->
-                                                <div class="form-group">
-                                                    <label for="memo">Memo</label>
-                                                    <input type="text" class="form-control form-control-md" id="memo" name="memo" value="<?= htmlspecialchars($apv->memo) ?>" disabled>
+                                                <div class="col-md-8">
+                                                    <div class="form-group">
+                                                        <label for="memo">Memo</label>
+                                                        <input type="text" class="form-control form-control-md" id="memo" name="memo"
+                                                            value="<?= htmlspecialchars($apv->memo) ?>" <?= ($apv->status == 4) ? '' : 'disabled' ?>>
+                                                    </div>
+                                                </div>
+
+                                                <!-- LOCATION -->
+                                                <div class="col-md-4 vendor-details">
+                                                    <div class="form-group">
+                                                        <label for="location" class="form-label">Location</label>
+                                                        <select class="form-control form-control-sm" id="location" name="location" 
+                                                                <?php if ($apv->status != 4) echo 'disabled'; ?>>
+                                                            <?php
+                                                                // Array to prevent duplicates
+                                                                $used_locations = [];
+                                                                $selected_location = $apv->location ?? ''; // Assuming this holds the selected location
+
+                                                                // Locations
+                                                                foreach ($locations as $location):
+                                                                    if (!in_array($location->name, $used_locations)):
+                                                                        $used_locations[] = $location->name; // Track used locations
+                                                            ?>
+                                                                        <option value="<?= htmlspecialchars($location->id) ?>" 
+                                                                                <?= $location->id == $selected_location ? 'selected' : '' ?>>
+                                                                            <?= htmlspecialchars($location->name) ?>
+                                                                        </option>
+                                                            <?php
+                                                                    endif;
+                                                                endforeach;
+                                                            ?>
+                                                        </select>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -319,19 +380,61 @@ $newAPVoucherNo = Apv::getLastApvNo();
                                             </div>
                                         </div>
 
+
                                         <!-- TAX WITHHELD -->
-                                        <div class="row">
-                                            <label class="col-sm-6 col-form-label">Tax Withheld (%):</label>
-                                            <div class="col-sm-6">
-                                                <select class="form-select form-select-sm" id="tax_withheld_percentage" name="tax_withheld_percentage" disabled>
-                                                    <?php foreach ($wtaxes as $wtax) : ?>
-                                                        <option value="<?= $wtax->wtax_rate ?>" data-account-id="<?= $wtax->wtax_account_id ?>">
-                                                            <?= $wtax->wtax_name ?>
-                                                        </option>
-                                                    <?php endforeach; ?>
-                                                </select>
+                                        <?php if ($apv->status == 4): ?>
+                                            <!-- Show editable Tax Withheld dropdown when instatusvoice_status is 4 -->
+                                            <div class="row">
+                                                <label class="col-sm-6 col-form-label">Tax Withheld (%):</label>
+                                                <div class="col-sm-6">
+                                                    <select class="form-select form-select-sm" id="tax_withheld_percentage" name="tax_withheld_percentage">
+                                                        <?php
+                                                        // Array to prevent duplicates
+                                                        $used_wtaxes = [];
+                                                        foreach ($wtaxes as $wtax):
+                                                            if (!in_array($wtax->id, $used_wtaxes)):
+                                                                $used_wtaxes[] = $wtax->id; // Track used tax rates
+                                                        ?>
+                                                                <option value="<?= htmlspecialchars($wtax->id) ?>"
+                                                                    data-account-id="<?= htmlspecialchars($wtax->wtax_account_id) ?>"
+                                                                    data-rate="<?= htmlspecialchars($wtax->wtax_rate) ?>"
+                                                                    <?= $wtax->id == $apv->tax_withheld_percentage ? 'selected' : '' ?>>
+                                                                    <?= htmlspecialchars($wtax->wtax_name) ?>
+                                                                </option>
+                                                        <?php
+                                                            endif;
+                                                        endforeach;
+                                                        ?>
+                                                    </select>
+                                                </div>
                                             </div>
-                                        </div>
+                                        <?php else: ?>
+                                            <!-- Show disabled Tax Withheld dropdown when invoice_status is not 4 -->
+                                            <div class="row">
+                                                <label class="col-sm-6 col-form-label" for="tax_withheld_percentage">Tax Withheld (%):</label>
+                                                <div class="col-sm-6">
+                                                    <select class="form-control form-control-sm" id="tax_withheld_percentage" name="tax_withheld_percentage" disabled>
+                                                        <option value="">Select Tax Withheld</option>
+                                                        <?php
+                                                        // Array to prevent duplicates
+                                                        $used_wtaxes = [];
+                                                        foreach ($wtaxes as $wtax):
+                                                            if (!in_array($wtax->id, $used_wtaxes)):
+                                                                $used_wtaxes[] = $wtax->id; // Track used tax rates
+                                                        ?>
+                                                                <option value="<?= htmlspecialchars($wtax->id) ?>"
+                                                                    data-account-id="<?= htmlspecialchars($wtax->wtax_account_id) ?>"
+                                                                    <?= $wtax->id == $apv->tax_withheld_percentage ? 'selected' : '' ?>>
+                                                                    <?= htmlspecialchars($wtax->wtax_name) ?>
+                                                                </option>
+                                                        <?php
+                                                            endif;
+                                                        endforeach;
+                                                        ?>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        <?php endif; ?>
 
                                         <div class="row">
                                             <label class="col-sm-6 col-form-label">Tax Withheld Amount:</label>
@@ -349,10 +452,12 @@ $newAPVoucherNo = Apv::getLastApvNo();
                                             </div>
                                         </div>
                                     </div>
+                                    
                                     <div class="card-footer d-flex justify-content-center">
                                         <?php if ($apv->status == 4): ?>
                                             <!-- Buttons to show when invoice_status is 4 -->
-                                            <button type="submit" class="btn btn-info me-2">Save and Print</button>
+                                            <button type="button" id="saveDraftBtn" class="btn btn-secondary me-2">Update Draft</button>
+                                            <button type="submit" class="btn btn-info me-2">Save as Final</button>
                                         <?php elseif ($apv->status == 3): ?>
                                             <!-- Button to show when invoice_status is 3 -->
                                             <a class="btn btn-primary" href="#" id="reprintButton">
@@ -398,13 +503,11 @@ $newAPVoucherNo = Apv::getLastApvNo();
                                                     </tr>
                                                 </thead>
                                                 <tbody id="itemTableBody" style="font-size: 14px;">
-                                                    <?php
-                                                    if ($apv) {
-                                                        foreach ($apv->details as $detail) {
-                                                    ?>
+                                                    <?php if ($apv) : ?>
+                                                        <?php foreach ($apv->details as $detail) : ?>
                                                             <tr>
                                                                 <td>
-                                                                    <select class="form-control form-control-sm account-dropdown select2" name="account_code[]" disabled>
+                                                                    <select class="form-control form-control-sm account-dropdown select2" name="account_code[]" <?= ($apv->status == 4) ? '' : 'disabled' ?>>
                                                                         <?php foreach ($accounts as $acc) : ?>
                                                                             <option value="<?= htmlspecialchars($acc->id) ?>" <?= ($acc->id == $detail['account_id']) ? 'selected' : '' ?>>
                                                                                 <?= htmlspecialchars($acc->account_code . ' - ' . $acc->account_description) ?>
@@ -414,7 +517,7 @@ $newAPVoucherNo = Apv::getLastApvNo();
                                                                 </td>
 
                                                                 <td>
-                                                                    <select class="form-control form-control-sm cost-dropdown select2" name="cost_center_id[]" disabled>
+                                                                    <select class="form-control form-control-sm cost-dropdown select2" name="cost_center_id[]" <?= ($apv->status == 4) ? '' : 'disabled' ?>>
                                                                         <?php foreach ($cost_centers as $cost_center) : ?>
                                                                             <option value="<?= htmlspecialchars($cost_center->id) ?>" <?= ($cost_center->id == $detail['cost_center_id']) ? 'selected' : '' ?>>
                                                                                 <?= htmlspecialchars($cost_center->code . ' - ' . $cost_center->particular) ?>
@@ -424,37 +527,37 @@ $newAPVoucherNo = Apv::getLastApvNo();
                                                                 </td>
 
                                                                 <td>
-                                                                    <input type="text" class="form-control form-control-sm memo" name="memo[]" placeholder="Enter memo" value="<?= htmlspecialchars($detail['memo']) ?>">
+                                                                    <input type="text" class="form-control form-control-sm memo" name="memo[]" placeholder="Enter memo" value="<?= htmlspecialchars($detail['memo']) ?>" <?= ($apv->status == 4) ? '' : 'disabled' ?>>
                                                                 </td>
 
                                                                 <td>
-                                                                    <input type="text" class="form-control form-control-sm amount" name="amount[]" placeholder="Enter amount" value="<?= htmlspecialchars($detail['amount']) ?>">
+                                                                    <input type="text" class="form-control form-control-sm amount" name="amount[]" placeholder="Enter amount" value="<?= htmlspecialchars($detail['amount']) ?>" <?= ($apv->status == 4) ? '' : 'disabled' ?>>
                                                                 </td>
 
                                                                 <td>
-                                                                    <select class="form-control form-control-sm discount-dropdown select2" name="discount_percentage[]" disabled>
-                                                                        <?php foreach ($discounts as $discount) : ?>
-                                                                            <option value="<?= htmlspecialchars($discount->discount_rate) ?>" <?= ($discount->discount_rate == $detail['discount_percentage']) ? 'selected' : '' ?>>
-                                                                                <?= htmlspecialchars($discount->discount_description) ?>
+                                                                    <select class="form-control form-control-sm discount_percentage select2" name="discount_percentage[]" <?php echo ($apv->status != 4) ? 'disabled' : ''; ?>>
+                                                                        <?php foreach ($discounts as $discount): ?>
+                                                                            <option value="<?= htmlspecialchars($discount->discount_rate) ?>" data-account-id="<?= htmlspecialchars($discount->discount_account_id) ?>" <?= ($discount->discount_rate == $detail['discount_percentage']) ? 'selected' : '' ?>>
+                                                                                <?= htmlspecialchars($discount->discount_name) ?>
                                                                             </option>
                                                                         <?php endforeach; ?>
                                                                     </select>
                                                                 </td>
 
                                                                 <td>
-                                                                    <input type="text" class="form-control form-control-sm discount-amount" name="discount_amount[]" placeholder="" value="<?= htmlspecialchars($detail['discount_amount']) ?>" readonly>
+                                                                    <input type="text" class="form-control form-control-sm discount-amount" name="discount_amount[]" value="<?= htmlspecialchars($detail['discount_amount']) ?>" readonly>
                                                                 </td>
 
                                                                 <td>
-                                                                    <input type="text" class="form-control form-control-sm net-amount-before-vat" name="net_amount_before_vat[]" placeholder="" value="<?= htmlspecialchars($detail['net_amount_before_vat']) ?>" readonly>
+                                                                    <input type="text" class="form-control form-control-sm net-amount-before-vat" name="net_amount_before_vat[]" value="<?= htmlspecialchars($detail['net_amount_before_vat']) ?>" readonly>
                                                                 </td>
 
                                                                 <td>
-                                                                    <input type="text" class="form-control form-control-sm net-amount" name="net_amount[]" placeholder="" value="<?= htmlspecialchars($detail['net_amount']) ?>" readonly>
+                                                                    <input type="text" class="form-control form-control-sm net-amount" name="net_amount[]" value="<?= htmlspecialchars($detail['net_amount']) ?>" readonly>
                                                                 </td>
 
                                                                 <td>
-                                                                    <select class="form-control form-control-sm vat_percentage select2" name="vat_percentage[]" disabled>
+                                                                    <select class="form-control form-control-sm vat_percentage select2" name="vat_percentage[]" <?= ($apv->status == 4) ? '' : 'disabled' ?>>
                                                                         <?php foreach ($input_vats as $vat) : ?>
                                                                             <option value="<?= htmlspecialchars($vat->input_vat_rate) ?>" <?= ($vat->input_vat_rate == $detail['vat_percentage']) ? 'selected' : '' ?>>
                                                                                 <?= htmlspecialchars($vat->input_vat_name) ?>
@@ -464,17 +567,15 @@ $newAPVoucherNo = Apv::getLastApvNo();
                                                                 </td>
 
                                                                 <td>
-                                                                    <input type="text" class="form-control form-control-sm input-vat" name="vat_amount[]" placeholder="" value="<?= htmlspecialchars($detail['input_vat']) ?>" readonly>
+                                                                    <input type="text" class="form-control form-control-sm input-vat" name="vat_amount[]" value="<?= htmlspecialchars($detail['input_vat']) ?>" readonly>
                                                                 </td>
 
                                                                 <td>
                                                                     <button type="button" class="btn btn-sm btn-danger removeRow"><i class="fas fa-trash"></i></button>
                                                                 </td>
                                                             </tr>
-                                                    <?php
-                                                        }
-                                                    }
-                                                    ?>
+                                                        <?php endforeach; ?>
+                                                    <?php endif; ?>
                                                 </tbody>
                                             </table>
                                         </div>
@@ -671,6 +772,13 @@ $newAPVoucherNo = Apv::getLastApvNo();
             dropdownCssClass: 'select2--medium', // Add this line
         });
 
+        $('#location').select2({
+            theme: 'classic', // Use 'bootstrap-5' for Bootstrap 5, 'bootstrap-4' for Bootstrap 4
+            width: '100%',
+            placeholder: 'Select Location',
+            allowClear: false
+        });
+
         $('#terms_id').select2({
             theme: 'classic',
             width: '100%',
@@ -756,26 +864,27 @@ $newAPVoucherNo = Apv::getLastApvNo();
             let totalAmountDue = 0;
 
             $('.amount').each(function() {
+                const row = $(this).closest('tr');
                 const amount = parseFloat($(this).val()) || 0;
+                const discountPercentage = parseFloat(row.find('.discount_percentage').val()) || 0;
+                const vatPercentage = parseFloat(row.find('.vat_percentage').val()) || 0;
+
                 totalAmount += amount;
-                const discountPercentage = parseFloat($(this).closest('tr').find('.discount_percentage').val()) || 0;
-                const vatPercentage = parseFloat($(this).closest('tr').find('.vat_percentage').val()) || 0;
 
                 const discountAmount = (discountPercentage / 100) * amount;
-                $(this).closest('tr').find('.discount-amount').val(discountAmount.toFixed(2)); // Update discount amount field
+                row.find('.discount-amount').val(discountAmount.toFixed(2));
                 totalDiscountAmount += discountAmount;
 
                 const netAmountBeforeVAT = amount - discountAmount;
-                $(this).closest('tr').find('.net-amount-before-vat').val(netAmountBeforeVAT.toFixed(2)); // Update net amount before VAT field
+                row.find('.net-amount-before-vat').val(netAmountBeforeVAT.toFixed(2));
                 totalNetAmount += netAmountBeforeVAT;
 
-                const vatPercentageAmount = vatPercentage / 100;
-                const netAmount = netAmountBeforeVAT / (1 + vatPercentageAmount);
-                $(this).closest('tr').find('.net-amount').val(netAmount.toFixed(2)); // Update net amount field
-
-                const vatAmount = netAmountBeforeVAT - netAmount;
-                $(this).closest('tr').find('.input-vat').val(vatAmount.toFixed(2)); // Update VAT amount field
+                const vatAmount = (vatPercentage / 100) * netAmountBeforeVAT;
+                row.find('.input-vat').val(vatAmount.toFixed(2));
                 totalVat += vatAmount;
+
+                const netAmount = netAmountBeforeVAT - vatAmount;
+                row.find('.net-amount').val(netAmount.toFixed(2));
 
                 totalTaxableAmount += netAmount;
             });
@@ -787,7 +896,8 @@ $newAPVoucherNo = Apv::getLastApvNo();
             $("#vat_percentage_amount").val(totalVat.toFixed(2));
             $("#net_of_vat").val(totalTaxableAmount.toFixed(2));
 
-            const taxWithheldPercentage = parseFloat($("#tax_withheld_percentage").val()) || 0;
+            const selectedTaxWithheld = $("#tax_withheld_percentage option:selected");
+            const taxWithheldPercentage = parseFloat(selectedTaxWithheld.data('rate')) || 0;
             const taxWithheldAmount = (taxWithheldPercentage / 100) * totalTaxableAmount;
             $("#tax_withheld_amount").val(taxWithheldAmount.toFixed(2));
 
@@ -795,6 +905,15 @@ $newAPVoucherNo = Apv::getLastApvNo();
             $("#total_amount_due").val(totalAmountDue.toFixed(2));
         }
 
+        // Event listeners
+        $('#itemTableBody').on('input change', '.amount, .discount_percentage, .vat_percentage', calculateNetAmount);
+        $('#tax_withheld_percentage').on('change', calculateNetAmount);
+
+        $('#itemTableBody').on('input change', '.amount, .discount_percentage, .vat_percentage', function() {
+            calculateNetAmount();
+        });
+
+        
         // Event listener for tax withheld percentage change
         $('#tax_withheld_percentage').on('change', function() {
             calculateNetAmount();
@@ -809,6 +928,11 @@ $newAPVoucherNo = Apv::getLastApvNo();
         $('#itemTableBody').on('change', '.discount_percentage, .vat_percentage', function() {
             calculateNetAmount();
         });
+
+        $(document).ready(function() {
+    // Attach event listeners to existing rows
+    $('#itemTableBody tr').find('.amount, .discount_percentage, .vat_percentage').on('input change', calculateNetAmount);
+});
 
         // Event listeners
         $('#addItemBtn').click(addRow);
@@ -864,7 +988,7 @@ $newAPVoucherNo = Apv::getLastApvNo();
                 
                 // Gather all form data
                 const formData = {
-                    action: 'update_draft',
+                    action: 'save_final',
                     id: apvId,
                     apv_no: $('#apv_no').val(),
                     ref_no: $('#ref_no').val(),
@@ -878,11 +1002,13 @@ $newAPVoucherNo = Apv::getLastApvNo();
                     vendor_name: $('#vendor_name').val(),
                     vendor_tin: $('#vendor_tin').val(),
                     memo: $('#memo').val(),
+                    location: $('#location').val(),
                     gross_amount: $('#gross_amount').val(),
                     discount_amount: $('#discount_amount').val(),
                     net_amount_due: $('#net_amount_due').val(),
                     vat_percentage_amount: $('#vat_percentage_amount').val(),
                     net_of_vat: $('#net_of_vat').val(),
+                    tax_withheld_percentage: $('#tax_withheld_percentage').val(),
                     tax_withheld_amount: $('#tax_withheld_amount').val(),
                     total_amount_due: $('#total_amount_due').val(),
                     wtax_account_id: $('#tax_withheld_account_id').val(),
@@ -929,6 +1055,96 @@ $newAPVoucherNo = Apv::getLastApvNo();
                             icon: 'error',
                             title: 'Error',
                             text: 'An error occurred while saving the APV: ' + textStatus
+                        });
+                    }
+                });
+            }
+        });
+
+        $('#saveDraftBtn').click(function(event) {
+            event.preventDefault();
+            
+            // Check if the table has any rows
+            if ($('#itemTableBody tr').length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No Items',
+                    text: 'You must add at least one item before updating the draft.'
+                });
+                return false;
+            }
+
+            const items = gatherTableItems();
+            const apvStatus = <?= json_encode($apv->status) ?>;
+            const apvId = <?= json_encode($apv->id) ?>;
+
+            if (apvStatus == 4) {
+                // Show loading overlay
+                document.getElementById('loadingOverlay').style.display = 'flex';
+                
+                // Gather all form data
+                const formData = {
+                    action: 'update_draft',
+                    id: apvId,
+                    ref_no: $('#ref_no').val(),
+                    po_no: $('#po_no').val(),
+                    rr_no: $('#rr_no').val(),
+                    apv_date: $('#apv_date').val(),
+                    apv_due_date: $('#apv_due_date').val(),
+                    terms_id: $('#terms_id').val(),
+                    account_id: $('#account_id').val(),
+                    vendor_id: $('#vendor_id').val(),
+                    vendor_name: $('#vendor_name').val(),
+                    vendor_tin: $('#vendor_tin').val(),
+                    memo: $('#memo').val(),
+                    location: $('#location').val(),
+                    gross_amount: $('#gross_amount').val(),
+                    discount_amount: $('#discount_amount').val(),
+                    net_amount_due: $('#net_amount_due').val(),
+                    vat_percentage_amount: $('#vat_percentage_amount').val(),
+                    net_of_vat: $('#net_of_vat').val(),
+                    tax_withheld_percentage: $('#tax_withheld_percentage').val(),
+                    tax_withheld_amount: $('#tax_withheld_amount').val(),
+                    total_amount_due: $('#total_amount_due').val(),
+                    wtax_account_id: $('#tax_withheld_account_id').val(),
+                    item_data: JSON.stringify(items)
+                };
+
+                console.log('Sending data:', formData);
+
+                $.ajax({
+                    url: 'api/apv_controller.php',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: formData,
+                    success: function(response) {
+                        document.getElementById('loadingOverlay').style.display = 'none';
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: 'Draft updated successfully!',
+                                showCancelButton: true,
+                                cancelButtonText: 'Close'
+                            }).then((result) => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Error updating draft: ' + (response.message || 'Unknown error')
+                            });
+                        }
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        document.getElementById('loadingOverlay').style.display = 'none';
+                        console.error('AJAX error:', textStatus, errorThrown);
+                        console.log('Response Text:', jqXHR.responseText);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'An error occurred while updating the draft: ' + textStatus
                         });
                     }
                 });

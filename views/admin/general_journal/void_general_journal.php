@@ -1,8 +1,12 @@
 <?php
 // Guard to ensure only admins can access
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
-
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('general_journal');
 // Fetch all general journal entries
 $journals = GeneralJournal::all();
 ?>
@@ -23,7 +27,7 @@ $journals = GeneralJournal::all();
             </nav>
             <div class="row">
                 <div class="col-12">
-                    <?php 
+                    <?php
                     // Display flash messages for various actions
                     displayFlashMessage('add_general_journal');
                     displayFlashMessage('delete_general_journal');
@@ -32,19 +36,17 @@ $journals = GeneralJournal::all();
                     <!-- Default box -->
                     <div class="card">
                         <div class="card-body">
-                            <div class="row">
+                        <div class="card shadow mb-4">
                                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                                    <h6 class="m-0 font-weight-bold text-primary">Journal</h6>
                                     <div>
-                                        <a href="general_journal" class="btn btn-sm btn-secondary">
-                                            <i class="fas fa-arrow-left"></i> Go Back
+                                        <a href="general_journal" class="btn btn-lg btn-outline-secondary me-2 mb-2">
+                                        <i class="fas fa-arrow-left"></i> Go Back
                                         </a>
-                                        <a href="create_general_journal" class="btn btn-sm btn-primary">
-                                            <i class="fas fa-plus"></i> Create General Journal
+                                        <a href="create_general_journal" class="btn btn-lg btn-outline-success me-2 mb-2">
+                                            <i class="fas fa-plus fa-lg me-2"></i> Create Entry
                                         </a>
                                     </div>
                                 </div>
-                            </div>
                             <div class="col-sm-12">
                                 <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                                     <thead>
@@ -60,11 +62,11 @@ $journals = GeneralJournal::all();
                                     <tbody>
                                         <?php foreach ($journals as $journal): ?>
                                             <?php if ($journal->status == 3): // Only include credits with status 4 ?>
-                                            <tr>
-                                                <td><?= htmlspecialchars($journal->entry_no) ?></td>
-                                                <td><?= htmlspecialchars($journal->journal_date) ?></td>
-                                                <td><?= htmlspecialchars($journal->memo) ?></td>
-                                                <td class="text-center">
+                                                <tr>
+                                                    <td><?= htmlspecialchars($journal->entry_no) ?></td>
+                                                    <td><?= htmlspecialchars($journal->journal_date) ?></td>
+                                                    <td><?= htmlspecialchars($journal->memo) ?></td>
+                                                    <td class="text-center">
                                                         <?php
                                                         switch ($journal->status) {
                                                             case 3:
@@ -87,12 +89,13 @@ $journals = GeneralJournal::all();
                                                         }
                                                         ?>
                                                     </td>
-                                                <td>
-                                                    <a href="view_journal?id=<?= urlencode($journal->id) ?>" class="btn btn-sm btn-info">
-                                                        <i class="fas fa-eye"></i> View
-                                                    </a>
-                                                </td>
-                                            </tr>
+                                                    <td>
+                                                        <a href="view_journal?id=<?= urlencode($journal->id) ?>"
+                                                            class="btn btn-sm btn-info">
+                                                            <i class="fas fa-eye"></i> View
+                                                        </a>
+                                                    </td>
+                                                </tr>
                                             <?php endif; ?>
                                         <?php endforeach; ?>
                                     </tbody>

@@ -2,8 +2,13 @@
 
 // Guard
 require_once '_guards.php';
-Guard::adminOnly();
-
+//Guard
+require_once '_guards.php';
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('cost_center');
 $cost_centers = CostCenter::all();
 
 ?>
@@ -35,7 +40,7 @@ $cost_centers = CostCenter::all();
                         <div class="card-body">
                             <form method="POST" action="api/masterlist/cost_center_controller.php">
                                 <input type="hidden" name="action" value="add" />
-                                
+
                                 <div class="row mb-3">
                                     <label for="code" class="col-sm-2 col-form-label">Code</label>
                                     <div class="col-sm-4">

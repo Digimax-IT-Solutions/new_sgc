@@ -10,6 +10,7 @@ class GeneralJournal
     public $total_debit;
     public $total_credit;
     public $memo;
+    public $location;
     public $print_status;
     public $status;
     public $created_at;
@@ -25,6 +26,7 @@ class GeneralJournal
         $this->total_debit = $data['total_debit'] ?? null;
         $this->total_credit = $data['total_credit'] ?? null;
         $this->memo = $data['memo'] ?? null;
+        $this->location = $data['location'] ?? null;
         $this->print_status = $data['print_status'] ?? null;
         $this->status = $data['status'] ?? null;
         $this->created_at = $data['created_at'] ?? null;
@@ -38,7 +40,7 @@ class GeneralJournal
         }
     }
 
-    public static function add($entry_no, $journal_date, $total_debit, $total_credit, $created_by, $memo, $details)
+    public static function add($entry_no, $journal_date, $total_debit, $total_credit, $created_by, $memo, $location, $details)
     {
         global $connection;
 
@@ -54,8 +56,9 @@ class GeneralJournal
                     total_debit,
                     total_credit,
                     memo,
+                    location,
                     created_at
-                ) VALUES (?,?,?,?,?, NOW())
+                ) VALUES (?,?,?,?,?,?, NOW())
             ");
 
             $stmt->execute([
@@ -63,7 +66,8 @@ class GeneralJournal
                 $journal_date,
                 $total_debit,
                 $total_credit,
-                $memo
+                $memo,
+                $location
             ]);
 
             // Retrieve the ID of the newly inserted journal entry
@@ -92,6 +96,7 @@ class GeneralJournal
                     $transaction_type,
                     $journal_date,
                     $entry_no,
+                    $location,
                     $detail['name'],
                     $detail['account_id'],
                     $detail['debit'],
@@ -102,7 +107,6 @@ class GeneralJournal
 
             // Commit the transaction
             $connection->commit();
-
         } catch (PDOException $e) {
             // Rollback the transaction on error
             $connection->rollBack();
@@ -137,7 +141,7 @@ class GeneralJournal
         ]);
     }
 
-    private static function logAuditTrail($general_journal_id, $transaction_type, $transaction_date, $ref_no, $name, $account_id, $debit, $credit, $created_by)
+    private static function logAuditTrail($general_journal_id, $transaction_type, $transaction_date, $ref_no, $location, $name, $account_id, $debit, $credit, $created_by)
     {
         global $connection;
 
@@ -147,13 +151,14 @@ class GeneralJournal
                 transaction_type,
                 transaction_date,
                 ref_no,
+                location,
                 name,
                 account_id,
                 debit,
                 credit,
                 created_by,
                 created_at
-            ) VALUES (?,?,?,?,?,?, ?, ?,?, NOW())
+            ) VALUES (?,?,?,?,?,?, ?,?, ?,?, NOW())
         ");
 
         $stmt->execute([
@@ -161,6 +166,7 @@ class GeneralJournal
             $transaction_type,
             $transaction_date,
             $ref_no,
+            $location,
             $name,
             $account_id,
             $debit,
@@ -197,6 +203,7 @@ class GeneralJournal
                 gj.total_debit,
                 gj.total_credit,
                 gj.memo,
+                gj.location,
                 gj.print_status,
                 gj.status
             FROM general_journal gj
@@ -232,7 +239,6 @@ class GeneralJournal
                 gjd.credit,
                 gjd.memo,
                 gjd.name,
-                coa.gl_name,
                 coa.account_code,
                 coa.account_description
             FROM general_journal_details gjd
@@ -252,7 +258,6 @@ class GeneralJournal
                 'general_journal_id' => $row['general_journal_id'],
                 'account_id' => $row['account_id'],
                 'cost_center_id' => $row['cost_center_id'],
-                'gl_name' => $row['gl_name'],
                 'account_code' => $row['account_code'],
                 'account_description' => $row['account_description'],
                 'debit' => $row['debit'],
@@ -306,9 +311,10 @@ class GeneralJournal
         return $result['last_transaction_id'] ?? null;
     }
 
-    public static function update($id, $entry_no, $journal_date, $total_debit, $total_credit, $memo, $status) {
+    public static function update($id, $entry_no, $journal_date, $total_debit, $total_credit, $memo, $status)
+    {
         global $connection;
-        
+
         $stmt = $connection->prepare("
             UPDATE general_journal 
             SET entry_no = :entry_no, 
@@ -319,7 +325,7 @@ class GeneralJournal
                 status = :status
             WHERE id = :id
         ");
-        
+
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
         $stmt->bindParam(':entry_no', $entry_no, PDO::PARAM_STR);
         $stmt->bindParam(':journal_date', $journal_date, PDO::PARAM_STR);
@@ -327,7 +333,7 @@ class GeneralJournal
         $stmt->bindParam(':total_credit', $total_credit, PDO::PARAM_STR);
         $stmt->bindParam(':memo', $memo, PDO::PARAM_STR);
         $stmt->bindParam(':status', $status, PDO::PARAM_INT);
-        
+
         $stmt->execute();
     }
 
@@ -372,7 +378,8 @@ class GeneralJournal
     }
 
     // GET LAST ENTRY_NO 
-    public static function getLastEntryNo() {
+    public static function getLastEntryNo()
+    {
         global $connection;
 
         // Prepare and execute the query
@@ -390,12 +397,12 @@ class GeneralJournal
         // Check if there is a result and fetch the latest AP voucher number
         if ($result) {
             $latestNo = $result['entry_no'];
-                // Assuming the format is 'CM' followed by digits
-                $numericPart = intval(substr($latestNo, 2)); // 'CM' is 2 characters
-                $newNo = $numericPart + 1;
+            // Assuming the format is 'CM' followed by digits
+            $numericPart = intval(substr($latestNo, 2)); // 'CM' is 2 characters
+            $newNo = $numericPart + 1;
         } else {
-           // If no valid credit number exists, start with 1
-           $newNo = 1;
+            // If no valid credit number exists, start with 1
+            $newNo = 1;
         }
 
         // Format the new number with leading zeros
@@ -405,47 +412,47 @@ class GeneralJournal
     }
 
     public static function saveDraft(
-        $journal_date, $total_debit, $total_credit, $memo, $items
+        $journal_date,
+        $total_debit,
+        $total_credit,
+        $memo,
+        $location,
+        $items
     ) {
         global $connection;
-    
+
         try {
             $connection->beginTransaction();
-    
+
+            // Insert into general_journal table with draft status
             $sql = "INSERT INTO general_journal (
-                    journal_date,
-                    total_debit,
-                    total_credit,
-                    memo,
-                    status
-                ) VALUES (:journal_date, :total_debit, :total_credit, :memo, :status)";
-    
+                    journal_date, total_debit, total_credit, memo, location, status
+                ) VALUES (
+                    :journal_date, :total_debit, :total_credit, :memo, :location, :status
+                )";
+
             $stmt = $connection->prepare($sql);
             $stmt->bindParam(':journal_date', $journal_date);
             $stmt->bindParam(':total_debit', $total_debit);
             $stmt->bindParam(':total_credit', $total_credit);
-            $stmt->bindValue(':memo', $memo);
+            $stmt->bindParam(':memo', $memo);
+            $stmt->bindParam(':location', $location);
             $stmt->bindValue(':status', 4, PDO::PARAM_INT); // Set status to 4 for draft
-    
+
             $stmt->execute();
-    
+
             $general_journal_id = $connection->lastInsertId();
-    
-            $itemSql = "INSERT INTO general_journal_details (
-                general_journal_id,
-                account_id,
-                cost_center_id,
-                name,           
-                debit,
-                credit,
-                memo
-            ) VALUES (
-                :general_journal_id, :account_id, :cost_center_id, :name, :debit, :credit, :memo
-            )";
-    
-            $itemStmt = $connection->prepare($itemSql);
-    
+
+            // Ensure $items is an array
             if (is_array($items) && !empty($items)) {
+                $itemSql = "INSERT INTO general_journal_details (
+                    general_journal_id, account_id, cost_center_id, name, debit, credit, memo
+                ) VALUES (
+                    :general_journal_id, :account_id, :cost_center_id, :name, :debit, :credit, :memo
+                )";
+
+                $itemStmt = $connection->prepare($itemSql);
+
                 foreach ($items as $item) {
                     $itemStmt->bindParam(':general_journal_id', $general_journal_id);
                     $itemStmt->bindParam(':account_id', $item['account_id']);
@@ -457,7 +464,7 @@ class GeneralJournal
                     $itemStmt->execute();
                 }
             }
-    
+
             $connection->commit();
             return true;
         } catch (Exception $e) {
@@ -465,6 +472,260 @@ class GeneralJournal
             throw $e;
         }
     }
-    
-}
+    public static function void($id)
+    {
+        global $connection;
 
+        try {
+            $connection->beginTransaction();
+
+            // Update the status to 3 (void) in the sales_invoice table
+            $stmt = $connection->prepare("UPDATE general_journal SET status = 3 WHERE id = :id");
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $result = $stmt->execute();
+
+            if ($result) {
+                // Update the state to 2 in the audit_trail table
+                $auditStmt = $connection->prepare("UPDATE audit_trail SET state = 2 WHERE transaction_id = :id");
+                $auditStmt->bindParam(':id', $id, PDO::PARAM_INT);
+                $auditResult = $auditStmt->execute();
+
+                if ($auditResult) {
+                    // Delete from transaction_entries
+                    $deleteStmt = $connection->prepare("DELETE FROM transaction_entries WHERE transaction_id = :id");
+                    $deleteStmt->bindParam(':id', $id, PDO::PARAM_INT);
+                    $deleteResult = $deleteStmt->execute();
+
+                    if ($deleteResult) {
+                        $connection->commit();
+                        return true;
+                    } else {
+                        throw new Exception("Failed to delete transaction entries.");
+                    }
+                } else {
+                    throw new Exception("Failed to update audit trail.");
+                }
+            } else {
+                throw new Exception("Failed to void invoice.");
+            }
+        } catch (Exception $e) {
+            $connection->rollBack();
+            throw $e;
+        }
+    }
+
+    public static function draftDetails($general_journal_id)
+    {
+        global $connection;
+
+        $stmt = $connection->prepare('
+            SELECT 
+                gjd.id,
+                gjd.general_journal_id,
+                gjd.account_id,
+                gjd.cost_center_id,
+                gjd.memo,
+                gjd.debit,
+                gjd.credit,
+                gjd.name,
+                coa.gl_name,
+                coa.account_code,
+                coa.account_description,
+                cc.particular
+            FROM 
+                general_journal_details gjd
+            LEFT JOIN
+                chart_of_account coa ON gjd.account_id = coa.id
+            LEFT JOIN
+                cost_center cc ON gjd.cost_center_id = cc.id
+            WHERE 
+                gjd.general_journal_id = :general_journal_id
+        ');
+
+        $stmt->bindParam(':general_journal_id', $general_journal_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $stmt->setFetchMode(PDO::FETCH_ASSOC);
+
+        return $stmt->fetchAll(); // Return the fetched data
+    }
+
+    public static function updateDraft(
+        $general_journal_id,
+        $journal_date,
+        $total_debit,
+        $total_credit,
+        $memo,
+        $location,
+        $details
+    ) {
+        global $connection;
+
+        try {
+            // Start the transaction
+            $connection->beginTransaction();
+
+            // Update the general_journal record
+            $stmt = $connection->prepare("
+                UPDATE general_journal 
+                SET journal_date = :journal_date,
+                    total_debit = :total_debit,
+                    total_credit = :total_credit,
+                    memo = :memo,
+                    location = :location,
+                    status = 4
+                WHERE id = :general_journal_id
+            ");
+
+            // Bind the parameters
+            $stmt->bindParam(':general_journal_id', $general_journal_id, PDO::PARAM_INT);
+            $stmt->bindParam(':entry_no', $entry_no, PDO::PARAM_STR);
+            $stmt->bindParam(':journal_date', $journal_date, PDO::PARAM_STR);
+            $stmt->bindParam(':total_debit', $total_debit, PDO::PARAM_STR);
+            $stmt->bindParam(':total_credit', $total_credit, PDO::PARAM_STR);
+            $stmt->bindParam(':memo', $memo, PDO::PARAM_STR);
+            $stmt->bindParam(':location', $location, PDO::PARAM_STR);
+
+            // Execute the statement
+            $result = $stmt->execute();
+
+            if ($result) {
+                // Delete existing general_journal_details before inserting new ones
+                $stmt = $connection->prepare("DELETE FROM general_journal_details WHERE general_journal_id = ?");
+                $stmt->execute([$general_journal_id]);
+
+                // Prepare the statement for inserting new journal details
+                $stmt = $connection->prepare("
+                    INSERT INTO general_journal_details (
+                        general_journal_id, account_id, cost_center_id, name, memo, debit, credit
+                    ) VALUES (
+                        :general_journal_id, :account_id, :cost_center_id, :name, :memo, :debit, :credit
+                    )
+                ");
+
+                // Insert new journal details
+                foreach ($details as $detail) {
+                    $stmt->execute([
+                        ':general_journal_id' => $general_journal_id,
+                        ':account_id' => $detail['account_id'],
+                        ':cost_center_id' => $detail['cost_center_id'],
+                        ':name' => $detail['name'],
+                        ':memo' => $detail['memo'],
+                        ':debit' => $detail['debit'],
+                        ':credit' => $detail['credit']
+                    ]);
+                }
+
+                // Commit the transaction
+                $connection->commit();
+                return [
+                    'success' => true,
+                    'journalId' => $general_journal_id
+                ];
+            } else {
+                throw new Exception("Failed to update journal.");
+            }
+        } catch (Exception $ex) {
+            // Rollback the transaction in case of an error
+            $connection->rollback();
+            error_log('Error updating draft journal: ' . $ex->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Error: ' . $ex->getMessage()
+            ];
+        }
+    }
+
+
+    public static function saveFinal(
+        $general_journal_id,
+        $entry_no,
+        $journal_date,
+        $total_debit,
+        $total_credit,
+        $memo,
+        $location,
+        $details,
+        $created_by
+    ) {
+        global $connection;
+
+        try {
+            // Start a transaction
+            $connection->beginTransaction();
+
+            $transaction_type = "General Journal";
+
+            // Update general_journal table
+            $stmt = $connection->prepare("
+                UPDATE general_journal 
+                SET entry_no = :entry_no,
+                    journal_date = :journal_date,
+                    total_debit = :total_debit,
+                    total_credit = :total_credit,
+                    memo = :memo,
+                    location = :location,
+                    status = 1
+                WHERE id = :general_journal_id
+            ");
+
+            $stmt->execute([
+                ':general_journal_id' => $general_journal_id,
+                ':entry_no' => $entry_no,
+                ':journal_date' => $journal_date,
+                ':total_debit' => $total_debit,
+                ':total_credit' => $total_credit,
+                ':memo' => $memo,
+                ':location' => $location
+            ]);
+
+            // Delete existing journal details
+            $stmt = $connection->prepare("DELETE FROM general_journal_details WHERE general_journal_id = ?");
+            $stmt->execute([$general_journal_id]);
+
+            // Insert new journal details
+            $stmt = $connection->prepare("
+                INSERT INTO general_journal_details (
+                    general_journal_id, account_id, cost_center_id, name, memo, debit, credit
+                ) VALUES (
+                    :general_journal_id, :account_id, :cost_center_id, :name, :memo, :debit, :credit
+                )
+            ");
+
+            foreach ($details as $detail) {
+                $stmt->execute([
+                    ':general_journal_id' => $general_journal_id,
+                    ':account_id' => $detail['account_id'],
+                    ':cost_center_id' => $detail['cost_center_id'],
+                    ':name' => $detail['name'],
+                    ':memo' => $detail['memo'],
+                    ':debit' => $detail['debit'],
+                    ':credit' => $detail['credit']
+                ]);
+
+                // Log audit trail for each detail line
+                self::logAuditTrail(
+                    $general_journal_id,
+                    $transaction_type,
+                    $journal_date,
+                    $entry_no,
+                    $location,
+                    $detail['name'],
+                    $detail['account_id'],
+                    $detail['debit'],
+                    $detail['credit'],
+                    $created_by
+                );
+            }
+
+            // Commit the transaction
+            $connection->commit();
+            return true;
+        } catch (PDOException $e) {
+            $connection->rollBack();
+            throw new Exception("Database error: " . $e->getMessage());
+        } catch (Exception $e) {
+            $connection->rollBack();
+            throw new Exception("Error: " . $e->getMessage());
+        }
+    }
+}

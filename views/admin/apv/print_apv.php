@@ -154,14 +154,14 @@ try {
         $pdf->Cell($colWidth3, 5, '', 'LRB', 0);
         $pdf->Cell($colWidth4, 5, '', 'LRB', 0);
         $pdf->Cell($colWidth5, 5, '', 'LRB', 1);
-        
+
 
         // Reset font
-        $pdf->SetFont('Arial', '', 9);
-
-        // Initialize total debit and credit
-        $totalDebit = 0;
-        $totalCredit = 0;
+        $pdf->SetFont(
+            'Arial',
+            '',
+            9
+        );
 
         // Initialize total debit and credit
         $totalDebit = 0;
@@ -171,45 +171,58 @@ try {
         $transactionEntries = Apv::findTransactionEntries($apvId);
         foreach ($transactionEntries as $entry) {
             // Skip the row if both debit and credit are zero
-            if ($entry['debit'] == 0 && $entry['credit'] == 0) {
+            if (
+                $entry['debit'] == 0 && $entry['credit'] == 0
+            ) {
                 continue;
             }
-        
+
             // Split account code into GL and SL
             $glCode = substr($entry['account_code'], 0, 5);
             $slCode = substr($entry['account_code'], 5);
-        
+
             $startY = $pdf->GetY();
-            
+
             // Draw GL and SL cells
             $pdf->Cell($colWidth1, 7, $glCode, 'L', 0, 'C');
             $pdf->Cell($colWidth2, 7, $slCode, 'R', 0, 'C');
-            
+
             // Use MultiCell for Account Title
             $pdf->MultiCell($colWidth3, 7, $entry['account_description'], 'LR', 'L');
-            
+
             $endY = $pdf->GetY();
-            
+
             // Draw the border for GL and SL columns to match the height of the MultiCell
             $pdf->Line($pdf->GetX(), $startY, $pdf->GetX(), $endY);
             $pdf->Line($pdf->GetX() + $colWidth1, $startY, $pdf->GetX() + $colWidth1, $endY);
-            
+
             $pdf->SetXY($pdf->GetX() + $colWidth1 + $colWidth2 + $colWidth3, $startY);
-            
+
             // Draw Debit and Credit cells
             $pdf->Cell($colWidth4, $endY - $startY, ($entry['debit'] != 0 ? number_format($entry['debit'], 2) : ''), 'LR', 0, 'R');
             $pdf->Cell($colWidth5, $endY - $startY, ($entry['credit'] != 0 ? number_format($entry['credit'], 2) : ''), 'LR', 1, 'R');
-            
+
+            // Accumulate the total debit and credit
+            $totalDebit += $entry['debit'];
+            $totalCredit += $entry['credit'];
+
             $pdf->SetY($endY);
         }
 
         $pdf->Line($pdf->GetX(), $pdf->GetY(), $pdf->GetX() + 190, $pdf->GetY()); // Draw a line
+
         // Total row
         $pdf->SetFont('Arial', 'B', 10);
-        $pdf->Cell($colWidth1 + $colWidth2 + $colWidth3, 7, 'Total', 0, 0, 'R');
+        $pdf->Cell(
+            $colWidth1 + $colWidth2 + $colWidth3,
+            7,
+            'Total',
+            0,
+            0,
+            'R'
+        );
         $pdf->Cell($colWidth4, 7, number_format($totalDebit, 2), 0, 0, 'R');
         $pdf->Cell($colWidth5, 7, number_format($totalCredit, 2), 0, 1, 'R');
-
         // Add signature lines
         $pdf->Ln(15); // Move to the next line after the last row
 

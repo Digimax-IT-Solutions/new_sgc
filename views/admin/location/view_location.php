@@ -1,8 +1,12 @@
 <?php
 // Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
-
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('location');
 $locations = Location::all();
 
 $location = null;
@@ -64,14 +68,17 @@ $page = 'location_list'; // Set the variable corresponding to the current page
                         <div class="card-body">
 
                             <form method="POST" action="api/masterlist/location_controller.php" id="uomForm">
-                                <input type="hidden" name="action" id="modalAction" value="<?= isset($_GET['action']) ? htmlspecialchars($_GET['action'], ENT_QUOTES, 'UTF-8') : 'create' ?>">
-                                <input type="hidden" name="id" id="itemId" value="<?= isset($_GET['id']) ? htmlspecialchars($_GET['id'], ENT_QUOTES, 'UTF-8') : '' ?>">
+                                <input type="hidden" name="action" id="modalAction"
+                                    value="<?= isset($_GET['action']) ? htmlspecialchars($_GET['action'], ENT_QUOTES, 'UTF-8') : 'create' ?>">
+                                <input type="hidden" name="id" id="itemId"
+                                    value="<?= isset($_GET['id']) ? htmlspecialchars($_GET['id'], ENT_QUOTES, 'UTF-8') : '' ?>">
 
                                 <div class="row mb-3">
                                     <label for="categoryName" class="col-sm-2 col-form-label">Location</label>
                                     <div class="col-sm-4">
                                         <input type="text" class="form-control" id="categoryName" name="name"
-                                            placeholder="Enter location here" value="<?= $location ? htmlspecialchars($location->name, ENT_QUOTES, 'UTF-8') : '' ?>" />
+                                            placeholder="Enter location here"
+                                            value="<?= $location ? htmlspecialchars($location->name, ENT_QUOTES, 'UTF-8') : '' ?>" />
                                     </div>
                                 </div>
 

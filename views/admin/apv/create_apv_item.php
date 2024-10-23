@@ -1,8 +1,13 @@
 <?php
 //Guard
-include '_guards.php';
+//Guard
+require_once '_guards.php';
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('accounts_payable_voucher');
 
-Guard::adminOnly();
 $accounts = ChartOfAccount::all();
 $vendors = Vendor::all();
 $cost_centers = CostCenter::all();
@@ -10,6 +15,8 @@ $discounts = Discount::all();
 $wtaxes = WithholdingTax::all();
 $input_vats = InputVat::all();
 $terms = Term::all();
+$locations = Location::all();
+
 
 $newAPVoucherNo = Apv::getLastApvNo();
 
@@ -151,7 +158,8 @@ $newAPVoucherNo = Apv::getLastApvNo();
                                             <div class="form-group">
                                                 <!-- AP Voucher No -->
                                                 <label for="apv_no">AP Voucher No.</label>
-                                                <input type="text" class="form-control form-control-sm" id="apv_no" name="apv_no" value="<?php echo $newAPVoucherNo; ?>" readonly>
+                                                <input type="text" class="form-control form-control-sm" id="apv_no"
+                                                    name="apv_no" value="<?php echo $newAPVoucherNo; ?>" readonly>
                                             </div>
                                         </div>
                                     </div>
@@ -161,10 +169,11 @@ $newAPVoucherNo = Apv::getLastApvNo();
                                         <div class="col-md-4 customer-details">
                                             <div class="form-group">
                                                 <label for="account_id">A/P Account</label>
-                                                <select class="form-control form-control-sm select2" id="account_id" name="account_id" required>
+                                                <select class="form-control form-control-sm select2" id="account_id"
+                                                    name="account_id" required>
                                                     <option value=""></option>
-                                                    <?php foreach ($accounts as $account) : ?>
-                                                        <?php if ($account->account_type == 'Accounts Payable') : ?>
+                                                    <?php foreach ($accounts as $account): ?>
+                                                        <?php if ($account->account_type == 'Accounts Payable'): ?>
                                                             <option value="<?= $account->id ?>">
                                                                 <?= $account->account_code ?> -
                                                                 <?= $account->account_description ?>
@@ -178,11 +187,14 @@ $newAPVoucherNo = Apv::getLastApvNo();
                                         <!-- SELECT VENDOR -->
                                         <div class="col-md-4 customer-details">
                                             <div class="form-group">
-                                                <label for="vendor_id">Filtered By Vendor<span class="text-muted"></span></label>
-                                                <select class="form-control form-control-sm select2" id="vendor_id" name="vendor_id" required>
+                                                <label for="vendor_id">Filtered By Vendor<span
+                                                        class="text-muted"></span></label>
+                                                <select class="form-control form-control-sm select2" id="vendor_id"
+                                                    name="vendor_id" required>
                                                     <option value=""></option>
-                                                    <?php foreach ($vendors as $vendor) : ?>
-                                                        <option value="<?= $vendor->id ?>" data-name="<?= $vendor->vendor_name ?>">
+                                                    <?php foreach ($vendors as $vendor): ?>
+                                                        <option value="<?= $vendor->id ?>"
+                                                            data-name="<?= $vendor->vendor_name ?>">
                                                             <?= $vendor->vendor_name ?>
                                                         </option>
                                                     <?php endforeach; ?>
@@ -202,7 +214,8 @@ $newAPVoucherNo = Apv::getLastApvNo();
                                         <div class="form-group">
                                             <!-- PURCHASE ORDER NO -->
                                             <label for="ref_no">Reference Doc No.</label>
-                                            <input type="text" class="form-control form-control-md" id="ref_no" name="ref_no" placeholder="Enter ref doc">
+                                            <input type="text" class="form-control form-control-md" id="ref_no"
+                                                name="ref_no" placeholder="Enter ref doc">
                                         </div>
                                     </div>
 
@@ -210,7 +223,8 @@ $newAPVoucherNo = Apv::getLastApvNo();
                                         <!-- SELECT DATE -->
                                         <div class="form-group">
                                             <label for="apv_date">APV Date</label>
-                                            <input type="date" class="form-control form-control-md" id="apv_date" name="apv_date" value="<?php echo date('Y-m-d'); ?>" required>
+                                            <input type="date" class="form-control form-control-md" id="apv_date"
+                                                name="apv_date" value="<?php echo date('Y-m-d'); ?>" required>
                                         </div>
                                     </div>
                                     <div class="col-md-3">
@@ -218,8 +232,9 @@ $newAPVoucherNo = Apv::getLastApvNo();
                                             <label for="terms_id">Terms</label>
                                             <select class="form-select form-select-md" id="terms_id" name="terms_id">
                                                 <option value="">Select Terms</option>
-                                                <?php foreach ($terms as $term) : ?>
-                                                    <option value="<?= htmlspecialchars($term->id) ?>" data-days="<?= htmlspecialchars($term->term_days_due) ?>">
+                                                <?php foreach ($terms as $term): ?>
+                                                    <option value="<?= htmlspecialchars($term->id) ?>"
+                                                        data-days="<?= htmlspecialchars($term->term_days_due) ?>">
                                                         <?= htmlspecialchars($term->term_name) ?>
                                                     </option>
                                                 <?php endforeach; ?>
@@ -230,15 +245,31 @@ $newAPVoucherNo = Apv::getLastApvNo();
                                         <!-- SELECT DATE -->
                                         <div class="form-group">
                                             <label for="apv_due_date">Due Date</label>
-                                            <input type="date" class="form-control form-control-md" id="apv_due_date" name="apv_due_date" value="<?php echo date('Y-m-d'); ?>" required>
+                                            <input type="date" class="form-control form-control-md" id="apv_due_date"
+                                                name="apv_due_date" value="<?php echo date('Y-m-d'); ?>" required>
                                         </div>
                                     </div>
 
-                                    <div class="col-md-8 order-details mt-5">
-                                        <!-- MEMO -->
-                                        <div class="form-group">
-                                            <label for="memo">Memo</label>
-                                            <input type="text" class="form-control form-control-md" id="memo" name="memo">
+                                        <div class="row order-details mt-5">
+                                            <div class="col-md-8">
+                                                <!-- MEMO -->
+                                                <div class="form-group">
+                                                    <label for="memo">Memo</label>
+                                                    <input type="text" class="form-control form-control-md" id="memo" name="memo">
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-4">
+                                            <!-- LOCATION -->
+                                            <div class="form-group">
+                                                <label for="location" class="form-label">Location</label>
+                                                <select class="form-select form-select-sm" id="location" name="location" required>
+                                                    <option value="">Select Location</option>
+                                                    <?php foreach ($locations as $location): ?>
+                                                        <option value="<?= $location->id ?>"><?= $location->name ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -261,7 +292,8 @@ $newAPVoucherNo = Apv::getLastApvNo();
                                 <div class="row">
                                     <label class="col-sm-6 col-form-label">Gross Amount:</label>
                                     <div class="col-sm-6">
-                                        <input type="text" class="form-control-plaintext text-end" id="gross_amount" name="gross_amount" value="0.00" readonly>
+                                        <input type="text" class="form-control-plaintext text-end" id="gross_amount"
+                                            name="gross_amount" value="0.00" readonly>
                                     </div>
                                 </div>
 
@@ -269,8 +301,10 @@ $newAPVoucherNo = Apv::getLastApvNo();
                                 <div class="row">
                                     <label class="col-sm-6 col-form-label">Discount:</label>
                                     <div class="col-sm-6">
-                                        <input type="text" class="form-control-plaintext text-end" id="discount_amount" name="discount_amount" value="0.00" readonly>
-                                        <input type="text" class="form-control" name="discount_account_id" id="discount_account_id" hidden>
+                                        <input type="text" class="form-control-plaintext text-end" id="discount_amount"
+                                            name="discount_amount" value="0.00" readonly>
+                                        <input type="text" class="form-control" name="discount_account_id"
+                                            id="discount_account_id" hidden>
                                     </div>
                                 </div>
 
@@ -278,7 +312,8 @@ $newAPVoucherNo = Apv::getLastApvNo();
                                 <div class="row">
                                     <label class="col-sm-6 col-form-label">Net Amount:</label>
                                     <div class="col-sm-6">
-                                        <input type="text" class="form-control-plaintext text-end" id="net_amount_due" name="net_amount_due" value="0.00" readonly>
+                                        <input type="text" class="form-control-plaintext text-end" id="net_amount_due"
+                                            name="net_amount_due" value="0.00" readonly>
                                     </div>
                                 </div>
 
@@ -286,8 +321,11 @@ $newAPVoucherNo = Apv::getLastApvNo();
                                 <div class="row">
                                     <label class="col-sm-6 col-form-label">Input Vat:</label>
                                     <div class="col-sm-6">
-                                        <input type="text" class="form-control-plaintext text-end" id="vat_percentage_amount" name="vat_percentage_amount" value="0.00" readonly>
-                                        <input type="text" class="form-control" name="vat_account_id" id="vat_account_id" hidden>
+                                        <input type="text" class="form-control-plaintext text-end"
+                                            id="vat_percentage_amount" name="vat_percentage_amount" value="0.00"
+                                            readonly>
+                                        <input type="text" class="form-control" name="vat_account_id"
+                                            id="vat_account_id" hidden>
                                     </div>
                                 </div>
 
@@ -295,7 +333,8 @@ $newAPVoucherNo = Apv::getLastApvNo();
                                 <div class="row">
                                     <label class="col-sm-6 col-form-label">Taxable Amount:</label>
                                     <div class="col-sm-6">
-                                        <input type="text" class="form-control-plaintext text-end" id="net_of_vat" name="net_of_vat" value="0.00" readonly>
+                                        <input type="text" class="form-control-plaintext text-end" id="net_of_vat"
+                                            name="net_of_vat" value="0.00" readonly>
                                     </div>
                                 </div>
 
@@ -303,10 +342,12 @@ $newAPVoucherNo = Apv::getLastApvNo();
                                 <div class="row">
                                     <label class="col-sm-6 col-form-label">Tax Withheld (%):</label>
                                     <div class="col-sm-6">
-                                        <select class="form-select form-select-sm" id="tax_withheld_percentage" name="tax_withheld_percentage">
+                                        <select class="form-select form-select-sm" id="tax_withheld_percentage"
+                                            name="tax_withheld_percentage">
                                             <option value="">Select</option>
-                                            <?php foreach ($wtaxes as $wtax) : ?>
-                                                <option value="<?= $wtax->wtax_rate ?>" data-account-id="<?= $wtax->wtax_account_id ?>">
+                                            <?php foreach ($wtaxes as $wtax): ?>
+                                                <option value="<?= $wtax->wtax_rate ?>"
+                                                    data-account-id="<?= $wtax->wtax_account_id ?>">
                                                     <?= $wtax->wtax_name ?>
                                                 </option>
                                             <?php endforeach; ?>
@@ -317,8 +358,10 @@ $newAPVoucherNo = Apv::getLastApvNo();
                                 <div class="row">
                                     <label class="col-sm-6 col-form-label">Tax Withheld Amount:</label>
                                     <div class="col-sm-6">
-                                        <input type="text" class="form-control-plaintext text-end" id="tax_withheld_amount" name="tax_withheld_amount" value="0.00" readonly>
-                                        <input type="hidden" class="form-control" name="tax_withheld_account_id" id="tax_withheld_account_id">
+                                        <input type="text" class="form-control-plaintext text-end"
+                                            id="tax_withheld_amount" name="tax_withheld_amount" value="0.00" readonly>
+                                        <input type="hidden" class="form-control" name="tax_withheld_account_id"
+                                            id="tax_withheld_account_id">
                                     </div>
                                 </div>
 
@@ -326,13 +369,15 @@ $newAPVoucherNo = Apv::getLastApvNo();
                                 <div class="row">
                                     <label class="col-sm-6 col-form-label fw-bold">Total Amount Due:</label>
                                     <div class="col-sm-6">
-                                        <input type="text" class="form-control-plaintext text-end fw-bold" id="total_amount_due" name="total_amount_due" value="0.00" readonly>
+                                        <input type="text" class="form-control-plaintext text-end fw-bold"
+                                            id="total_amount_due" name="total_amount_due" value="0.00" readonly>
                                     </div>
                                 </div>
 
                             </div>
                             <div class="card-footer d-flex">
-                                <button type="button" id="saveDraftBtn" class="btn btn-secondary me-2">Save as Draft</button>
+                                <button type="button" id="saveDraftBtn" class="btn btn-secondary me-2">Save as
+                                    Draft</button>
                                 <button type="submit" class="btn btn-info me-2">Save and Print</button>
                                 <button type="reset" class="btn btn-danger">Clear</button>
                             </div>
@@ -387,18 +432,18 @@ $newAPVoucherNo = Apv::getLastApvNo();
 <iframe id="printFrame" style="display:none;"></iframe>
 
 <script>
-    $(document).ready(function() {
+    $(document).ready(function () {
 
         loadAllReceiveItems();
 
-        $('button[type="reset"]').on('click', function(e) {
+        $('button[type="reset"]').on('click', function (e) {
             e.preventDefault(); // Prevent default reset behavior
 
             // Clear all input fields
             $('input').val('');
 
             // Reset all select elements to their default option
-            $('select').each(function() {
+            $('select').each(function () {
                 $(this).val($(this).find("option:first").val()).trigger('change');
             });
 
@@ -427,7 +472,7 @@ $newAPVoucherNo = Apv::getLastApvNo();
             });
         });
 
-        $('#saveDraftBtn').click(function(e) {
+        $('#saveDraftBtn').click(function (e) {
             e.preventDefault();
             saveDraft();
         });
@@ -462,7 +507,7 @@ $newAPVoucherNo = Apv::getLastApvNo();
                 data: formData,
                 processData: false,
                 contentType: false,
-                success: function(response) {
+                success: function (response) {
                     document.getElementById('loadingOverlay').style.display = 'none';
 
                     if (response.success) {
@@ -484,7 +529,7 @@ $newAPVoucherNo = Apv::getLastApvNo();
                         });
                     }
                 },
-                error: function(jqXHR, textStatus, errorThrown) {
+                error: function (jqXHR, textStatus, errorThrown) {
                     document.getElementById('loadingOverlay').style.display = 'none';
                     console.error('AJAX error:', textStatus, errorThrown);
                     console.log('Response Text:', jqXHR.responseText);
@@ -497,7 +542,7 @@ $newAPVoucherNo = Apv::getLastApvNo();
             });
         }
 
-        $('#itemTableBody').on('change', 'input[type="checkbox"]', function() {
+        $('#itemTableBody').on('change', 'input[type="checkbox"]', function () {
             updateSummary();
         });
 
@@ -507,7 +552,7 @@ $newAPVoucherNo = Apv::getLastApvNo();
             let netAmount = 0;
             let inputVatAmount = 0;
 
-            $('#itemTableBody tr').each(function() {
+            $('#itemTableBody tr').each(function () {
                 const checkbox = $(this).find('input[type="checkbox"]');
                 if (checkbox.prop('checked')) {
                     const amountText = $(this).find('.amount').val();
@@ -560,12 +605,18 @@ $newAPVoucherNo = Apv::getLastApvNo();
             $('#tax_withheld_amount').val(taxWithheldAmount.toFixed(2));
             $('#total_amount_due').val(totalAmountDue.toFixed(2));
         }
-        $('#vendor_id').on('select2:select', function(e) {
+        $('#vendor_id').on('select2:select', function (e) {
             var data = e.params.data;
             $('#vendor_name').val($(data.element).data('name'));
         });
+        $('#location').select2({
+            theme: 'classic', // Use 'bootstrap-5' for Bootstrap 5, 'bootstrap-4' for Bootstrap 4
+            width: '100%',
+            placeholder: 'Select Location',
+            allowClear: false
+        });
 
-        document.getElementById('tax_withheld_percentage').addEventListener('change', function() {
+        document.getElementById('tax_withheld_percentage').addEventListener('change', function () {
             var selectedOption = this.options[this.selectedIndex];
             var accountId = selectedOption.getAttribute('data-account-id');
             console.log(accountId);
@@ -597,7 +648,7 @@ $newAPVoucherNo = Apv::getLastApvNo();
             allowClear: false
         });
 
-        $('#vendor_id').on('change', function() {
+        $('#vendor_id').on('change', function () {
             var vendorId = $(this).val();
             filterReceiveItems(vendorId);
         });
@@ -607,7 +658,7 @@ $newAPVoucherNo = Apv::getLastApvNo();
 
             if (vendorId) {
                 // Loop through each row in the table body except the header
-                $('#itemTableBody tr:not(.table-header)').each(function() {
+                $('#itemTableBody tr:not(.table-header)').each(function () {
                     var rowVendorId = $(this).data('vendor-id');
 
                     if (rowVendorId == vendorId) {
@@ -649,7 +700,7 @@ $newAPVoucherNo = Apv::getLastApvNo();
                 data: {
                     action: 'fetch_all_receive_items'
                 },
-                success: function(response) {
+                success: function (response) {
                     if (response.success) {
                         populateItemTable(response.items || []);
                     } else {
@@ -661,7 +712,7 @@ $newAPVoucherNo = Apv::getLastApvNo();
                         });
                     }
                 },
-                error: function(jqXHR, textStatus, errorThrown) {
+                error: function (jqXHR, textStatus, errorThrown) {
                     console.error('AJAX error:', textStatus, errorThrown);
                     Swal.fire({
                         icon: 'error',
@@ -685,7 +736,7 @@ $newAPVoucherNo = Apv::getLastApvNo();
                 `;
                 tbody.append(row);
             } else {
-                items.forEach(function(item, index) {
+                items.forEach(function (item, index) {
                     var grossAmount = parseFloat(item.gross_amount);
                     var discountAmount = parseFloat(item.discount_amount);
                     var netAmountBeforeVat = (grossAmount - discountAmount).toFixed(2);
@@ -720,7 +771,7 @@ $newAPVoucherNo = Apv::getLastApvNo();
         // Gather table items and submit form
         function gatherTableItems() {
             const items = [];
-            $('#itemTableBody tr').each(function(index) {
+            $('#itemTableBody tr').each(function (index) {
                 const item = {
                     account_id: $(this).find('.receive_account_id').val(),
                     cost_center_id: $(this).find('.cost-dropdown').val(),
@@ -749,7 +800,7 @@ $newAPVoucherNo = Apv::getLastApvNo();
         }
 
         // Sumbit the form
-        $('#apvForm').submit(function(event) {
+        $('#apvForm').submit(function (event) {
             event.preventDefault();
 
             const items = gatherTableItems();
@@ -773,7 +824,7 @@ $newAPVoucherNo = Apv::getLastApvNo();
                 type: 'POST',
                 dataType: 'json',
                 data: $(this).serialize(),
-                success: function(response) {
+                success: function (response) {
                     // Hide loading overlay
                     $('#loadingOverlay').hide();
 
@@ -801,7 +852,7 @@ $newAPVoucherNo = Apv::getLastApvNo();
                         });
                     }
                 },
-                error: function(jqXHR, textStatus, errorThrown) {
+                error: function (jqXHR, textStatus, errorThrown) {
                     // Hide loading overlay
                     $('#loadingOverlay').hide();
 
@@ -826,7 +877,7 @@ $newAPVoucherNo = Apv::getLastApvNo();
                     id: id,
                     print_status: printStatus
                 },
-                success: function(response) {
+                success: function (response) {
                     if (response.success) {
                         console.log('Print status updated successfully');
 
@@ -835,7 +886,7 @@ $newAPVoucherNo = Apv::getLastApvNo();
 
                         printFrame.src = printContentUrl;
 
-                        printFrame.onload = function() {
+                        printFrame.onload = function () {
                             printFrame.contentWindow.focus();
                             printFrame.contentWindow.print();
                         };
@@ -849,7 +900,7 @@ $newAPVoucherNo = Apv::getLastApvNo();
                         });
                     }
                 },
-                error: function(jqXHR, textStatus, errorThrown) {
+                error: function (jqXHR, textStatus, errorThrown) {
                     console.error('AJAX error:', textStatus, errorThrown);
                     Swal.fire({
                         icon: 'error',

@@ -39,9 +39,11 @@ class ReceivingReport
     public $discount_percentage;
     public $discount;
     public $net;
+    public $net_amount_before_input_vat;
     public $input_vat_percentage;
     public $vatable_amount;
     public $vat_amount;
+    public $cost_per_unit;
     public $print_status;
     public $details;
 
@@ -62,6 +64,7 @@ class ReceivingReport
         $this->memo = $formData['memo'] ?? null;
         $this->gross_amount = $formData['gross_amount'] ?? null;
         $this->discount_amount = $formData['discount_amount'] ?? null;
+        $this->net_amount_before_input_vat = $formData['net_amount_before_input_vat'] ?? null;
         $this->net_amount = $formData['net_amount'] ?? null;
         $this->input_vat = $formData['input_vat'] ?? null;
         $this->vatable = $formData['vatable'] ?? null;
@@ -83,6 +86,7 @@ class ReceivingReport
         $this->input_vat_percentage = $formData['input_vat_percentage'] ?? null;
         $this->vatable_amount = $formData['vatable_amount'] ?? null;
         $this->vat_amount = $formData['vat_amount'] ?? null;
+        $this->cost_per_unit = $formData['cost_per_unit'] ?? null;
         $this->print_status = $formData['print_status'] ?? null;
         $this->po_no = $formData['po_no'] ?? null;
 
@@ -219,7 +223,7 @@ class ReceivingReport
     }
 
     // Adding Details
-    public static function addItem($transaction_id, $po_id, $item_id, $cost_center_id, $quantity, $cost, $amount, $discount_percentage, $discount_amount, $net_amount_before_input_vat, $net_amount, $input_vat_percentage, $input_vat_amount)
+    public static function addItem($transaction_id, $po_id, $item_id, $cost_center_id, $quantity, $cost, $amount, $discount_percentage, $discount_amount, $net_amount_before_input_vat, $net_amount, $input_vat_percentage, $input_vat_amount, $cost_per_unit)
     {
         global $connection;
 
@@ -229,8 +233,8 @@ class ReceivingReport
             receive_id, po_id, item_id, cost_center_id, quantity,
             cost, amount, discount_percentage, discount,
             net_amount_before_input_vat, net_amount,
-            input_vat_percentage, input_vat_amount
-        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+            input_vat_percentage, input_vat_amount, cost_per_unit
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     ");
 
             $params = [
@@ -246,7 +250,8 @@ class ReceivingReport
                 $net_amount_before_input_vat,
                 $net_amount,
                 $input_vat_percentage,
-                $input_vat_amount
+                $input_vat_amount,
+                $cost_per_unit
             ];
 
             error_log("Executing SQL with params: " . print_r($params, true));
@@ -260,6 +265,104 @@ class ReceivingReport
         } catch (PDOException $e) {
             error_log("PDO Exception in ReceivingReport::addItem: " . $e->getMessage());
             throw new Exception("Database error while inserting receive item detail: " . $e->getMessage());
+        }
+    }
+
+    // Method to call the InsertInventory stored procedure
+    public static function insertReceiveInventory($type, $transaction_id, $ref_no, $date, $name, $item_id, $quantity)
+    {
+        global $connection;  // Access the global PDO connection
+
+        try {
+            // Prepare the SQL statement
+            $stmt = $connection->prepare("
+                CALL InsertReceiveInventory(
+                    :type,
+                    :transaction_id,
+                    :ref_no,
+                    :date,
+                    :name,
+                    :item_id,
+                    :quantity
+                )
+            ");
+
+            // Bind parameters
+            $stmt->bindParam(':type', $type);
+            $stmt->bindParam(':transaction_id', $transaction_id, PDO::PARAM_INT);
+            $stmt->bindParam(':ref_no', $ref_no);
+            $stmt->bindParam(':date', $date);
+            $stmt->bindParam(':name', $name);
+            $stmt->bindParam(':item_id', $item_id, PDO::PARAM_INT);
+            $stmt->bindParam(':quantity', $quantity, PDO::PARAM_INT);
+
+            // Execute the statement
+            $stmt->execute();
+
+            // Check if the procedure was successful
+            return true;
+        } catch (PDOException $e) {
+            error_log("Error calling InsertInventory: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    // Method to call the InsertPurchases
+    public static function insertPurchases($type, $transaction_id, $ref_no, $date, $name, $item_id, $cost, $total_cost, $discount_rate, $purchase_discount_per_item, $purchase_discount_amount, $net_amount, $tax_type, $input_vat, $taxable_purchased_amount, $cost_per_unit, $quantity)
+    {
+        global $connection;  // Access the global PDO connection
+
+        try {
+            // Prepare the SQL statement
+            $stmt = $connection->prepare("
+                CALL InsertPurchases(
+                    :type,
+                    :transaction_id,
+                    :ref_no,
+                    :date,
+                    :name,
+                    :item_id,
+                    :cost,
+                    :total_cost,
+                    :discount_rate,
+                    :purchase_discount_per_item,
+                    :purchase_discount_amount,
+                    :net_amount,
+                    :tax_type,
+                    :input_vat,
+                    :taxable_purchased_amount,
+                    :cost_per_unit,
+                    :quantity
+                )
+            ");
+
+            // Bind parameters
+            $stmt->bindParam(':type', $type);
+            $stmt->bindParam(':transaction_id', $transaction_id, PDO::PARAM_INT);
+            $stmt->bindParam(':ref_no', $ref_no);
+            $stmt->bindParam(':date', $date);
+            $stmt->bindParam(':name', $name);
+            $stmt->bindParam(':item_id', $item_id, PDO::PARAM_INT);
+            $stmt->bindParam(':cost', $cost);
+            $stmt->bindParam(':total_cost', $total_cost);
+            $stmt->bindParam(':discount_rate', $discount_rate);
+            $stmt->bindParam(':purchase_discount_per_item', $purchase_discount_per_item);
+            $stmt->bindParam(':purchase_discount_amount', $purchase_discount_amount);
+            $stmt->bindParam(':net_amount', $net_amount);
+            $stmt->bindParam(':tax_type', $tax_type);
+            $stmt->bindParam(':input_vat', $input_vat);
+            $stmt->bindParam(':taxable_purchased_amount', $taxable_purchased_amount);
+            $stmt->bindParam(':cost_per_unit', $cost_per_unit);
+            $stmt->bindParam(':quantity', $quantity);
+
+            // Execute the statement
+            $stmt->execute();
+
+            // Check if the procedure was successful
+            return true;
+        } catch (PDOException $e) {
+            error_log("Error calling InsertInventory: " . $e->getMessage());
+            return false;
         }
     }
 
@@ -354,13 +457,14 @@ class ReceivingReport
                 ':po_id' => $po_id,
                 ':item_id' => $item_id
             ]);
+
             $current_received_qty = $stmt->fetchColumn();
 
             // Update purchase_order_details
             $stmt = $connection->prepare("
             UPDATE purchase_order_details
             SET received_qty = received_qty + :received_qty,
-                balance_qty = qty - :received_qty
+                balance_qty = qty - received_qty
             WHERE po_id = :po_id AND item_id = :item_id
         ");
 
@@ -466,6 +570,147 @@ class ReceivingReport
         return $newRRNo;
     }
 
+    public static function getPurchasesByItemDetails()
+    {
+        global $connection;
+
+        $query = "
+        SELECT 
+            ri.receive_date,
+            ri.receive_no,
+            rid.item_id,
+            i.item_name,
+            i.item_purchase_description,
+            rid.quantity as qty,
+            rid.cost,
+            rid.amount,
+            ri.discount_amount,
+            rid.net_amount_before_input_vat,
+            rid.input_vat_amount,
+            rid.net_amount,
+            rid.cost_per_unit
+        FROM 
+            receive_items ri
+        JOIN 
+            receive_item_details rid ON ri.id = rid.receive_id
+        JOIN
+            items i ON rid.item_id = i.id
+        ORDER BY 
+            ri.receive_date DESC
+        ";
+
+        $stmt = $connection->prepare($query);
+        $stmt->execute();
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return $result;
+    }
+
+
+
+    // 
+    public static function insert_inventory_valuation(
+        $type,
+        $transaction_id,
+        $ref_no,
+        $date,
+        $name,
+        $item_id,
+        $qty_purchased,
+        $qty_sold = 0.00,
+        $cost,
+        $total_cost,
+        $purchase_discount_rate,
+        $purchase_discount_per_item,
+        $purchase_discount_amount,
+        $net_amount,
+        $input_vat_rate,
+        $input_vat,
+        $taxable_purchased_amount,
+        $cost_per_unit,
+        $selling_price = 0.00,
+        $gross_sales = 0.00,
+        $sales_discount_rate = 0.00,
+        $sales_discount_amount = 0.00,
+        $net_sales = 0.00,
+        $sales_tax = 0.00,
+        $output_vat = 0.00,
+        $taxable_sales_amount = 0.00,
+        $selling_price_per_unit = 0.00
+    ) {
+        global $connection;  // Access the global PDO connection
+
+        try {
+            // Prepare the SQL statement
+            $stmt = $connection->prepare("
+            CALL insert_inventory_valuation(
+                :type,
+                :transaction_id,
+                :ref_no,
+                :date,
+                :name,
+                :item_id,
+                :qty_purchased,
+                :qty_sold,
+                :cost,
+                :total_cost,
+                :purchase_discount_rate,
+                :purchase_discount_per_item,
+                :purchase_discount_amount,
+                :net_amount,
+                :input_vat_rate,
+                :input_vat,
+                :taxable_purchased_amount,
+                :cost_per_unit,
+                :selling_price,
+                :gross_sales,
+                :sales_discount_rate,
+                :sales_discount_amount,
+                :net_sales,
+                :sales_tax,
+                :output_vat,
+                :taxable_sales_amount,
+                :selling_price_per_unit
+            )
+        ");
+
+            // Bind parameters
+            $stmt->bindParam(':type', $type);
+            $stmt->bindParam(':transaction_id', $transaction_id);
+            $stmt->bindParam(':ref_no', $ref_no);
+            $stmt->bindParam(':date', $date);
+            $stmt->bindParam(':name', $name);
+            $stmt->bindParam(':item_id', $item_id);
+            $stmt->bindParam(':qty_purchased', $qty_purchased);
+            $stmt->bindParam(':qty_sold', $qty_sold);
+            $stmt->bindParam(':cost', $cost);
+            $stmt->bindParam(':total_cost', $total_cost);
+            $stmt->bindParam(':purchase_discount_rate', $purchase_discount_rate);
+            $stmt->bindParam(':purchase_discount_per_item', $purchase_discount_per_item);
+            $stmt->bindParam(':purchase_discount_amount', $purchase_discount_amount);
+            $stmt->bindParam(':net_amount', $net_amount);
+            $stmt->bindParam(':input_vat_rate', $input_vat_rate);
+            $stmt->bindParam(':input_vat', $input_vat);
+            $stmt->bindParam(':taxable_purchased_amount', $taxable_purchased_amount);
+            $stmt->bindParam(':cost_per_unit', $cost_per_unit);
+            $stmt->bindParam(':selling_price', $selling_price);
+            $stmt->bindParam(':gross_sales', $gross_sales);
+            $stmt->bindParam(':sales_discount_rate', $sales_discount_rate);
+            $stmt->bindParam(':sales_discount_amount', $sales_discount_amount);
+            $stmt->bindParam(':net_sales', $net_sales);
+            $stmt->bindParam(':sales_tax', $sales_tax);
+            $stmt->bindParam(':output_vat', $output_vat);
+            $stmt->bindParam(':taxable_sales_amount', $taxable_sales_amount);
+            $stmt->bindParam(':selling_price_per_unit', $selling_price_per_unit);
+
+            // Execute the statement
+            $stmt->execute();
+
+            // Check if the procedure was successful
+            return true;
+        } catch (PDOException $e) {
+            error_log("Error calling insert_inventory_valuation: " . $e->getMessage());
+            return false;
+        }
+    }
 }
-
-

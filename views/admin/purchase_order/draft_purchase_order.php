@@ -1,8 +1,12 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
-
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('purchase_order');
 $purchase_orders = PurchaseOrder::all();
 
 // Calculate summary statistics
@@ -33,18 +37,17 @@ $page = 'purchase_order';
             <?php displayFlashMessage('add_purchase_order') ?>
             <?php displayFlashMessage('delete_purchase_order') ?>
             <?php displayFlashMessage('update_purchase_order') ?>
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">Purchase Orders</h6>
-                    <div>
-                        <a href="purchase_order" class="btn btn-sm btn-secondary">
-                            <i class="fas fa-arrow-left"></i> Go Back
-                        </a>
-                        <a href="create_purchase_order" class="btn btn-sm btn-primary">
-                            <i class="fas fa-plus"></i> New Purchase Order
-                        </a>
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                        <div>
+                            <a href="purchase_order" class="btn btn-lg btn-outline-secondary me-2 mb-2">
+                                    <i class="fas fa-arrow-left  fa-lg me-2"></i> Go Back
+                            </a>
+                            <a href="create_purchase_order" class="btn btn-lg btn-outline-success me-2 mb-2">
+                                <i class="fas fa-plus fa-lg me-2"></i> Create Purchase Order
+                            </a>
+                        </div>
                     </div>
-                </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
@@ -61,39 +64,39 @@ $page = 'purchase_order';
                             <tbody>
                                 <?php foreach ($purchase_orders as $order): ?>
                                     <?php if ($order->po_status == 4): // Only include invoices with status 3 ?>
-                                    <tr>
-                                        <td><?= $order->po_no ?></td>
-                                        <td><?= $order->vendor_name ?></td>
-                                        <td><?= date('M d, Y', strtotime($order->date)) ?></td>
-                                        <td class="text-right">₱<?= number_format($order->total_amount, 2) ?></td>
-                                        <td class="text-center">
-                                            <?php
-                                            switch ($order->po_status) {
+                                        <tr>
+                                            <td><?= $order->po_no ?></td>
+                                            <td><?= $order->vendor_name ?></td>
+                                            <td><?= date('M d, Y', strtotime($order->date)) ?></td>
+                                            <td class="text-right">₱<?= number_format($order->total_amount, 2) ?></td>
+                                            <td class="text-center">
+                                                <?php
+                                                switch ($order->po_status) {
 
-                                                case 4:
-                                                    echo '<span class="badge bg-info text-dark">Draft</span>'; 
-                                                    break;
-                                                case 0:
-                                                    echo '<span class="badge bg-warning">Waiting for delivery</span>';
-                                                    break;
-                                                case 1:
-                                                    echo '<span class="badge bg-success">Received</span>';
-                                                    break;
-                                                case 2:
-                                                    echo '<span class="badge bg-info">Partially Received</span>';
-                                                    break;
-                                                default:
-                                                    echo '<span class="badge bg-secondary">Unknown</span>';
-                                            }
-                                            ?>
-                                        </td>
-                                        <td>
-                                            <a href="view_purchase_order?action=update&id=<?= $order->id ?>"
-                                                class="btn btn-sm btn-info">
-                                                <i class="fas fa-eye"></i> View
-                                            </a>
-                                        </td>
-                                    </tr>
+                                                    case 4:
+                                                        echo '<span class="badge bg-info text-dark">Draft</span>';
+                                                        break;
+                                                    case 0:
+                                                        echo '<span class="badge bg-warning">Waiting for delivery</span>';
+                                                        break;
+                                                    case 1:
+                                                        echo '<span class="badge bg-success">Received</span>';
+                                                        break;
+                                                    case 2:
+                                                        echo '<span class="badge bg-info">Partially Received</span>';
+                                                        break;
+                                                    default:
+                                                        echo '<span class="badge bg-secondary">Unknown</span>';
+                                                }
+                                                ?>
+                                            </td>
+                                            <td>
+                                                <a href="view_purchase_order?action=update&id=<?= $order->id ?>"
+                                                    class="btn btn-sm btn-info">
+                                                    <i class="fas fa-eye"></i> View
+                                                </a>
+                                            </td>
+                                        </tr>
                                     <?php endif; ?>
                                 <?php endforeach; ?>
                             </tbody>

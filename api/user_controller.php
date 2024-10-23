@@ -26,9 +26,20 @@ if (post('action') === 'add') {
     $role = post('role');
     $password = post('password');
 
+    $modules = $_POST['menus']; // Submenus
+
 
     try {
-        User::add($name, $username, $role, $password);
+        // Add user to the users table
+        $userId = User::add($name, $username, $role, $password);
+
+        // // Add module access to the user_module_access table
+        // if (!empty($modules)) {
+        //     foreach ($modules as $module) {
+        //         User::addModuleAccess($userId, $module);
+        //     }
+        // }
+
         flashMessage('add_user', 'New user added.', FLASH_SUCCESS);
     } catch (Exception $ex) {
         flashMessage('add_user', $ex->getMessage(), FLASH_ERROR);
@@ -38,20 +49,43 @@ if (post('action') === 'add') {
 }
 
 
-// //Update category
+if (post('action') === 'addrole') {
 
-// if (post('action') === 'update') {
-//     $name = post('name');
-//     $id = post('id');
+    $role_name = strtoupper(post('roleName')); // Convert to uppercase
+    $modules = $_POST['menus']; // Submenus
 
-//     try {
-//         $category = Uom::find($id);
-//         $category->name = $name;
-//         $category->update();
-//         flashMessage('update_uom', 'Uom updated successfully.', FLASH_SUCCESS);
-//         redirect('../admin_category.php');
-//     } catch (Exception $ex) {
-//         flashMessage('update_uom', $ex->getMessage(), FLASH_ERROR);
-//         redirect("../admin_category.php?action=update&id={$id}");
-//     }
-// }
+
+    try {
+        // Add user to the users table
+        $roleId = Role::add($role_name);
+
+        // Add module access to the user_module_access table
+        if (!empty($modules)) {
+            foreach ($modules as $module) {
+                Role::addModuleAccess($roleId, $module);
+            }
+        }
+
+
+        flashMessage('add_role', 'New role added.', FLASH_SUCCESS);
+    } catch (Exception $ex) {
+        flashMessage('add_role', $ex->getMessage(), FLASH_ERROR);
+    }
+
+    redirect('../role_list');
+}
+
+if (get('action') === 'deleteRole') {
+    $id = get('id');
+    $user = Role::find($id);
+
+    if ($user) {
+        $user->delete();
+        flashMessage('delete_role', 'Role has been deleted', FLASH_SUCCESS);
+    } else {
+        flashMessage('delete_role', 'Invalid role', FLASH_ERROR);
+    }
+    redirect('../role_list');
+}
+
+

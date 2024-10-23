@@ -1,7 +1,11 @@
 <?php
 //Guard
 require_once '_guards.php';
-Guard::adminOnly();
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('invoice');
 
 $invoices = Invoice::all();
 $totalCount = Invoice::getTotalCount();
@@ -19,6 +23,25 @@ $page = 'invoices';
 
 <?php require 'views/templates/header.php' ?>
 <?php require 'views/templates/sidebar.php' ?>
+<style>
+    .btn-lg {
+
+        border-radius: 8px;
+    }
+
+    .btn-outline-primary,
+    .btn-outline-danger,
+    .btn-outline-secondary {
+        transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .btn-outline-success:hover,
+    .btn-outline-danger:hover,
+    .btn-outline-secondary:hover {
+        color: #fff !important;
+        box-shadow: 0px 4px 12px rgba(0, 123, 255, 0.3);
+    }
+</style>
 <div class="main">
     <?php require 'views/templates/navbar.php' ?>
     <main class="content">
@@ -106,27 +129,21 @@ $page = 'invoices';
 
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">Invoices</h6>
                     <div>
-                        <a href="draft_invoice" class="btn btn-sm btn-danger">
-                            <i class="fab fa-firstdraft"></i> Draft
+                        <a href="draft_invoice" class="btn btn-lg btn-outline-secondary me-2 mb-2">
+                            <i class="fab fa-firstdraft fa-lg me-2"></i> Drafts
                         </a>
-                        <a href="void_invoice" class="btn btn-sm btn-secondary">
-                            <i class="fas fa-ban"></i> Void
+                        <a href="void_invoice" class="btn btn-lg btn-outline-danger me-2 mb-2">
+                            <i class="fas fa-file-excel fa-lg me-2"></i> Voids
                         </a>
-                        <a class="btn btn-sm btn-outline-secondary me-2" id="upload_button">
-                            <i class="fas fa-upload"></i> Upload
-                        </a>
-                        <input type="file" name="excel_file" id="excel_file" accept=".xlsx, .xls"
-                            style="display: none;">
-                        <a href="create_invoice" class="btn btn-sm btn-primary">
-                            <i class="fas fa-plus"></i> New Invoice
+                        <a href="create_invoice" class="btn btn-lg btn-outline-success me-2 mb-2">
+                            <i class="fas fa-plus fa-lg me-2"></i> Create Invoice
                         </a>
                     </div>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive" style="overflow-x: auto;">
-                        <table class="table table-bordered" id="dataTable" style="min-width: 1000px; width: 100%;"
+                        <table class="table table-bordered display compact" id="dataTable" style="min-width: 1000px; width: 100%;"
                             cellspacing="0">
                             <thead>
                                 <tr>
@@ -195,7 +212,39 @@ $page = 'invoices';
 <?php require 'views/templates/footer.php' ?>
 
 <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
+
+        $('<div class="dt-buttons date-filters">' +
+            '<label for="fromDate">From: <input class="form-control" type="date" id="fromDate"></label>&nbsp' +
+            '<label for="toDate">To: <input class="form-control" type="date" id="toDate"></label>' +
+            '<br><br>' +
+            '</div>'
+        ).insertBefore('#dataTable');
+
+        $.fn.dataTable.ext.search.push(
+            function(settings, data, dataIndex) {
+                var fromDate = $('#fromDate').val();
+                var toDate = $('#toDate').val();
+                var dateColumn = data[3]; // Assuming the date is in the 4th column (index 3)
+
+                if (fromDate === "" && toDate === "") {
+                    return true;
+                }
+
+                var dateFrom = Date.parse(fromDate);
+                var dateTo = Date.parse(toDate);
+                var dateCheck = Date.parse(dateColumn);
+
+                if ((isNaN(dateFrom) && isNaN(dateTo)) ||
+                    (isNaN(dateFrom) && dateCheck <= dateTo) ||
+                    (dateFrom <= dateCheck && isNaN(dateTo)) ||
+                    (dateFrom <= dateCheck && dateCheck <= dateTo)) {
+                    return true;
+                }
+                return false;
+            }
+        );
+
         var table = $('#dataTable').DataTable({
             responsive: true,
             ordering: true,
@@ -215,33 +264,33 @@ $page = 'invoices';
             ],
             pageLength: 25,
             columnDefs: [{
-                className: "text-start",
-                targets: '_all'
-            },
-            {
-                width: "120px",
-                targets: 0
-            },
-            {
-                width: "100px",
-                targets: [1, 2]
-            },
-            {
-                width: "150px",
-                targets: [3, 4, 5]
-            },
-            {
-                width: "200px",
-                targets: 6
-            },
-            {
-                width: "100px",
-                targets: 7
-            },
-            {
-                orderable: false,
-                targets: 7
-            }
+                    className: "text-start",
+                    targets: '_all'
+                },
+                {
+                    width: "120px",
+                    targets: 0
+                },
+                {
+                    width: "100px",
+                    targets: [1, 2]
+                },
+                {
+                    width: "150px",
+                    targets: [3, 4, 5]
+                },
+                {
+                    width: "200px",
+                    targets: 6
+                },
+                {
+                    width: "100px",
+                    targets: 7
+                },
+                {
+                    orderable: false,
+                    targets: 7
+                }
             ],
             dom: '<"top"Bf>rt<"bottom"lip><"clear">',
             buttons: [
@@ -255,7 +304,7 @@ $page = 'invoices';
                             search: 'none'
                         }
                     },
-                    customize: function (csv) {
+                    customize: function(csv) {
                         return getHeader() + csv;
                     }
                 },
@@ -281,73 +330,99 @@ $page = 'invoices';
                 },
                 {
                     text: 'Export TXT',
-                    action: function (e, dt, button, config) {
-                        var header = getHeader();
-                        var tableData = dt.data().toArray();
-                        var content = header;
-
-                        var cellWidth = 25; // 100px is approximately 12 characters in monospace font
-                        var separator = '+' + '-'.repeat(cellWidth * 6 + 6) + '+\n';
-
-                        // Add table header
-                        content += separator;
-                        content += '|' + [
-                            'Invoice No.', 'Customer', 'Memo', 'Date',
-                            'Amount', 'Balance'
-                        ].map(h => h.padEnd(cellWidth)).join('|') + '|\n';
-                        content += separator;
-
-                        // Add table rows
-                        tableData.forEach(function (row) {
-                            content += '|' + [
-                                row[0],
-                                row[1].substring(0, cellWidth - 1),
-                                row[2].substring(0, cellWidth - 1),
-                                row[3],
-                                row[4],
-                                row[6]
-                            ].map(cell => cell.toString().padEnd(cellWidth)).join('|') + '|\n';
-                        });
-
-                        // Add table footer
-                        content += separator;
-
-                        var blob = new Blob([content], {
-                            type: 'text/plain;charset=utf-8'
-                        });
-                        saveAs(blob, 'invoice_export.txt');
+                    action: function(e, dt, button, config) {
+                        exportWithDateCheck('txt');
                     }
                 }
             ]
         });
 
+        function exportWithDateCheck(type) {
+            var fromDate = $('#fromDate').val();
+            var toDate = $('#toDate').val();
+
+            if (!fromDate || !toDate) {
+                Swal.fire({
+                    title: 'Date Range Not Set',
+                    text: 'Please select both From and To dates before exporting.',
+                    icon: 'warning',
+                    confirmButtonText: 'OK'
+                });
+                return;
+            }
+
+            // Proceed with export based on type
+            switch (type) {
+                case 'csv':
+                    table.button('.buttons-csv').trigger();
+                    break;
+                case 'excel':
+                    table.button('.buttons-excel').trigger();
+                    break;
+                case 'pdf':
+                    table.button('.buttons-pdf').trigger();
+                    break;
+                case 'txt':
+                    exportTXT();
+                    break;
+            }
+        }
+
+        function exportTXT() {
+            var header = getHeader();
+            var tableData = table.rows({
+                search: 'applied'
+            }).data().toArray();
+            var content = header;
+
+            var cellWidth = 25; // 100px is approximately 12 characters in monospace font
+            var separator = '+' + '-'.repeat(cellWidth * 6 + 6) + '+\n';
+
+            // Add table header
+            content += separator;
+            content += '|' + [
+                'Invoice No.', 'Customer', 'Memo', 'Date',
+                'Amount', 'Balance'
+            ].map(h => h.padEnd(cellWidth)).join('|') + '|\n';
+            content += separator;
+
+            // Add table rows
+            tableData.forEach(function(row) {
+                content += '|' + [
+                    row[0],
+                    row[1].substring(0, cellWidth - 1),
+                    row[2].substring(0, cellWidth - 1),
+                    row[3],
+                    row[4],
+                    row[6]
+                ].map(cell => cell.toString().padEnd(cellWidth)).join('|') + '|\n';
+            });
+
+            // Add table footer
+            content += separator;
+
+            var blob = new Blob([content], {
+                type: 'text/plain;charset=utf-8'
+            });
+            saveAs(blob, 'invoice_export.txt');
+        }
+
+        $('#fromDate, #toDate').on('change', function() {
+            table.draw();
+        });
+
         function getHeader() {
-            var recordCount = table.rows().count();
-            var totalAmount = table.column(4).data().reduce(function (sum, value) {
+            var recordCount = table.rows({
+                search: 'applied'
+            }).count();
+            var totalAmount = table.column(4, {
+                search: 'applied'
+            }).data().reduce(function(sum, value) {
                 return sum + parseFloat(value.replace(/[^\d.-]/g, ''));
             }, 0);
 
-            var dates = table.column(3).data().map(function (d) {
-                var parts = d.split(', ');
-                if (parts.length === 2) {
-                    var datePart = parts[1];
-                    return new Date(datePart);
-                }
-                return null;
-            }).filter(function (d) {
-                return d !== null;
-            });
-
-            var minDate = new Date(Math.min.apply(null, dates));
-            var maxDate = new Date(Math.max.apply(null, dates));
-
-            var formatDate = function (date) {
-                return date.toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit'
-                });
-            };
+            var fromDate = $('#fromDate').val();
+            var toDate = $('#toDate').val();
 
             return 'Taxpayer`s Name: Hideco Sugar Milling Co., Inc.\n' +
                 'TIN: 000-123-533-00000\n' +
@@ -357,20 +432,22 @@ $page = 'invoices';
                 'File Type: Text/CSV\n' +
                 'Number of Records: ' + recordCount + '\n' +
                 'Amount Field Control Total: ₱' + totalAmount.toFixed(2) + '\n' +
-                'Period Covered: ' + formatDate(minDate) + ' to ' + formatDate(maxDate) + '\n\n' +
+                'Period Covered: ' + fromDate + ' to ' + toDate + '\n\n' +
                 'Transaction Cutoff: \n' +
                 'Extracted by: ' + '<?= $_SESSION['user_name'] ?>' + '\n';
         }
     });
 </script>
-<script>
-    $(document).ready(function () {
 
-        $('#upload_button').on('click', function () {
+
+<script>
+    $(document).ready(function() {
+
+        $('#upload_button').on('click', function() {
             $('#excel_file').click();
         });
 
-        $('#excel_file').on('change', function () {
+        $('#excel_file').on('change', function() {
             if (this.files[0]) {
                 var formData = new FormData();
                 formData.append('excel_file', this.files[0]);
@@ -385,7 +462,7 @@ $page = 'invoices';
                     contentType: false,
                     processData: false,
                     dataType: 'json', // Add this line to expect JSON response
-                    success: function (response) {
+                    success: function(response) {
                         if (response.status === 'success') {
                             alert(response.message);
                             location.reload();
@@ -393,7 +470,7 @@ $page = 'invoices';
                             alert('Error: ' + response.message);
                         }
                     },
-                    error: function (xhr, status, error) {
+                    error: function(xhr, status, error) {
                         console.log(xhr.responseText); // Log the full response for debugging
                         alert('An error occurred: ' + error);
                     }

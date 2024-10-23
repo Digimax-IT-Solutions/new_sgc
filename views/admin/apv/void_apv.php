@@ -1,7 +1,12 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('accounts_payable_voucher');
 
 $apv = Apv::all();
 ?>
@@ -26,17 +31,18 @@ $apv = Apv::all();
                 <?php displayFlashMessage('add_apv') ?>
                 <?php displayFlashMessage('delete_apv') ?>
                 <?php displayFlashMessage('update_apv') ?>
-                <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 fw-bold text-primary"></h6>
-                    <div>
-                        <a href="accounts_payable_voucher" class="btn btn-sm btn-secondary">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                        <div>
+                            <a href="accounts_payable_voucher" class="btn btn-lg btn-outline-secondary me-2 mb-2">
                             <i class="fas fa-arrow-left"></i> Go Back
-                        </a>
-                        <a href="create_apv_expense" class="btn btn-sm btn-primary">
-                            <i class="fas fa-plus"></i> Create New
-                        </a>
+                            </a>
+                            <a href="create_apv_expense" class="btn btn-lg btn-outline-success me-2 mb-2">
+                                <i class="fas fa-plus fa-lg me-2"></i> Create New 
+                            </a>
+                        </div>
                     </div>
-                </div>
+
                 <div class="card-body">
                     <table class="table table-striped table-hover" id="apvTable">
                         <thead>
@@ -50,21 +56,21 @@ $apv = Apv::all();
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($apv as $ap) : ?>
+                            <?php foreach ($apv as $ap): ?>
                                 <?php if ($ap->status == 3): // Only include invoices with status 3 ?>
-                                <tr>
-                                    <td><?= htmlspecialchars($ap->apv_no); ?></td>
-                                    <td><?= htmlspecialchars($ap->apv_date); ?></td>
-                                    <td><?= htmlspecialchars($ap->memo); ?></td>
-                                    <td><b>₱<?= number_format($ap->total_amount_due, 2, '.', ','); ?></b></td>
-                                    <td class="text-center">
+                                    <tr>
+                                        <td><?= htmlspecialchars($ap->apv_no); ?></td>
+                                        <td><?= htmlspecialchars($ap->apv_date); ?></td>
+                                        <td><?= htmlspecialchars($ap->memo); ?></td>
+                                        <td><b>₱<?= number_format($ap->total_amount_due, 2, '.', ','); ?></b></td>
+                                        <td class="text-center">
                                             <?php
                                             switch ($ap->status) {
                                                 case 4:
                                                     echo '<span class="badge bg-info text-dark">Draft</span>';
                                                     break;
                                                 case 3:
-                                                    echo '<span class="badge bg-secondary">Void</span>'; 
+                                                    echo '<span class="badge bg-secondary">Void</span>';
                                                     break;
                                                 case 0:
                                                     echo '<span class="badge bg-warning">Waiting for delivery</span>';
@@ -80,12 +86,13 @@ $apv = Apv::all();
                                             }
                                             ?>
                                         </td>
-                                    <td>
-                                        <a href="view_apv?action=update&id=<?= htmlspecialchars($ap->id); ?>" class="btn btn-sm btn-info">
-                                            <i class="fas fa-eye"></i> View
-                                        </a>
-                                    </td>
-                                </tr>
+                                        <td>
+                                            <a href="view_apv?action=update&id=<?= htmlspecialchars($ap->id); ?>"
+                                                class="btn btn-sm btn-info">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
                                 <?php endif; ?>
                             <?php endforeach; ?>
                         </tbody>
@@ -100,7 +107,7 @@ $apv = Apv::all();
 
 
 <script>
-    $(document).ready(function() {
+    $(document).ready(function () {
         $('#apvTable').DataTable({
             "order": [
                 [2, "desc"]

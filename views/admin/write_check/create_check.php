@@ -1,16 +1,23 @@
 <?php
 //Guard
-include '_guards.php';
+//Guard
+require_once '_guards.php';
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('write_check');
 
-Guard::adminOnly();
 $accounts = ChartOfAccount::all();
 $vendors = Vendor::all();
 $customers = Customer::all();
 $other_names = OtherNameList::all();
+$employee = Employee::all();
 $cost_centers = CostCenter::all();
 $discounts = Discount::all();
 $wtaxes = WithholdingTax::all();
 $input_vats = InputVat::all();
+$locations = Location::all();
 
 $newWriteCvNo = WriteCheck::getLastCheckNo();
 ?>
@@ -168,6 +175,8 @@ $newWriteCvNo = WriteCheck::getLastCheckNo();
                                                     <option value="customers">Customer</option>
                                                     <option value="vendors">Vendor</option>
                                                     <option value="other_name">Other Names</option>
+                                                    <option value="employee">Employee</option>
+
                                                 </select>
                                             </div>
                                         </div>
@@ -240,12 +249,26 @@ $newWriteCvNo = WriteCheck::getLastCheckNo();
 
 
 
-                                    <div class="col-md-8 order-details">
+                                    <div class="row mt-5">
                                         <!-- MEMO -->
-                                        <div class="form-group">
-                                            <label for="memo" class="form-label">Memo</label>
-                                            <input type="text" class="form-control form-control-sm" id="memo"
-                                                name="memo">
+                                        <div class="col-md-8 order-details">
+                                            <div class="form-group">
+                                                <label for="memo" class="form-label">Memo</label>
+                                                <input type="text" class="form-control form-control-sm" id="memo" name="memo">
+                                            </div>
+                                        </div>
+
+                                        <!-- LOCATION -->
+                                        <div class="col-md-4 customer-details">
+                                            <div class="form-group">
+                                                <label for="location" class="form-label">Location</label>
+                                                <select class="form-select form-select-sm" id="location" name="location" required>
+                                                    <option value="">Select Location</option>
+                                                    <?php foreach ($locations as $location): ?>
+                                                        <option value="<?= htmlspecialchars($location->id) ?>"><?= htmlspecialchars($location->name) ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -414,7 +437,7 @@ $newWriteCvNo = WriteCheck::getLastCheckNo();
 <iframe id="printFrame" style="display:none;"></iframe>
 
 <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
         // Data from server (ideally, this should be fetched via an API)
         var customers = <?= json_encode($customers) ?>;
         var vendors = <?= json_encode($vendors) ?>;
@@ -483,11 +506,12 @@ $newWriteCvNo = WriteCheck::getLastCheckNo();
 </script>
 
 <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
         // Data from server (ideally, this should be fetched via an API)
         var customers = <?= json_encode($customers) ?>;
         var vendors = <?= json_encode($vendors) ?>;
         var otherNames = <?= json_encode($other_names) ?>;
+        var employee = <?= json_encode($employee) ?>;
 
         const payeeTypeSelect = $('#payee_type');
         const payeeDropdown = $('#payee_id');
@@ -543,6 +567,8 @@ $newWriteCvNo = WriteCheck::getLastCheckNo();
                     return mapData(vendors, 'vendor_name', 'vendor_address');
                 case 'other_name':
                     return mapData(otherNames, 'other_name', 'other_name_address');
+                case 'employee':
+                    return mapEmployeeData(employee);
                 default:
                     return [];
             }
@@ -555,20 +581,35 @@ $newWriteCvNo = WriteCheck::getLastCheckNo();
                 address: item[addressKey]
             }));
         }
+
+        function mapEmployeeData(data) {
+            return data.map(item => ({
+                id: item.id,
+                name: `${item.first_name} ${item.middle_name} ${item.last_name}`,
+                address: [
+                    item.house_lot_number,
+                    item.street,
+                    item.barangay,
+                    item.town,
+                    item.city
+                ].filter(Boolean).join(', ') // Filter out any empty values and join with comma
+            }));
+        }
     });
 </script>
 
+
 <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
 
         // Add click event listener to the Clear button
-        $('button[type="reset"]').on('click', function (e) {
+        $('button[type="reset"]').on('click', function(e) {
             e.preventDefault(); // Prevent default reset behavior
             // Clear all input fields
             $('input').val('');
 
             // Reset all select elements to their default option
-            $('select').each(function () {
+            $('select').each(function() {
                 $(this).val($(this).find("option:first").val()).trigger('change');
             });
 
@@ -597,8 +638,7 @@ $newWriteCvNo = WriteCheck::getLastCheckNo();
             });
         });
 
-
-        $('#saveDraftBtn').click(function (e) {
+        $('#saveDraftBtn').click(function(e) {
             e.preventDefault();
             saveDraft();
         });
@@ -606,11 +646,12 @@ $newWriteCvNo = WriteCheck::getLastCheckNo();
         function saveDraft() {
             const items = gatherTableItems();
 
-            if (items.length === 0) {
+            if (items === false || items.length === 0) {
+                if (items === false) return;
                 Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Please add items before saving as draft'
+                    icon: 'warning',
+                    title: 'Warning',
+                    text: 'Please add items first'
                 });
                 return;
             }
@@ -625,6 +666,13 @@ $newWriteCvNo = WriteCheck::getLastCheckNo();
             formData.append('action', 'save_draft');
             formData.append('tax_withheld_account_id', taxWithheldAccountId);
 
+            // Add summary data with raw values
+            const summaryFields = ['gross_amount', 'discount_amount', 'net_amount_due', 'vat_percentage_amount', 'net_of_vat', 'tax_withheld_amount', 'total_amount_due'];
+            summaryFields.forEach(field => {
+                const rawValue = $(`#${field}`).data('raw-value') || 0;
+                formData.set(field, rawValue);
+            });
+
             // Show the loading overlay
             document.getElementById('loadingOverlay').style.display = 'flex';
 
@@ -636,7 +684,7 @@ $newWriteCvNo = WriteCheck::getLastCheckNo();
                 data: formData,
                 processData: false,
                 contentType: false,
-                success: function (response) {
+                success: function(response) {
                     document.getElementById('loadingOverlay').style.display = 'none';
 
                     if (response.success) {
@@ -658,7 +706,7 @@ $newWriteCvNo = WriteCheck::getLastCheckNo();
                         });
                     }
                 },
-                error: function (jqXHR, textStatus, errorThrown) {
+                error: function(jqXHR, textStatus, errorThrown) {
                     document.getElementById('loadingOverlay').style.display = 'none';
                     console.error('AJAX error:', textStatus, errorThrown);
                     console.log('Response Text:', jqXHR.responseText);
@@ -671,13 +719,12 @@ $newWriteCvNo = WriteCheck::getLastCheckNo();
             });
         }
 
-        document.getElementById('tax_withheld_percentage').addEventListener('change', function () {
+        document.getElementById('tax_withheld_percentage').addEventListener('change', function() {
             var selectedOption = this.options[this.selectedIndex];
             var accountId = selectedOption.getAttribute('data-account-id');
             console.log(accountId);
             document.getElementById('tax_withheld_account_id').value = accountId;
         });
-
 
         $('#bank_account_id').select2({
             theme: 'classic', // Use 'bootstrap-5' for Bootstrap 5, 'bootstrap-4' for Bootstrap 4
@@ -686,6 +733,12 @@ $newWriteCvNo = WriteCheck::getLastCheckNo();
             allowClear: false
         });
 
+        $('#location').select2({
+            theme: 'classic', // Use 'bootstrap-5' for Bootstrap 5, 'bootstrap-4' for Bootstrap 4
+            width: '100%',
+            placeholder: 'Select Location',
+            allowClear: false
+        });
 
         $('#payee_id').select2({
             theme: 'classic', // Use 'bootstrap-5' for Bootstrap 5, 'bootstrap-4' for Bootstrap 4
@@ -704,28 +757,28 @@ $newWriteCvNo = WriteCheck::getLastCheckNo();
         // Populate dropdowns with accounts from PHP
         const accounts = <?php echo json_encode($accounts); ?>;
         let accountDropdownOptions = '';
-        $.each(accounts, function (index, account) {
+        $.each(accounts, function(index, account) {
             accountDropdownOptions += `<option value="${account.id}">${account.account_code}-${account.account_description}</option>`;
         });
 
         // Populate dropdowns with discounts from PHP
         const discountOptions = <?php echo json_encode($discounts); ?>;
         let discountDropdownOptions = '';
-        discountOptions.forEach(function (discount) {
+        discountOptions.forEach(function(discount) {
             discountDropdownOptions += `<option value="${discount.discount_rate}" data-account-id="${discount.discount_account_id}">${discount.discount_name}</option>`;
         });
 
         // Populate dropdowns with VAT from PHP
         const vatOptions = <?php echo json_encode($input_vats); ?>;
         let vatDropdownOptions = '';
-        vatOptions.forEach(function (vat) {
+        vatOptions.forEach(function(vat) {
             vatDropdownOptions += `<option value="${vat.input_vat_rate}" data-account-id="${vat.input_vat_account_id}">${vat.input_vat_name}</option>`;
         });
 
         // Populate dropdowns with cost centers from PHP
         const costCenterOptions = <?php echo json_encode($cost_centers); ?>;
         let costCenterDropdownOptions = '';
-        costCenterOptions.forEach(function (cost) {
+        costCenterOptions.forEach(function(cost) {
             costCenterDropdownOptions += `<option value="${cost.id}">${cost.code} - ${cost.particular}</option>`;
         });
 
@@ -755,6 +808,18 @@ $newWriteCvNo = WriteCheck::getLastCheckNo();
             });
         }
 
+        // Function to format number with commas and two decimal places
+        function formatNumber(num) {
+            return parseFloat(num).toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function parseFormattedNumber(str) {
+            return parseFloat(str.replace(/,/g, '')) || 0;
+        }
+
         // Function to calculate net amount
         function calculateNetAmount() {
             let totalAmount = 0;
@@ -764,72 +829,79 @@ $newWriteCvNo = WriteCheck::getLastCheckNo();
             let totalTaxableAmount = 0;
             let totalAmountDue = 0;
 
-            $('.amount').each(function () {
-                const amount = parseFloat($(this).val()) || 0;
+            $('.amount').each(function() {
+                const amount = parseFloat($(this).data('raw-value')) || parseFormattedNumber($(this).val());
                 totalAmount += amount;
                 const discountPercentage = parseFloat($(this).closest('tr').find('.discount_percentage').val()) || 0;
                 const vatPercentage = parseFloat($(this).closest('tr').find('.vat_percentage').val()) || 0;
 
                 const discountAmount = (discountPercentage / 100) * amount;
-                $(this).closest('tr').find('.discount-amount').val(discountAmount.toFixed(2)); // Update discount amount field
+                $(this).closest('tr').find('.discount-amount').val(formatNumber(discountAmount)).data('raw-value', discountAmount);
                 totalDiscountAmount += discountAmount;
 
                 const netAmountBeforeVAT = amount - discountAmount;
-                $(this).closest('tr').find('.net-amount-before-vat').val(netAmountBeforeVAT.toFixed(2)); // Update net amount before VAT field
+                $(this).closest('tr').find('.net-amount-before-vat').val(formatNumber(netAmountBeforeVAT)).data('raw-value', netAmountBeforeVAT);
                 totalNetAmount += netAmountBeforeVAT;
 
                 const vatPercentageAmount = vatPercentage / 100;
                 const netAmount = netAmountBeforeVAT / (1 + vatPercentageAmount);
-                $(this).closest('tr').find('.net-amount').val(netAmount.toFixed(2)); // Update net amount field
+                $(this).closest('tr').find('.net-amount').val(formatNumber(netAmount)).data('raw-value', netAmount);
 
                 const vatAmount = netAmountBeforeVAT - netAmount;
-                $(this).closest('tr').find('.input-vat').val(vatAmount.toFixed(2)); // Update VAT amount field
+                $(this).closest('tr').find('.input-vat').val(formatNumber(vatAmount)).data('raw-value', vatAmount);
                 totalVat += vatAmount;
 
                 totalTaxableAmount += netAmount;
             });
 
-            // Update total fields
-            $("#gross_amount").val(totalAmount.toFixed(2));
-            $("#discount_amount").val(totalDiscountAmount.toFixed(2));
-            $("#net_amount_due").val(totalNetAmount.toFixed(2));
-            $("#vat_percentage_amount").val(totalVat.toFixed(2));
-            $("#net_of_vat").val(totalTaxableAmount.toFixed(2));
+            $("#gross_amount").val(formatNumber(totalAmount)).data('raw-value', totalAmount);
+            $("#discount_amount").val(formatNumber(totalDiscountAmount)).data('raw-value', totalDiscountAmount);
+            $("#net_amount_due").val(formatNumber(totalNetAmount)).data('raw-value', totalNetAmount);
+            $("#vat_percentage_amount").val(formatNumber(totalVat)).data('raw-value', totalVat);
+            $("#net_of_vat").val(formatNumber(totalTaxableAmount)).data('raw-value', totalTaxableAmount);
 
             const taxWithheldPercentage = parseFloat($("#tax_withheld_percentage").val()) || 0;
             const taxWithheldAmount = (taxWithheldPercentage / 100) * totalTaxableAmount;
-            $("#tax_withheld_amount").val(taxWithheldAmount.toFixed(2));
+            $("#tax_withheld_amount").val(formatNumber(taxWithheldAmount)).data('raw-value', taxWithheldAmount);
 
             totalAmountDue = totalNetAmount - taxWithheldAmount;
-            $("#total_amount_due").val(totalAmountDue.toFixed(2));
+            $("#total_amount_due").val(formatNumber(totalAmountDue)).data('raw-value', totalAmountDue);
         }
 
-        // Event listener for tax withheld percentage change
-        $('#tax_withheld_percentage').on('change', function () {
+        $('#itemTableBody').on('focus', '.amount', function() {
+            $(this).val($(this).data('raw-value') || parseFormattedNumber($(this).val()));
+        });
+
+        $('#itemTableBody').on('blur', '.amount', function() {
+            const rawValue = parseFormattedNumber($(this).val());
+            const formattedValue = formatNumber(rawValue);
+            $(this).val(formattedValue);
+            $(this).data('raw-value', rawValue);
             calculateNetAmount();
         });
 
-        // Event listener for amount input
-        $('#itemTableBody').on('input', '.amount', function () {
+        $('#itemTableBody').on('input', '.amount, .discount_percentage, .vat_percentage', function() {
             calculateNetAmount();
         });
 
-        // Event listener for discount or VAT change
-        $('#itemTableBody').on('change', '.discount_percentage, .vat_percentage', function () {
+        $('#tax_withheld_percentage').on('change', function() {
             calculateNetAmount();
         });
 
-        // Event listeners
-        $('#addItemBtn').click(addRow);
+        $('#addItemBtn').click(function() {
+            addRow();
+            calculateNetAmount();
+        });
 
-        $(document).on('click', '.removeRow', function () {
+        $(document).on('click', '.removeRow', function() {
             $(this).closest('tr').remove();
             calculateNetAmount();
         });
 
+
         function getUniqueInputVatIds() {
             const uniqueIds = new Set();
-            $('#itemTableBody tr').each(function () {
+            $('#itemTableBody tr').each(function() {
                 const inputVatId = $(this).find('.vat_percentage option:selected').data('account-id');
                 if (inputVatId) {
                     uniqueIds.add(inputVatId);
@@ -841,7 +913,7 @@ $newWriteCvNo = WriteCheck::getLastCheckNo();
         // Function to get unique discount account IDs
         function getUniqueDiscountAccountIds() {
             const uniqueIds = new Set();
-            $('#itemTableBody tr').each(function () {
+            $('#itemTableBody tr').each(function() {
                 const discountAccountId = $(this).find('.discount_percentage option:selected').data('account-id');
                 if (discountAccountId) {
                     uniqueIds.add(discountAccountId);
@@ -853,7 +925,7 @@ $newWriteCvNo = WriteCheck::getLastCheckNo();
         // Function to get unique output VAT IDs
         function getUniqueOutputVatIds() {
             const uniqueIds = new Set();
-            $('#itemTableBody tr').each(function () {
+            $('#itemTableBody tr').each(function() {
                 const outputVatId = $(this).find('.sales_tax_percentage option:selected').data('account-id');
                 if (outputVatId) {
                     uniqueIds.add(outputVatId);
@@ -865,23 +937,37 @@ $newWriteCvNo = WriteCheck::getLastCheckNo();
         // Gather table items and submit form
         function gatherTableItems() {
             const items = [];
-            $('#itemTableBody tr').each(function (index) {
+            let hasEmptyAmount = false;
+            let firstEmptyAmountRow;
+            
+
+            $('#itemTableBody tr').each(function(index) {
+
+                const amount =  parseFloat($(this).find('.amount').data('raw-value')) || parseFormattedNumber($(this).find('.amount').val());
+
+                if (!amount) {
+                    hasEmptyAmount = true;
+                    if (!firstEmptyAmountRow) {
+                        firstEmptyAmountRow = $(this); // Store the first row with empty quantity
+                    }
+                    return true; // Continue to the next row
+                }
+
                 const item = {
                     account_id: $(this).find('.account-dropdown').val(),
                     cost_center_id: $(this).find('.cost-dropdown').val(),
                     memo: $(this).find('.memo').val(),
-                    amount: $(this).find('.amount').val(),
+                    amount: amount,
                     discount_percentage: $(this).find('.discount_percentage').val(),
-                    discount_amount: $(this).find('.discount-amount').val(),
-                    net_amount_before_vat: $(this).find('.net-amount-before-vat').val(),
-                    net_amount: $(this).find('.net-amount').val(),
+                    discount_amount: parseFormattedNumber($(this).find('.discount-amount').val()),
+                    net_amount_before_vat: parseFormattedNumber($(this).find('.net-amount-before-vat').val()),
+                    net_amount: parseFormattedNumber($(this).find('.net-amount').val()),
                     vat_percentage: $(this).find('.vat_percentage').val(),
-                    input_vat: $(this).find('.input-vat').val(),
+                    input_vat: parseFormattedNumber($(this).find('.input-vat').val()),
                     discount_account_id: $(this).find('.discount_percentage option:selected').data('account-id'),
                     input_vat_account_id: $(this).find('.vat_percentage option:selected').data('account-id')
                 };
 
-                // For the first row only, set input_vat_account_id as input_vat_account_id of the first row
                 if (index === 0) {
                     item.input_vat_account_id_first_row = item.input_vat_account_id;
                     item.discount_account_id_first_row = item.discount_account_id;
@@ -889,23 +975,64 @@ $newWriteCvNo = WriteCheck::getLastCheckNo();
 
                 items.push(item);
             });
+
+            if (hasEmptyAmount) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Warning',
+                    text: 'Please enter a Amount for every account.'
+                }).then(() => {
+                    // Highlight the first row with an empty quantity
+                    firstEmptyAmountRow.find('input[name="cost[]"]').focus().css('border', '2px solid red');
+                });
+                return false;
+            }
+
             return items;
         }
-        $('#writeCheckForm').submit(function (event) {
+
+        function parseSummaryValue(id) {
+            return parseFloat($('#' + id).val().replace(/,/g, '')) || 0;
+        }
+
+
+        // Update the form submission function
+        $('#writeCheckForm').submit(function(event) {
             event.preventDefault();
 
             const items = gatherTableItems();
 
-            if (items.length === 0) {
+
+            if (items === false || items.length === 0) {
+                if (items === false) return;
                 Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
+                    icon: 'warning',
+                    title: 'Warning',
                     text: 'Please add items first'
                 });
                 return;
             }
-
             $('#item_data').val(JSON.stringify(items));
+
+            // Parse summary values
+            const summaryData = {
+                gross_amount: parseSummaryValue('gross_amount'),
+                discount_amount: parseSummaryValue('discount_amount'),
+                net_amount_due: parseSummaryValue('net_amount_due'),
+                vat_percentage_amount: parseSummaryValue('vat_percentage_amount'),
+                net_of_vat: parseSummaryValue('net_of_vat'),
+                tax_withheld_amount: parseSummaryValue('tax_withheld_amount'),
+                total_amount_due: parseSummaryValue('total_amount_due')
+            };
+
+            // Add summary data to form data
+            const formData = $(this).serializeArray();
+            $.each(summaryData, function(key, value) {
+                formData.push({
+                    name: key,
+                    value: value
+                });
+            });
 
             // Show loading overlay
             $('#loadingOverlay').css('display', 'flex');
@@ -914,8 +1041,8 @@ $newWriteCvNo = WriteCheck::getLastCheckNo();
                 url: $(this).attr('action'),
                 type: 'POST',
                 dataType: 'json',
-                data: $(this).serialize(),
-                success: function (response) {
+                data: formData,
+                success: function(response) {
                     // Hide loading overlay
                     $('#loadingOverlay').hide();
 
@@ -941,7 +1068,7 @@ $newWriteCvNo = WriteCheck::getLastCheckNo();
                         });
                     }
                 },
-                error: function (jqXHR, textStatus, errorThrown) {
+                error: function(jqXHR, textStatus, errorThrown) {
                     // Hide loading overlay
                     $('#loadingOverlay').hide();
 
@@ -967,7 +1094,7 @@ $newWriteCvNo = WriteCheck::getLastCheckNo();
                     id: id,
                     print_status: printStatus
                 },
-                success: function (response) {
+                success: function(response) {
                     if (response.success) {
                         // If the status was updated successfully, proceed with printing
                         console.log('Print status updated, now printing check:', id);
@@ -978,7 +1105,7 @@ $newWriteCvNo = WriteCheck::getLastCheckNo();
 
                         printFrame.src = printContentUrl;
 
-                        printFrame.onload = function () {
+                        printFrame.onload = function() {
                             printFrame.contentWindow.focus();
                             printFrame.contentWindow.print();
                         };
@@ -990,7 +1117,7 @@ $newWriteCvNo = WriteCheck::getLastCheckNo();
                         });
                     }
                 },
-                error: function (jqXHR, textStatus, errorThrown) {
+                error: function(jqXHR, textStatus, errorThrown) {
                     console.error('AJAX error:', textStatus, errorThrown);
                     Swal.fire({
                         icon: 'error',

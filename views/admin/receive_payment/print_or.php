@@ -11,28 +11,28 @@ try {
     if (isset($_GET['id'])) {
         $id = $_GET['id'];
 
-        $invoice = OfficialReceipt::find($id);
-        if ($invoice) {
+        $orPayment = OfficialReceipt::find($id);
+        if ($orPayment) {
 
             // Get the check ID from the request
-            $invoice_id = $_GET['id']; // Assuming the ID is passed as a query parameter
+            $or_id = $_GET['id']; // Assuming the ID is passed as a query parameter
 
             // Fetch invoice data based on the provided ID
-            $invoice = Invoice::find($invoice_id);
+            $orPayment = OfficialReceipt::find($or_id);
 
             // Invoice if the invoice exists
-            if ($invoice) {
+            if ($orPayment) {
 
                 // Create a new PDF instance
                 $pdf = new FPDF();
                 $pdf->AddPage();
 
             // Add a watermark based on the invoice status
-            if ($invoice->invoice_status == 3) {
+            if ($orPayment->status == 3) {
                 // If invoice status is 3, add a "VOID" watermark
                 $pdf->SetFont('Arial', 'B', 190);
                 $pdf->RotatedText(55, 190, 'VOID', 45, array(192, 192, 192)); // Light gray color
-            } elseif ($invoice->invoice_status == 4) {
+            } elseif ($orPayment->status == 4) {
                 // If invoice status is 4, add a "DRAFT" watermark
                 $pdf->SetFont('Arial', 'B', 175);
                 $pdf->RotatedText(55, 190, 'DRAFT', 45, array(192, 192, 192)); // Light gray color
@@ -46,7 +46,7 @@ try {
                 $pdf->SetXY(-40, 10);
                 $pdf->SetFont('Arial', '', 8);
 
-                if ($invoice->print_status == 1) {
+                if ($orPayment->print_status == 1) {
                     $statusText = 'Original Copy';
                 } else {
                     $statusText = 'Reprinted Copy';
@@ -76,8 +76,8 @@ try {
 
                 $pdf->SetY($pdf->GetY() + 15);
                 $pdf->SetFont('Arial', 'B', 14);
-                $pdf->Cell(0, 4, 'SALES INVOICE', 0, 3, 'C');
-                $pdf->Cell(0, 10, 'No. ' . $invoice->invoice_number, 0, 1, 'R');
+                $pdf->Cell(0, 4, 'CASH INVOICE', 0, 3, 'C');
+                $pdf->Cell(0, 10, 'CI No.: ' . $orPayment->ci_no, 0, 1, 'R');
                 $pdf->Ln(5);
 
                 // Set font and size for the details section
@@ -86,33 +86,35 @@ try {
                 $lineHeight = 5; // Adjust according to your line spacing requirement
                 $rightColumnX = $pageWidth - 60; // X position for the right column
 
+                
                 // Date and Terms
-                // Invoice details
-                $date = new DateTime($invoice->invoice_date);
-                $formattedDate = $date->format('m/d/y');
-                $pdf->Cell(100, $lineHeight, 'Date: ' . $formattedDate, 0, 0, 'L');
-                $pdf->SetX($rightColumnX);
-                $pdf->Cell(0, $lineHeight, 'Terms: ' . $invoice->terms, 0, 1, 'L');
 
-                // Customer and Rep
-                $pdf->Cell(100, $lineHeight, 'Customer: ' . $invoice->customer_name, 0, 0, 'L');
+                $date = new DateTime($orPayment->or_date);
+                $formattedDate = $date->format('m/d/y');
+                // Invoice details
+
+                $pdf->Cell(100, $lineHeight, '', 0, 1, 'L');
                 $pdf->SetX($rightColumnX);
-                $pdf->Cell(0, $lineHeight, 'Rep: ' . $invoice->rep, 0, 1, 'L');
+                $pdf->Cell(0, $lineHeight, 'Date: ' . $formattedDate, 0, 1, 'L');
+                // Customer and Rep
+                $pdf->Cell(100, $lineHeight, 'Customer Name: ' . $orPayment->customer_name, 0, 0, 'L');
+                $pdf->SetX($rightColumnX);
+                $pdf->Cell(0, $lineHeight, 'OR No.: ' . $orPayment->or_number, 0, 1, 'L');
 
                 // Address
-                $pdf->Cell(100, $lineHeight, 'Address: ' . $invoice->shipping_address, 0, 0, 'L');
+                $pdf->Cell(100, $lineHeight, 'Address: ' . $orPayment->shipping_address, 0, 0, 'L');
                 $pdf->SetX($rightColumnX);
-                $pdf->Cell(0, $lineHeight, '', 0, 1, 'L');
+                $pdf->Cell(0, $lineHeight, 'Payment Method: ' . $orPayment->payment_method, 0, 1, 'L');
 
                 // Business style and Customer P.O No.
-                $pdf->Cell(100, $lineHeight, 'Business Style: ' . $invoice->business_style, 0, 0, 'L');
+                $pdf->Cell(100, $lineHeight, 'Business Style: ' . $orPayment->business_style, 0, 0, 'L');
                 $pdf->SetX($rightColumnX);
-                $pdf->Cell(0, $lineHeight, 'Customer P.O No.: ' . $invoice->customer_po, 0, 1, 'L');
+                $pdf->Cell(0, $lineHeight, 'Check/Ref No.: ' . $orPayment->check_no, 0, 1, 'L');
 
                 // TIN and S.O No.
-                $pdf->Cell(100, $lineHeight, 'TIN: ' . $invoice->customer_tin, 0, 0, 'L');
+                $pdf->Cell(100, $lineHeight, 'TIN: ' . $orPayment->customer_tin, 0, 0, 'L');
                 $pdf->SetX($rightColumnX);
-                $pdf->Cell(0, $lineHeight, 'S.O No.: ' . $invoice->so_no, 0, 1, 'L');
+                $pdf->Cell(0, $lineHeight, 'P.O No.: ' . $orPayment->customer_po, 0, 1, 'L');
 
                 $pdf->Ln(2);
 
@@ -133,8 +135,8 @@ try {
                 $totalCost = 0;
                 $totalAmount = 0;
 
-                if ($invoice) {
-                    foreach ($invoice->details as $detail) {
+                if ($orPayment) {
+                    foreach ($orPayment->details as $detail) {
                         $totalCost += $detail['cost'];
                         $totalAmount += $detail['amount'];
 
@@ -166,33 +168,33 @@ try {
                 $pdf->Line($pdf->GetX(), $pdf->GetY(), $pdf->GetX() + 190, $pdf->GetY()); // Draw a line
                 $pdf->SetFont('Arial', '', 9);
                 $pdf->Cell(159, 10, 'Gross Amount:', 0, 0, 'R');
-                $pdf->Cell(30, 10, number_format($invoice->gross_amount, 2), 0, 0, 'R');
+                $pdf->Cell(30, 10, number_format($orPayment->gross_amount, 2), 0, 0, 'R');
                 $pdf->Ln(4); // Move to the next line after the last row
                 $pdf->Cell(159, 10, 'Less: Discount:', 0, 0, 'R');
-                $pdf->Cell(30, 10, number_format($invoice->discount_amount, 2), 0, 0, 'R');
+                $pdf->Cell(30, 10, number_format($orPayment->discount_amount, 2), 0, 0, 'R');
                 $pdf->Ln(4); // Move to the next line after the last row
                 $pdf->Cell(159, 10, 'Net Amount:', 0, 0, 'R');
-                $pdf->Cell(30, 10, number_format($invoice->net_amount_due, 2), 0, 0, 'R');
+                $pdf->Cell(30, 10, number_format($orPayment->net_amount_due, 2), 0, 0, 'R');
                 $pdf->Ln(4); // Move to the next line after the last row
                 $pdf->Cell(159, 10, 'VAT Sales:', 0, 0, 'R');
-                $pdf->Cell(30, 10, number_format($invoice->vatable_amount, 2), 0, 0, 'R');
+                $pdf->Cell(30, 10, number_format($orPayment->vatable_amount, 2), 0, 0, 'R');
                 $pdf->Ln(4); // Move to the next line after the last row
                 $pdf->Cell(159, 10, 'Vatable (12%):', 0, 0, 'R');
-                $pdf->Cell(30, 10, number_format($invoice->vat_amount, 2), 0, 0, 'R');
+                $pdf->Cell(30, 10, number_format($orPayment->vat_amount, 2), 0, 0, 'R');
                 $pdf->Ln(4); // Move to the next line after the last row
                 $pdf->Cell(159, 10, 'Vat-Exempt Sales:', 0, 0, 'R');
-                $pdf->Cell(30, 10, number_format($invoice->vat_exempt_amount, 2), 0, 0, 'R');
+                $pdf->Cell(30, 10, number_format($orPayment->vat_exempt_amount, 2), 0, 0, 'R');
                 $pdf->Ln(4); // Move to the next line after the last row
                 $pdf->Cell(159, 10, 'Zero-rated Sales:', 0, 0, 'R');
-                $pdf->Cell(30, 10, number_format($invoice->zero_rated_amount, 2), 0, 0, 'R');
+                $pdf->Cell(30, 10, number_format($orPayment->zero_rated_amount, 2), 0, 0, 'R');
                 $pdf->Ln(4); // Move to the next line after the last row
                 $pdf->Cell(159, 10, ' Withholding Tax:', 0, 0, 'R');
-                $pdf->Cell(30, 10, number_format($invoice->tax_withheld_amount, 2), 0, 0, 'R');
+                $pdf->Cell(30, 10, number_format($orPayment->tax_withheld_amount, 2), 0, 0, 'R');
                 $pdf->Ln(4); // Move to the next line after the last row
 
                 $pdf->SetFont('Arial', 'B', 10); // 'B' indicates bold
                 $pdf->Cell(159, 10, 'Total Amount Due:', 0, 0, 'R');
-                $pdf->Cell(30, 10, number_format($invoice->total_amount_due, 2), 0, 0, 'R');
+                $pdf->Cell(30, 10, number_format($orPayment->total_amount_due, 2), 0, 0, 'R');
                 $pdf->Ln(15); // Move to the next line after the last row
 
                 $pdf->SetFont('Arial', '', 8);
@@ -214,7 +216,7 @@ try {
                 // Define the height of each line
                 $lineHeight = 5; // Adjust as needed
                 // Wrap text and add memo to PDF cell
-                $pdf->MultiCell($cellWidth, $lineHeight, 'Memo: ' . $invoice->memo, 0, 'L', false);
+                $pdf->MultiCell($cellWidth, $lineHeight, 'Memo: ' . $orPayment->memo, 0, 'L', false);
 
                 // Add additional details in the table footer
                 $pdf->SetFont('Arial', '', 8);

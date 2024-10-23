@@ -1,8 +1,15 @@
 <?php
 
-//Guard 
+// 1. Access Control
+require_once '_init.php';
 require_once '_guards.php';
-Guard::adminOnly();
+
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('dashboard');
+
 $products = Product::all();
 $page = 'home';
 ?>
@@ -289,7 +296,7 @@ $page = 'home';
 
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", function() {
         var ctx = document.getElementById("chartjs-dashboard-line").getContext("2d");
         var gradient = ctx.createLinearGradient(0, 0, 0, 225);
         gradient.addColorStop(0, "rgba(215, 227, 244, 1)");
@@ -359,7 +366,7 @@ $page = 'home';
     });
 </script>
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", function() {
         // Pie chart
         new Chart(document.getElementById("chartjs-dashboard-pie"), {
             type: "pie",
@@ -387,7 +394,7 @@ $page = 'home';
     });
 </script>
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", function() {
         // Bar chart
         new Chart(document.getElementById("chartjs-dashboard-bar"), {
             type: "bar",
@@ -431,47 +438,47 @@ $page = 'home';
     });
 </script>
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", function() {
         var markers = [{
-            coords: [31.230391, 121.473701],
-            name: "Shanghai"
-        },
-        {
-            coords: [28.704060, 77.102493],
-            name: "Delhi"
-        },
-        {
-            coords: [6.524379, 3.379206],
-            name: "Lagos"
-        },
-        {
-            coords: [35.689487, 139.691711],
-            name: "Tokyo"
-        },
-        {
-            coords: [23.129110, 113.264381],
-            name: "Guangzhou"
-        },
-        {
-            coords: [40.7127837, -74.0059413],
-            name: "New York"
-        },
-        {
-            coords: [34.052235, -118.243683],
-            name: "Los Angeles"
-        },
-        {
-            coords: [41.878113, -87.629799],
-            name: "Chicago"
-        },
-        {
-            coords: [51.507351, -0.127758],
-            name: "London"
-        },
-        {
-            coords: [40.416775, -3.703790],
-            name: "Madrid "
-        }
+                coords: [31.230391, 121.473701],
+                name: "Shanghai"
+            },
+            {
+                coords: [28.704060, 77.102493],
+                name: "Delhi"
+            },
+            {
+                coords: [6.524379, 3.379206],
+                name: "Lagos"
+            },
+            {
+                coords: [35.689487, 139.691711],
+                name: "Tokyo"
+            },
+            {
+                coords: [23.129110, 113.264381],
+                name: "Guangzhou"
+            },
+            {
+                coords: [40.7127837, -74.0059413],
+                name: "New York"
+            },
+            {
+                coords: [34.052235, -118.243683],
+                name: "Los Angeles"
+            },
+            {
+                coords: [41.878113, -87.629799],
+                name: "Chicago"
+            },
+            {
+                coords: [51.507351, -0.127758],
+                name: "London"
+            },
+            {
+                coords: [40.416775, -3.703790],
+                name: "Madrid "
+            }
         ];
         var map = new jsVectorMap({
             map: "world",
@@ -498,7 +505,7 @@ $page = 'home';
     });
 </script>
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", function() {
         var date = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000);
         var defaultDate = date.getUTCFullYear() + "-" + (date.getUTCMonth() + 1) + "-" + date.getUTCDate();
         document.getElementById("datetimepicker-dashboard").flatpickr({

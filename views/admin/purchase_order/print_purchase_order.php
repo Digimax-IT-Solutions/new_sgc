@@ -122,8 +122,11 @@ try {
 
                 $pdf->Ln(2);
 
+
+
                 // Table headers
                 $pdf->Ln(); // Move to the next line
+                $pdf->Cell(0, 10, 'Please furnish us with the following at your qouted prices.', 0, 1, 'C');
                 $pdf->Line($pdf->GetX(), $pdf->GetY(), $pdf->GetX() + 190, $pdf->GetY()); // Draw a line
 
                 // Adjusting the column widths
@@ -131,7 +134,7 @@ try {
                 $pdf->Cell(30, 10, 'Item Name', 0, 0, 'L');
                 $pdf->Cell(40, 10, 'Description', 0, 0, 'L');
                 $pdf->Cell(20, 10, 'Qty', 0, 0, 'C');
-                $pdf->Cell(20, 10, 'Unit', 0, 0, 'C');
+                $pdf->Cell(20, 10, 'U/M', 0, 0, 'C');
                 $pdf->Cell(25, 10, 'Cost', 0, 0, 'R');
                 $pdf->Cell(25, 10, 'Amount', 0, 0, 'R');
                 $pdf->Ln(); // Move to the next line
@@ -144,33 +147,43 @@ try {
                     foreach ($purchase_order->details as $detail) {
                         $totalCost += $detail['cost'];
                         $totalAmount += $detail['amount'];
-
+                        
                         $startY = $pdf->GetY();
                         $currentX = $pdf->GetX();
-
+                        
                         // Pr No.
                         $pdf->Cell(30, 5, $detail['pr_no'], 0, 0, 'L');
-
+                        
                         // Item Name
-                        $pdf->Cell(30, 5, $detail['item_name'], 0, 0, 'L');
-
-                        // Description (using MultiCell)
-                        $pdf->SetXY($currentX + 60, $startY);
-                        $pdf->MultiCell(40, 5, $detail['item_purchase_description'], 0, 'L');
-
-                        $endY = $pdf->GetY();
-
-                        // Other details
+                        $pdf->SetXY($currentX + 30, $startY);
+                        $pdf->MultiCell(30, 5, $detail['item_name'], 0, 'L');
+                        $itemNameEndY = $pdf->GetY(); // Capture the Y position after Item Name
+                        
+                        // Ensure enough space for Description
+                        $pdf->SetXY($currentX + 70, $startY);
+                        
+                        // Description (using MultiCell for wrapping text)
+                        $pdf->MultiCell(30, 5, $detail['item_purchase_description'], 0, 'L');
+                        $descriptionEndY = $pdf->GetY(); // Capture the Y position after Description
+                        
+                        // Determine the maximum Y position used for the current line
+                        $endY = max($itemNameEndY, $descriptionEndY);
+                        
+                        // Set the X position and Y position for the remaining cells
                         $pdf->SetXY($currentX + 100, $startY);
+                        
+                        // Other details
                         $pdf->Cell(20, 5, $detail['qty'], 0, 0, 'C');
                         $pdf->Cell(20, 5, $detail['uom_name'], 0, 0, 'C');
                         $pdf->Cell(25, 5, number_format($detail['cost'], 2), 0, 0, 'R');
                         $pdf->Cell(25, 5, number_format($detail['amount'], 2), 0, 0, 'R');
-
-                        // Move to the next line, considering the height of the description
+                        
+                        // Move to the next line, considering the height of the highest cell content
                         $pdf->SetY($endY);
                     }
                 }
+                
+                
 
 
                 $pdf->SetFont('Arial', 'B', 10); // 'B' indicates bold
@@ -180,13 +193,27 @@ try {
 
                 $pdf->SetFont('Arial', '', 8);
                 $pdf->Line($pdf->GetX(), $pdf->GetY(), $pdf->GetX() + 190, $pdf->GetY()); // Draw a line
-                $pdf->Cell(50, 10, 'PREPARED/POSTED BY:', 0, 0, 'L');
+                
+                // First row with labels
+                $pdf->Cell(50, 10, 'PREPARED BY:', 0, 0, 'L');
                 $pdf->Cell(50, 10, 'CHECKED/CERTIFIED BY:', 0, 0, 'L');
-                $pdf->Cell(50, 10, 'VERIFIED FOR PAYMENT BY:', 0, 0, 'L');
-                $pdf->Cell(40, 10, 'PAYMENT APPROVED BY:', 0, 0, 'L');
-                $pdf->Ln(15); // Move to the next line
+                $pdf->Cell(50, 10, 'VERIFIED BY:', 0, 0, 'L');
+                $pdf->Cell(40, 10, 'APPROVED BY:', 0, 1, 'L');
+                
+                // Second row with names/values
+                $pdf->Cell(50, 5, 'Edmundo B. Panta', 0, 0, 'L');
+                $pdf->Cell(50, 5, '', 0, 0, 'L');
+                $pdf->Cell(50, 5, 'Ana Liza S. Parrilla', 0, 0, 'L');
+                $pdf->Cell(40, 5, 'Emmanuel Q. Cadungog', 0, 1, 'L');
+                
+                // Third row with titles
+                $pdf->Cell(50, 5, 'Purchasing Supervisor', 0, 0, 'L');
+                $pdf->Cell(50, 5, '', 0, 0, 'L');
+                $pdf->Cell(50, 5, 'Audit & Budget Supervisor', 0, 0, 'L');
+                $pdf->Cell(40, 5, 'Asst. to Pres/Resident Manager', 0, 1, 'L');
+                
+                $pdf->Ln(5); // Adjust spacing after the rows
                 $pdf->Line($pdf->GetX(), $pdf->GetY(), $pdf->GetX() + 190, $pdf->GetY()); // Draw a line
-
                 $pdf->Ln(2);
 
                 // Set font and size for table content

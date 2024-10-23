@@ -1,13 +1,20 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('general_journal');
 $accounts = ChartOfAccount::all();
 $cost_centers = CostCenter::all();
 $customers = Customer::all();
 $vendors = Vendor::all();
 $other_names = OtherNameList::all();
 $general_journal = GeneralJournal::all();
+$locations = Location::all();
+
 
 $newEntryNo = GeneralJournal::getLastEntryNo();
 
@@ -119,6 +126,7 @@ foreach ($other_names as $other_name) {
             /* Ensure it's above other content */
             display: none;
         }
+
         #loadingOverlay {
             position: fixed;
             top: 0;
@@ -191,8 +199,7 @@ foreach ($other_names as $other_name) {
                                         <div class="form-group">
                                             <label for="journal_date">Entry Date</label>
                                             <input type="date" class="form-control form-control-sm" id="journal_date"
-                                                name="journal_date"
-                                                value="<?php echo date('Y-m-d'); ?>">
+                                                name="journal_date" value="<?php echo date('Y-m-d'); ?>">
                                         </div>
                                     </div>
                                     <div class="col-md-2">
@@ -202,6 +209,18 @@ foreach ($other_names as $other_name) {
                                                 name="entry_no" value="<?php echo $newEntryNo; ?>" readonly>
                                         </div>
                                     </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label for="location">Location</label>
+                                            <select class="form-select form-select-sm select2" id="location" name="location" required>
+                                                <option value="">Select Location</option>
+                                                <?php foreach ($locations as $location): ?>
+                                                    <option value="<?= $location->id ?>"><?= $location->name ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                    </div>
+
 
                                     <div class="col-md-2">
                                         <div class="form-group">
@@ -255,7 +274,7 @@ foreach ($other_names as $other_name) {
                                                 <th style="width: 15%;">Debit</th>
                                                 <th style="width: 15%;">Credit</th>
                                                 <th style="width: 15%;">Name</th>
-                                                <th style="width: 15%;">Memo</th>
+                                                <th style="width: 15%;">Description</th>
                                                 <th style="width: 15%;">Cost Center</th>
                                                 <th style="width: 5%;"></th>
                                             </tr>
@@ -304,9 +323,10 @@ foreach ($other_names as $other_name) {
                                 <!-- Submit Button -->
                                 <div class="row">
                                     <div class="col-md-10 d-inline-block">
-                                    <button type="button" id="saveDraftBtn" class="btn btn-secondary me-2">Save as Draft</button>
-                                    <button type="submit" class="btn btn-info me-2">Save and Print</button>
-                                    <button type="reset" class="btn btn-danger">Clear</button>
+                                        <button type="button" id="saveDraftBtn" class="btn btn-secondary me-2">Save as
+                                            Draft</button>
+                                        <button type="submit" class="btn btn-info me-2">Save and Print</button>
+                                        <button type="reset" class="btn btn-danger">Clear</button>
                                     </div>
                                 </div>
                             </form>
@@ -318,7 +338,7 @@ foreach ($other_names as $other_name) {
             </div>
         </div>
     </main>
-    
+
     <div id="loadingOverlay" style="display: none;">
         <div class="spinner"></div>
         <div class="message">Processing General Journal</div>
@@ -329,9 +349,8 @@ foreach ($other_names as $other_name) {
 <iframe id="printFrame" style="display:none;"></iframe>
 
 <script>
+    $(document).ready(function() {
 
-    $(document).ready(function () {
-        
         $('button[type="reset"]').on('click', function(e) {
             e.preventDefault(); // Prevent default reset behavior
 
@@ -369,7 +388,7 @@ foreach ($other_names as $other_name) {
                 showConfirmButton: false
             });
         });
-       
+
         $('#saveDraftBtn').click(function(e) {
             e.preventDefault();
             saveDraft();
@@ -401,7 +420,7 @@ foreach ($other_names as $other_name) {
                 data: formData,
                 processData: false,
                 contentType: false,
-                success: function (response) {
+                success: function(response) {
                     $('#loadingOverlay').fadeOut();
                     if (response.success) {
                         Swal.fire({
@@ -422,7 +441,7 @@ foreach ($other_names as $other_name) {
                         });
                     }
                 },
-                error: function (jqXHR, textStatus, errorThrown) {
+                error: function(jqXHR, textStatus, errorThrown) {
                     $('#loadingOverlay').fadeOut();
                     console.error('AJAX error:', textStatus, errorThrown);
                     Swal.fire({
@@ -435,12 +454,13 @@ foreach ($other_names as $other_name) {
         }
 
         // Initialize Select2 for existing dropdowns
-        $('.account-dropdown, .name-dropdown, .cost-dropdown').select2({
-            theme: 'bootstrap-5',
+        $('.account-dropdown, .name-dropdown, .cost-dropdown, #location').select2({
+            theme: 'classic',
             width: '100%'
         });
 
-        $(document).on('click', '.removeRow', function () {
+
+        $(document).on('click', '.removeRow', function() {
             // Destroy Select2 before removing the row to prevent memory leaks
             $(this).closest('tr').find('.account-dropdown, .name-dropdown, .cost-dropdown').select2('destroy');
             $(this).closest('tr').remove();
@@ -452,7 +472,7 @@ foreach ($other_names as $other_name) {
             let totalCredit = parseFloat($('#total_credit').val()) || 0;
             let inconsistentAccounts = [];
 
-            $('#itemTableBody').find('tr').each(function () {
+            $('#itemTableBody').find('tr').each(function() {
                 let debit = parseFloat($(this).find('.debit').val()) || 0;
                 let credit = parseFloat($(this).find('.credit').val()) || 0;
                 if (debit !== 0 && credit !== 0) {
@@ -471,7 +491,7 @@ foreach ($other_names as $other_name) {
             let totalCredit = 0;
             let inconsistentAccounts = []; // Array to hold inconsistent accounts
 
-            $('#itemTableBody').find('tr').each(function () {
+            $('#itemTableBody').find('tr').each(function() {
                 let debit = parseFloat($(this).find('.debit').val()) || 0;
                 let credit = parseFloat($(this).find('.credit').val()) || 0;
 
@@ -534,27 +554,39 @@ foreach ($other_names as $other_name) {
             return options;
         }
 
-        // Populate dropdowns with accounts from PHP
+
+
         const accounts = <?php echo json_encode($accounts); ?>;
         let accountDropdownOptions = '';
-        $.each(accounts, function (index, account) {
-            accountDropdownOptions += `<option value="${account.id}">${account.account_description}</option>`;
+        $.each(accounts, function(index, account) {
+            const glCode = account.gl_code ? account.gl_code : '';
+            const slCode = account.sl_code ? account.sl_code : '';
+            accountDropdownOptions += `<option value="${account.id}" 
+        data-gl-code="${glCode}" 
+        data-sl-code="${slCode}" 
+        data-account-name="${account.account_name}"
+        data-account-description="${account.account_description}">${account.account_code} - ${account.account_description}</option>`;
         });
 
         // Populate dropdowns with cost centers from PHP
         const costCenterOptions = <?php echo json_encode($cost_centers); ?>;
         let costCenterDropdownOptions = '';
-        costCenterOptions.forEach(function (cost) {
-            costCenterDropdownOptions += `<option value="${cost.id}">${cost.particular}</option>`;
+        costCenterOptions.forEach(function(cost) {
+            costCenterDropdownOptions += `<option value="${cost.id}">${cost.code} - ${cost.particular}</option>`;
         });
+
 
         // Add a new row to the table
         function addRow() {
             const newRow = `
             <tr>
                 <td><select class="form-control form-control-sm account-dropdown" name="account_id[]" required>${accountDropdownOptions}</select></td>
-                <td class="debit-cell"><input type="number" class="form-control form-control-sm debit" name="debit[]" placeholder="0.00"></td>
-                <td class="credit-cell"><input type="number" class="form-control form-control-sm credit" name="credit[]" placeholder="0.00"></td>
+               <td class="debit-cell">
+                    <input type="number" class="form-control form-control-sm debit" name="debit[]" placeholder="0.00" step="0.01">
+                </td>
+                <td class="credit-cell">
+                    <input type="number" class="form-control form-control-sm credit" name="credit[]" placeholder="0.00" step="0.01">
+                </td>
                 <td><select class="form-control form-control-sm name-dropdown" name="name[]" required>${generateNameOptions()}</select></td>
                 <td class="memo-cell"><input type="text" class="form-control form-control-sm memo" name="memo[]" placeholder="Enter memo"></td>
                 <td><select class="form-control form-control-sm cost-dropdown" name="cost_center_id[]">${costCenterDropdownOptions}</select></td>
@@ -575,13 +607,13 @@ foreach ($other_names as $other_name) {
         $('#addItemBtn').click(addRow);
 
         // Event listener for removing rows
-        $(document).on('click', '.removeRow', function () {
+        $(document).on('click', '.removeRow', function() {
             $(this).closest('tr').remove();
             calculateTotals(); // Update totals when a row is removed
         });
 
         // Event listener for input in debit and credit fields
-        $(document).on('input', '.debit, .credit', function () {
+        $(document).on('input', '.debit, .credit', function() {
             calculateTotals(); // Update totals when input changes in debit or credit fields
         });
 
@@ -591,7 +623,7 @@ foreach ($other_names as $other_name) {
         // Gather table items for form submission
         function gatherTableItems() {
             const items = [];
-            $('#itemTableBody tr').each(function (index) {
+            $('#itemTableBody tr').each(function(index) {
                 const item = {
                     account_id: $(this).find('.account-dropdown').val(),
                     name: $(this).find('.name-dropdown').val(),
@@ -606,7 +638,7 @@ foreach ($other_names as $other_name) {
             return items;
         }
 
-        $('#writeCheckForm').submit(function (event) {
+        $('#writeCheckForm').submit(function(event) {
             event.preventDefault();
 
             const items = gatherTableItems();
@@ -630,7 +662,7 @@ foreach ($other_names as $other_name) {
                 type: 'POST',
                 dataType: 'json',
                 data: $(this).serialize(),
-                success: function (response) {
+                success: function(response) {
                     // Hide loading overlay
                     $('#loadingOverlay').hide();
 
@@ -657,7 +689,7 @@ foreach ($other_names as $other_name) {
                         });
                     }
                 },
-                error: function (jqXHR, textStatus, errorThrown) {
+                error: function(jqXHR, textStatus, errorThrown) {
                     // Hide loading overlay
                     $('#loadingOverlay').hide();
 
@@ -683,7 +715,7 @@ foreach ($other_names as $other_name) {
                     id: id,
                     print_status: printStatus
                 },
-                success: function (response) {
+                success: function(response) {
                     if (response.success) {
                         // If the status was updated successfully, proceed with printing
                         console.log('Print status updated, now printing general journal:', id);
@@ -693,7 +725,7 @@ foreach ($other_names as $other_name) {
 
                         printFrame.src = printContentUrl;
 
-                        printFrame.onload = function () {
+                        printFrame.onload = function() {
                             printFrame.contentWindow.focus();
                             printFrame.contentWindow.print();
                         };
@@ -705,7 +737,7 @@ foreach ($other_names as $other_name) {
                         });
                     }
                 },
-                error: function (jqXHR, textStatus, errorThrown) {
+                error: function(jqXHR, textStatus, errorThrown) {
                     console.error('AJAX error:', textStatus, errorThrown);
                     Swal.fire({
                         icon: 'error',

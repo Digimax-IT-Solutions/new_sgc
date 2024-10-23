@@ -5,7 +5,7 @@
 <script src="plugins/jquery/jquery.min.js"></script>
 
 <!-- Bootstrap 5 JS Bundle with Popper -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 
 
 <!-- Include the ColResize plugin in your HTML file -->
@@ -28,37 +28,47 @@
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
 
+
 <!-- Select2 JS -->
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <!-- Feather Icons -->
 <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
 
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+
+<!-- jQuery -->
+<!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> -->
+
+<!-- DataTables JS -->
+<!-- <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script> -->
+
 <script src="src/js/app.js"></script>
 
 <script>
     // Initialize Feather icons
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
         feather.replace();
     });
 
     // Initialize Select2
-    $(document).ready(function () {
+    $(document).ready(function() {
         $('.select2').select2({
             theme: 'bootstrap-5'
         });
     });
 
     // Initialize DataTables
-    $(document).ready(function () {
-        $('.datatable').DataTable({
-            responsive: true,
-            language: {
-                search: "_INPUT_",
-                searchPlaceholder: "Search...",
-            }
-        });
-    });
+    // $(document).ready(function () {
+    //     $('.datatable').DataTable({
+    //         responsive: true,
+    //         language: {
+    //             search: "_INPUT_",
+    //             searchPlaceholder: "Search...",
+    //         }
+    //     });
+    // });
 </script>
 </body>
 

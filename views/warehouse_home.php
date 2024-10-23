@@ -2,7 +2,7 @@
 
 //Guard 
 require_once '_guards.php';
-Guard::warehouseOnly();
+Guard::restrictToRoles([ROLE_WAREHOUSE]);
 ?>
 
 

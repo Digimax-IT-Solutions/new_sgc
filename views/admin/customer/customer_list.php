@@ -1,8 +1,12 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
-
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('customer');
 //require_once 'api/category_controller.php';
 
 $customers = Customer::all();
@@ -231,41 +235,41 @@ $page = 'customer_list';
     }
 </script>
 <script>
-        $(document).ready(function () {
+    $(document).ready(function () {
 
-            $('#upload_button').on('click', function () {
-                $('#excel_file').click();
-            });
-
-            $('#excel_file').on('change', function () {
-                if (this.files[0]) {
-                    var formData = new FormData();
-                    formData.append('excel_file', this.files[0]);
-                    formData.append('action', 'upload'); // Add this line to specify the action
-
-                    $.ajax({
-                        url: 'api/masterlist/customer_controller.php', // Update this path if needed
-                        type: 'POST',
-                        data: formData,
-                        async: true,
-                        cache: false,
-                        contentType: false,
-                        processData: false,
-                        dataType: 'json', // Add this line to expect JSON response
-                        success: function (response) {
-                            if (response.status === 'success') {
-                                alert(response.message);
-                                location.reload();
-                            } else {
-                                alert('Error: ' + response.message);
-                            }
-                        },
-                        error: function (xhr, status, error) {
-                            console.log(xhr.responseText); // Log the full response for debugging
-                            alert('An error occurred: ' + error);
-                        }
-                    });
-                }
-            });
+        $('#upload_button').on('click', function () {
+            $('#excel_file').click();
         });
-    </script>
+
+        $('#excel_file').on('change', function () {
+            if (this.files[0]) {
+                var formData = new FormData();
+                formData.append('excel_file', this.files[0]);
+                formData.append('action', 'upload'); // Add this line to specify the action
+
+                $.ajax({
+                    url: 'api/masterlist/customer_controller.php', // Update this path if needed
+                    type: 'POST',
+                    data: formData,
+                    async: true,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    dataType: 'json', // Add this line to expect JSON response
+                    success: function (response) {
+                        if (response.status === 'success') {
+                            alert(response.message);
+                            location.reload();
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.log(xhr.responseText); // Log the full response for debugging
+                        alert('An error occurred: ' + error);
+                    }
+                });
+            }
+        });
+    });
+</script>

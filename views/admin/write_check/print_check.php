@@ -4,6 +4,58 @@ require_once '_init.php';
 // Include FPDF library
 require_once 'plugins/fpdf186/fpdf.php';
 
+function numberToWords($number) {
+    $ones = array(
+        1 => "One", 2 => "Two", 3 => "Three", 4 => "Four", 5 => "Five", 
+        6 => "Six", 7 => "Seven", 8 => "Eight", 9 => "Nine", 10 => "Ten", 
+        11 => "Eleven", 12 => "Twelve", 13 => "Thirteen", 14 => "Fourteen", 
+        15 => "Fifteen", 16 => "Sixteen", 17 => "Seventeen", 18 => "Eighteen", 
+        19 => "Nineteen"
+    );
+    $tens = array(
+        2 => "Twenty", 3 => "Thirty", 4 => "Forty", 5 => "Fifty", 
+        6 => "Sixty", 7 => "Seventy", 8 => "Eighty", 9 => "Ninety"
+    );
+    $scales = array(
+        "", "Thousand", "Million", "Billion", "Trillion"
+    );
+
+    if ($number == 0) {
+        return "Zero";
+    }
+
+    $number = (int)$number;
+    $string = "";
+    $scaleCount = 0;
+
+    while ($number > 0) {
+        if ($number % 1000 != 0) {
+            $scaleKey = $scaleCount;
+            $groupWords = "";
+            $groupNumber = $number % 1000;
+
+            if ($groupNumber >= 100) {
+                $groupWords .= $ones[floor($groupNumber / 100)] . " Hundred ";
+                $groupNumber %= 100;
+            }
+
+            if ($groupNumber >= 20) {
+                $groupWords .= $tens[floor($groupNumber / 10)] . " ";
+                $groupNumber %= 10;
+            }
+
+            if ($groupNumber > 0) {
+                $groupWords .= $ones[$groupNumber] . " ";
+            }
+
+            $string = trim($groupWords) . " " . $scales[$scaleKey] . " " . $string;
+        }
+        $number = floor($number / 1000);
+        $scaleCount++;
+    }
+
+    return trim($string);
+}
 
 try {
 
@@ -104,17 +156,52 @@ try {
 
         // Set padding for the cells (space between left-aligned and right-aligned text)
         $padding = -100; // Adjust as needed
+        // Retrieve all employees from the database
+        $employees = Employee::all();
 
-        // Text to be displayed on the left
-        $textLeft = 'Payee: ' . $check->payee_name;
+        // Check if $employees is null or empty
+        if ($employees === null || empty($employees)) {
+            // Handle the case where no employees were found
+            error_log("No employees found in the database.");
+            $employees = []; // Initialize as an empty array to avoid the foreach() error
+        }
+
+        // Determine if the payee is an employee
+        if ($check->payee_type == 'employee') {
+            // Retrieve employee details
+            $employee = null;
+            foreach ($employees as $emp) {
+                if ($emp->id == $check->payee_id) {
+                    $employee = $emp;
+                    break;
+                }
+            }
+
+            if ($employee) {
+                // Construct employee details
+                $payeeName = $employee->first_name . ' ' . $employee->middle_name . ' ' . $employee->last_name;
+
+                // Text to be displayed on the left
+                $textLeft = "Payee: $payeeName";
+            } else {
+                $textLeft = 'Payee: Employee not found';
+                error_log("Employee with ID {$check->payee_id} not found.");
+            }
+        } else {
+            // Text to be displayed for non-employee payees
+            $textLeft = 'Payee: ' . $check->payee_name;
+        }
+
+        // Add the text to the PDF
         $pdf->Cell($maxWidth / 2 - $padding, $lineHeight, $textLeft, 0, 0, 'L');
+
 
         // Text to be displayed on the right
         $textRight = 'Ref No: ' . $check->cv_no;
         $pdf->Cell($maxWidth / 2 - $padding, $lineHeight, $textRight, 0, 1, 'L');
 
         // Text to be displayed on the left
-        $textLeft = 'Address: ' . $check->payee_address;
+        $textLeft = '' . "";
         $pdf->Cell($maxWidth / 2 - $padding, $lineHeight, $textLeft, 0, 0, 'L');
 
         // Text to be displayed on the right
@@ -133,11 +220,11 @@ try {
         $pdf->Ln(2);
 
         // Set column widths
-        $colWidth1 = 20; // GL column
-        $colWidth2 = 20; // SL column
-        $colWidth3 = 90; // Account Title column
-        $colWidth4 = 30; // Debit column
-        $colWidth5 = 30; // Credit column
+        $colWidth1 = 15; // GL column
+        $colWidth2 = 15; // SL column
+        $colWidth3 = 106; // Account Title column
+        $colWidth4 = 27; // Debit column
+        $colWidth5 = 27; // Credit column
 
         // Table headers
         $pdf->SetFont('Arial', 'B', 10);
@@ -202,15 +289,65 @@ try {
         $pdf->Cell($colWidth4, 7, number_format($totalDebit, 2), 0, 0, 'R');
         $pdf->Cell($colWidth5, 7, number_format($totalCredit, 2), 0, 1, 'R');
 
+       // Format the amount without a thousands separator
+        $amountInFigures = number_format($totalDebit, 2, '.', '');
+
+        // Split the amount into whole and decimal parts
+        list($whole, $decimal) = explode('.', $amountInFigures);
+
+        // Convert the whole part to words
+        $amountInWords = strtoupper(numberToWords($whole));
+
+        // Add "&" and the decimal part as digits
+        $amountInWords .= " & " . $decimal . "/100";
+
+        // // Add "&" and the decimal part in words if needed
+        // if ((int)$decimal > 0) {
+        //     $amountInWords .= ' & ' . strtoupper(numberToWords($decimal)) . '/100.';
+        // } else {
+        //     $amountInWords .= ' & 00/100.';
+        // }
+
+        // Set font for the regular text
+        $pdf->SetFont('Arial', '', 8);
+
+        // Output the first line, left-aligned
+        $pdf->Cell(0, 2, 'Received the check in full/partial payment of account with HIDECO SUGAR MILLING CO., INC. the amount of', 0, 1, 'L');
+
+        // Make the amount in words bold and a little bigger, and center it
+        $pdf->SetFont('Arial', 'B', 10);
+        // $pdf->Cell(0, 4, ' ' . $amountInWords, 0, 1, 'L');
+        $pdf->Cell(0, 4, ' ' . $amountInWords, 0, 1, 'L');
+
+
+
+        // Reset the font to its previous style
+        $pdf->SetFont('Arial', '', 8);
+
+        // Received by section
+        $pdf->Ln(5);
+        $pdf->SetY($pdf->GetY() + 5); // Move down 5 units
+        $pdf->Cell(130); // Move to the right
+        $pdf->Cell(65, 0, '', 'T', 1, 'R'); // Draw a line for signature
+        $pdf->Cell(197, 6, 'Authorized Signature/ Name in Print / Date Received', 0, 1, 'R');
+
+
         // Add signature lines
-        $pdf->Ln(15); // Move to the next line after the last row
+        $pdf->Ln(5); // Move to the next line after the last row
 
         $pdf->SetFont('Arial', '', 8);
         $pdf->Line($pdf->GetX(), $pdf->GetY(), $pdf->GetX() + 190, $pdf->GetY()); // Draw a line
+        // First row with labels
         $pdf->Cell(50, 10, 'PREPARED/POSTED BY:', 0, 0, 'L');
         $pdf->Cell(50, 10, 'CHECKED/CERTIFIED BY:', 0, 0, 'L');
         $pdf->Cell(50, 10, 'VERIFIED FOR PAYMENT BY:', 0, 0, 'L');
-        $pdf->Cell(40, 10, 'PAYMENT APPROVED BY:', 0, 0, 'L');
+        $pdf->Cell(40, 10, 'PAYMENT APPROVED BY:', 0, 1, 'L');
+
+        // Second row with names/values
+        $pdf->Cell(65, 5, 'ACC/JCM', 0, 0, 'L'); 
+        $pdf->Cell(50, 5, 'AVP', 0, 0, 'L'); 
+        $pdf->Cell(50, 5, 'ASP', 0, 0, 'L'); 
+        $pdf->Cell(40, 5, 'EQC', 0, 0, 'L'); 
         $pdf->Ln(15); // Move to the next line
         $pdf->Line($pdf->GetX(), $pdf->GetY(), $pdf->GetX() + 190, $pdf->GetY()); // Draw a line
 
@@ -229,9 +366,6 @@ try {
         // Add additional details in the table footer
         $pdf->SetFont('Arial', '', 8);
 
-
-        $pdf->Ln(10);
-        $pdf->SetFont('Arial', '', 8);
         $pdf->Cell(0, 10, '"THIS DOCUMENT IS NOT VALID FOR CLAIM OF INPUT TAX"', 0, 1, 'C');
         $pdf->Ln(20);
 

@@ -1,8 +1,12 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::warehouseOnly();
-
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('warehouse_receive_items');
 $receiveItems = ReceivingReport::all();
 
 // Calculate summary statistics
@@ -15,9 +19,9 @@ $page = 'receive_items';
 ?>
 
 <?php require 'views/templates/header.php' ?>
-<?php require 'views/templates/warehouse_sidebar.php' ?>
+<?php require 'views/templates/sidebar.php' ?>
 <div class="main">
-    <?php require 'views/templates/warehouse_navbar.php' ?>
+    <?php require 'views/templates/navbar.php' ?>
     <main class="content">
         <div class="container-fluid p-0">
             <div class="mb-3">

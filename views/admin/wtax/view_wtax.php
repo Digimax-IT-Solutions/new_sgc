@@ -1,9 +1,13 @@
 <?php
 
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
-
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('wtax');
 $accounts = ChartOfAccount::all();
 
 ?>

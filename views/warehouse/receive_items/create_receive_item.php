@@ -1,7 +1,12 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::warehouseOnly();
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('warehouse_receive_items');
 $accounts = ChartOfAccount::all();
 $vendors = Vendor::all();
 $products = Product::all();
@@ -16,7 +21,7 @@ $newRRNo = ReceivingReport::getLastRRNo();
 ?>
 
 <?php require 'views/templates/header.php' ?>
-<?php require 'views/templates/warehouse_sidebar.php' ?>
+<?php require 'views/templates/sidebar.php' ?>
 
 <style>
     .card {
@@ -62,9 +67,11 @@ $newRRNo = ReceivingReport::getLastRRNo();
     }
 
     #itemTable {
-        min-width: 1500px; /* Adjust this value based on your table's content */
+        min-width: 1500px;
+        /* Adjust this value based on your table's content */
         table-layout: fixed;
     }
+
     #itemTable th {
         white-space: nowrap;
     }
@@ -118,7 +125,7 @@ $newRRNo = ReceivingReport::getLastRRNo();
 </style>
 
 <div class="main">
-    <?php require 'views/templates/warehouse_navbar.php' ?>
+    <?php require 'views/templates/navbar.php' ?>
 
     <main class="content">
         <div class="container-fluid p-0">
@@ -189,7 +196,8 @@ $newRRNo = ReceivingReport::getLastRRNo();
                                     <div class="col-md-3 receive-item-details">
                                         <label for="receive_number" class="form-label"><i
                                                 class="fas fa-hashtag me-1"></i>RR No</label>
-                                                <input type="text" class="form-control form-control-sm" id="receive_number" name="receive_number" value="<?php echo $newRRNo; ?>" readonly>
+                                        <input type="text" class="form-control form-control-sm" id="receive_number"
+                                            name="receive_number" value="<?php echo $newRRNo; ?>" readonly>
                                     </div>
                                     <div class="col-md-3 receive-item-details">
                                         <label for="receive_date" class="form-label"><i
@@ -207,13 +215,13 @@ $newRRNo = ReceivingReport::getLastRRNo();
                                                     data-days="<?= $term->term_days_due ?>"><?= $term->term_name ?></option>
                                             <?php endforeach; ?>
                                         </select>
-                                    </div>
-                                    <div class="col-md-3 receive-item-details">
+                                    </div> -->
+                                    <div class="col-md-3 receive-item-details" hidden>
                                         <label for="receive_due_date" class="form-label"><i
                                                 class="far fa-clock me-1"></i>Due Date</label>
                                         <input type="date" class="form-control form-control-sm" id="receive_due_date"
                                             name="receive_due_date" value="<?php echo date('Y-m-d'); ?>" required>
-                                    </div> -->
+                                    </div>
                                     <div class="col-md-4 receive-item-details" style="display: none;">
                                         <label for="account_id" class="form-label"><i
                                                 class="fas fa-book me-1"></i>Account</label>
@@ -336,9 +344,12 @@ $newRRNo = ReceivingReport::getLastRRNo();
                                                 <th><i class="fas fa-chart-pie me-1"></i>Cost Center</th>
                                                 <th><i class="fas fa-info-circle me-1"></i>Desc</th>
                                                 <th><i class="fas fa-balance-scale me-1"></i>U/M</th>
-                                                <th style="background-color: #e6f3ff;"><i class="fas fa-truck-loading me-1"></i>PO Quantity</th>
-                                                <th style="background-color: #e6f3ff;"><i class="fas fa-truck-loading me-1"></i>Delivered</th>
-                                                <th style="background-color: #e6f3ff;"><i class="fas fa-truck-loading me-1"></i>Quantity Received</th>
+                                                <th style="background-color: #e6f3ff;"><i
+                                                        class="fas fa-truck-loading me-1"></i>PO Quantity</th>
+                                                <th style="background-color: #e6f3ff;"><i
+                                                        class="fas fa-truck-loading me-1"></i>Delivered</th>
+                                                <th style="background-color: #e6f3ff;"><i
+                                                        class="fas fa-truck-loading me-1"></i>Quantity Received</th>
                                                 <th hidden>Cost</th>
                                                 <th class="text-right" hidden>Amount</th>
                                                 <th class="text-right" hidden>Disc Type</th>
@@ -374,30 +385,7 @@ $newRRNo = ReceivingReport::getLastRRNo();
 <?php require 'views/templates/footer.php' ?>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const poDateInput = document.getElementById('receive_date');
-        const termsSelect = document.getElementById('terms');
-        const deliveryDateInput = document.getElementById('receive_due_date');
-
-        function updateDeliveryDate() {
-            const poDate = new Date(poDateInput.value);
-            const selectedOption = termsSelect.options[termsSelect.selectedIndex];
-            const termDaysDue = parseInt(selectedOption.dataset.days, 10);
-
-            if (!isNaN(poDate.getTime()) && !isNaN(termDaysDue)) {
-                const deliveryDate = new Date(poDate);
-                deliveryDate.setDate(deliveryDate.getDate() + termDaysDue);
-                
-                // Format the date as YYYY-MM-DD for the input
-                const formattedDate = deliveryDate.toISOString().split('T')[0];
-                deliveryDateInput.value = formattedDate;
-            }
-        }
-
-        termsSelect.addEventListener('change', updateDeliveryDate);
-        poDateInput.addEventListener('change', updateDeliveryDate);
-    });
-
+ 
     $(document).ready(function() {
         initializeSelect2();
         setupEventListeners();

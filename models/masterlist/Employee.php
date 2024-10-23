@@ -52,9 +52,11 @@ class Employee
     {
         global $connection;
 
-        $stmt = $connection->prepare('DELETE FROM `employee` WHERE id=:id');
+        $stmt = $connection->prepare('DELETE FROM `employee` WHERE id = :id');
         $stmt->bindParam(':id', $this->id);
-        $stmt->execute();
+
+        // Return true if delete is successful, false otherwise
+        return $stmt->execute();
     }
 
     public static function all()
@@ -107,7 +109,7 @@ class Employee
         $stmt->bindParam(':sss', $sss);
         $stmt->bindParam(':philhealth', $philhealth);
         $stmt->bindParam(':pagibig', $pagibig);
-        
+
         $stmt->execute();
     }
 
@@ -129,12 +131,12 @@ class Employee
         return null;
     }
 
-    public static function find($employee_code)
+    public static function find($id)
     {
         global $connection;
 
-        $stmt = $connection->prepare("SELECT * FROM `employee` WHERE employee_code=:employee_code");
-        $stmt->bindParam(":employee_code", $employee_code);
+        $stmt = $connection->prepare("SELECT * FROM `employee` WHERE id=:id");
+        $stmt->bindParam(":id", $id);
         $stmt->execute();
         $stmt->setFetchMode(PDO::FETCH_ASSOC);
 

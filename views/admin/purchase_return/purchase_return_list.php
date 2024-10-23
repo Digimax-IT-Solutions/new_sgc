@@ -1,8 +1,12 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
-
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('purhcase_return');
 //require_once 'api/category_controller.php';
 
 $uoms = Uom::all();
@@ -33,8 +37,8 @@ $page = 'uom_list';
                     <!-- Default box -->
                     <div class="card">
                         <div class="card-body">
-                            
-                          
+
+
                         </div>
                         <!-- /.card-body -->
                     </div>
@@ -82,4 +86,3 @@ $page = 'uom_list';
 
 
     <?php require 'views/templates/footer.php' ?>
-

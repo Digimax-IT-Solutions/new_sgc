@@ -1,8 +1,12 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
-
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('category');
 $categories = Category::all();
 
 $category = null;
@@ -69,32 +73,35 @@ $page = 'category'; // Set the variable corresponding to the current page
                     <!-- Default box -->
                     <div class="card">
                         <div class="card-body">
-                        <?php if (isset($_GET['id'])): 
+                            <?php if (isset($_GET['id'])):
                                 $id = $_GET['id'];
                                 $category = Category::find($id);
                                 if ($category): ?>
-                            <form method="POST" action="api/category_controller.php" id="categoryForm">
-                                <input type="hidden" name="action" id="modalAction" value="update" />
-                                <input type="hidden" name="id" id="itemId" value="<?= $category ? htmlspecialchars($category->id) : '' ?>" />
+                                    <form method="POST" action="api/category_controller.php" id="categoryForm">
+                                        <input type="hidden" name="action" id="modalAction" value="update" />
+                                        <input type="hidden" name="id" id="itemId"
+                                            value="<?= $category ? htmlspecialchars($category->id) : '' ?>" />
 
-                                <div class="row mb-3">
-                                    <label for="categoryName" class="col-sm-2 col-form-label">Category Name</label>
-                                    <div class="col-sm-4">
-                                        <input type="text" class="form-control" id="categoryName" name="name"
-                                            placeholder="Enter category name here" value="<?= $category ? htmlspecialchars($category->name) : '' ?>" required />
-                                    </div>
-                                </div>
+                                        <div class="row mb-3">
+                                            <label for="categoryName" class="col-sm-2 col-form-label">Category Name</label>
+                                            <div class="col-sm-4">
+                                                <input type="text" class="form-control" id="categoryName" name="name"
+                                                    placeholder="Enter category name here"
+                                                    value="<?= $category ? htmlspecialchars($category->name) : '' ?>"
+                                                    required />
+                                            </div>
+                                        </div>
 
-                                <!-- Submit Button -->
-                                <div class="row">
-                                    <div class="col-md-10 d-inline-block">
-                                        <button type="submit" class="btn btn-primary">Submit</button>
-                                    </div>
-                                </div>
-                            </form>
-                            <?php else: ?>
-                                <p>Category not found.</p>
-                            <?php endif; 
+                                        <!-- Submit Button -->
+                                        <div class="row">
+                                            <div class="col-md-10 d-inline-block">
+                                                <button type="submit" class="btn btn-primary">Submit</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                <?php else: ?>
+                                    <p>Category not found.</p>
+                                <?php endif;
                             else: ?>
                                 <p>No ID provided.</p>
                             <?php endif; ?>

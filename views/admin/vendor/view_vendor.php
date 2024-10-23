@@ -1,8 +1,12 @@
 <?php
 // Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
-
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('vendor_list');
 // Fetch all vendors
 $vendors = Vendor::all();
 $input_vats = InputVat::all();
@@ -149,7 +153,7 @@ foreach ($items as $item) {
                                                 <?= htmlspecialchars($vendor->tax_type) ?>
                                             </option>
                                             <?php foreach ($input_vats as $input_vat): ?>
-                                                
+
                                                 <option value="<?= htmlspecialchars($input_vat->input_vat_name) ?>">
                                                     <?= htmlspecialchars($input_vat->input_vat_name) ?>
                                                 </option>

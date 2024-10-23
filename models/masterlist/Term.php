@@ -21,7 +21,7 @@ class Term
     public function update()
     {
         global $connection;
-        
+
         // Check if name is unique
         $existingTerm = self::findByName($this->term_name);
         if ($existingTerm && $existingTerm->id !== $this->id) {
@@ -116,4 +116,3 @@ class Term
         return null;
     }
 }
-?>

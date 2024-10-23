@@ -13,6 +13,7 @@ if (post('action') === 'add') {
         $total_debit = post('total_debit');
         $total_credit = post('total_credit');
         $memo = post('memo');
+        $location = post('location');
         $created_by = $_SESSION['user_name'];
 
         // Add check to prevent double insertion
@@ -35,10 +36,19 @@ if (post('action') === 'add') {
             $total_credit,
             $created_by,
             $memo,
+            $location,
             $details
         );
 
         flashMessage('add_general_journal', 'Journal added successfully.', FLASH_SUCCESS);
+
+        // Send a message to Discord with the user info
+        $discordMessage = "**" . $_SESSION['name'] . " created a General Journal 📰!**\n"; // Bold username and action
+        $discordMessage .= "-----------------------\n"; // Top border
+        $discordMessage .= "**GJ No:** `" . post('entry_no') . "`\n"; // Bold "PR No" and use backticks for code block style
+        $discordMessage .= "**Memo:** `" . post('memo') . "`\n"; // Bold "Memo" and use backticks for code block style
+        $discordMessage .= "-----------------------\n"; // Bottom border
+        sendToDiscord($discordMessage); // Send the message to Discord
 
         // Prepare the response with just the transaction_id
         $response = ['success' => true, 'id' => $transaction_id + 1];
@@ -75,7 +85,7 @@ if (post('action') === 'update_print_status') {
 
         if ($result) {
             $response = ['success' => true];
-            
+
         } else {
             throw new Exception("Failed to update print status.");
         }
@@ -132,26 +142,21 @@ if (post('action') === 'update') {
 if (post('action') === 'void_check') {
     try {
         $id = post('id');
-
         if (!$id) {
             throw new Exception("General Journal ID is required.");
         }
 
-        // Update the status to 3 (void) in the database
-        $stmt = $connection->prepare("UPDATE general_journal SET status = 3 WHERE id = :id");
-        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-        $result = $stmt->execute();
+        $result = GeneralJournal::void($id);
 
         if ($result) {
             $response = ['success' => true];
         } else {
-            throw new Exception("Failed to void general.");
+            throw new Exception("Failed to void journal.");
         }
     } catch (Exception $e) {
         $response = ['success' => false, 'message' => 'Error: ' . $e->getMessage()];
-        error_log('Error voiding general: ' . $e->getMessage());
+        error_log('Error voiding journal: ' . $e->getMessage());
     }
-
     // Send JSON response
     header('Content-Type: application/json');
     echo json_encode($response);
@@ -160,31 +165,25 @@ if (post('action') === 'void_check') {
 
 if (post('action') === 'save_draft') {
     try {
+        // Retrieve form data
         $journal_date = post('journal_date');
         $total_debit = !empty(post('total_debit')) ? post('total_debit') : '0.00';
         $total_credit = !empty(post('total_credit')) ? post('total_credit') : '0.00';
         $memo = post('memo');
-        $items = json_decode(post('item_data'), true);
+        $location = post('location');
 
+        // Decode JSON data (general journal items)
+        $items = json_decode(post('item_data'), true);
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new Exception("Error decoding item data: " . json_last_error_msg());
         }
 
         // Validate required fields
-        $requiredFields = ['journal_date'];
-        $emptyFields = [];
-
-        foreach ($requiredFields as $field) {
-            if (empty($$field)) {
-                $emptyFields[] = $field;
-            }
+        if (empty($journal_date)) {
+            throw new Exception("Journal date cannot be empty");
         }
 
-        if (!empty($emptyFields)) {
-            throw new Exception("Required fields cannot be empty: " . implode(', ', $emptyFields));
-        }
-
-        // Validate items
+        // Validate that items are provided
         if (empty($items)) {
             throw new Exception("No items provided for the journal entry");
         }
@@ -195,59 +194,56 @@ if (post('action') === 'save_draft') {
             $item['credit'] = !empty($item['credit']) ? $item['credit'] : '0.00';
         }
 
+        // Save draft to database
         GeneralJournal::saveDraft(
-            $journal_date, $total_debit, $total_credit, $memo, $items
+            $journal_date, $total_debit, $total_credit, $memo, $location, $items
         );
 
-        $response = ['success' => true, 'entry_no' => $entry_no];
+        $response = ['success' => true];
     } catch (Exception $ex) {
-        $response = ['success' => false, 'message' => $ex->getMessage()];
+        $response = ['success' => false, 'message' => 'Error: ' . $ex->getMessage()];
         error_log('Error in saving general journal draft: ' . $ex->getMessage());
     }
+
+    // Send JSON response
     header('Content-Type: application/json');
     echo json_encode($response);
     exit;
 }
 
+
 if (post('action') === 'update_draft') {
     try {
         $id = post('id');
-        $entry_no = post('entry_no');
+        $journal_date = post('journal_date');
+        $total_debit = post('total_debit');
+        $total_credit = post('total_credit');
+        $memo = post('memo');
+        $location = post('location');
         $items = json_decode(post('item_data'), true);
 
-        if (!$id || !$entry_no) {
-            throw new Exception("General ID and number are required.");
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new Exception("Error decoding item data: " . json_last_error_msg());
         }
 
         // Log received data
         error_log('Received data: ' . print_r($_POST, true));
 
-        // Update the general journal in the database
-        $stmt = $connection->prepare("
-            UPDATE general_journal 
-            SET status = 0, 
-                entry_no = :entry_no
-            WHERE id = :id
-        ");
-        
-        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-        $stmt->bindParam(':entry_no', $entry_no, PDO::PARAM_STR);
+        // Call the updateDraft function to update the journal details
+        $response = GeneralJournal::updateDraft(
+            $id, $journal_date, $total_debit, $total_credit, 
+            $memo, $location, $items
+        );
 
-        $result = $stmt->execute();
+        // If updateDraft executes successfully, return success response
+        $response = [
+            'success' => true,
+            'id' => $id,
+            'message' => 'General journal updated successfully'
+        ];
 
-        if ($result) {
-            // Update general journal details
-            // (You might want to add code here to update the items in a separate table)
-
-            $response = [
-                'success' => true,
-                'id' => $id,
-                'message' => 'General journal updated successfully'
-            ];
-        } else {
-            throw new Exception("Failed to update general journal.");
-        }
     } catch (Exception $ex) {
+        // If an exception occurs, log the error and return failure response
         $response = ['success' => false, 'message' => 'Error: ' . $ex->getMessage()];
         error_log('Error updating draft general journal: ' . $ex->getMessage());
     }
@@ -257,6 +253,51 @@ if (post('action') === 'update_draft') {
     echo json_encode($response);
     exit;
 }
+
+if (post('action') === 'save_final') {
+    try {
+        $id = post('id');
+        $entry_no = post('entry_no');
+        $journal_date = post('journal_date');
+        $total_debit = post('total_debit');
+        $total_credit = post('total_credit');
+        $memo = post('memo');
+        $location = post('location');
+        $items = json_decode(post('item_data'), true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new Exception("Error decoding item data: " . json_last_error_msg());
+        }
+
+        // Log received data
+        error_log('Received data: ' . print_r($_POST, true));
+
+        // Call the saveFinal function to update the journal
+        $response = GeneralJournal::saveFinal(
+            $id, $entry_no, $journal_date, $total_debit, $total_credit, 
+            $memo, $location, $items, $_SESSION['user_id'] // Assume user_id is stored in session
+        );
+
+        // If saveFinal executes successfully, return success response
+        $response = [
+            'success' => true,
+            'id' => $id,
+            'message' => 'General journal updated successfully'
+        ];
+
+    } catch (Exception $ex) {
+        // If an exception occurs, log the error and return failure response
+        $response = ['success' => false, 'message' => 'Error: ' . $ex->getMessage()];
+        error_log('Error updating general journal: ' . $ex->getMessage());
+    }
+
+    // Send JSON response
+    header('Content-Type: application/json');
+    echo json_encode($response);
+    exit;
+}
+
+
 
 // Redirect if no actions were performed
 redirect('../general_journal');

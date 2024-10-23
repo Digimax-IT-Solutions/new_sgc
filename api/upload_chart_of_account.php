@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Remove header row
             array_shift($rows);
 
-            $stmt = $connection->prepare("INSERT INTO chart_of_account (account_code, account_type_id, gl_code, gl_name, sl_code, sl_name, account_description) VALUES (?,?,?,?,?,?,?)");
+            $stmt = $connection->prepare("INSERT INTO chart_of_account (account_code, account_type_id, account_name, sub_account_id, account_description) VALUES (?,?,?,?,?)");
             $checkStmt = $connection->prepare("SELECT COUNT(*) FROM chart_of_account WHERE account_code = ?");
 
             $connection->beginTransaction();
@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             foreach ($rows as $row) {
                 // Ensure all values are set, even if empty
-                $row = array_pad($row, 7, null);
+                $row = array_pad($row, 5, null);
 
                 // Check if account_code already exists
                 $checkStmt->execute([$row[0]]);

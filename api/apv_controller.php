@@ -22,12 +22,14 @@ if (post('action') === 'add') {
         $vendor_name = post('vendor_name');
         $vendor_tin = post('vendor_tin');
         $memo = post('memo');
+        $location = post('location');
         $gross_amount = post('gross_amount');
         $discount_amount = post('discount_amount');
         $net_amount_due = post('net_amount_due');
         $vat_percentage_amount = post('vat_percentage_amount');
         $net_of_vat = post('net_of_vat');
         $tax_withheld_amount = post('tax_withheld_amount');
+        $tax_withheld_percentage = post('tax_withheld_percentage');
         $wtax_account_id = post('tax_withheld_account_id');
         $total_amount_due = post('total_amount_due');
         $created_by = $_SESSION['user_name'];
@@ -40,10 +42,7 @@ if (post('action') === 'add') {
 
         // Save check using WriteCheck class method
         Apv::add(
-            $apv_no, $ref_no, $po_no, $rr_no, $apv_date, $apv_due_date, $terms_id, $account_id, 
-            $vendor_id, $vendor_name, $vendor_tin, $memo, $gross_amount, $discount_amount, 
-            $net_amount_due, $vat_percentage_amount, $net_of_vat, $tax_withheld_amount, 
-            $total_amount_due, $created_by, $items, $wtax_account_id
+            $apv_no, $ref_no, $po_no, $rr_no, $apv_date, $apv_due_date, $terms_id, $account_id, $vendor_id, $vendor_name, $vendor_tin, $memo, $location, $gross_amount, $discount_amount, $net_amount_due, $vat_percentage_amount, $net_of_vat, $tax_withheld_amount, $tax_withheld_percentage, $total_amount_due, $created_by, $items, $wtax_account_id
         );
 
         flashMessage('add_apv', 'Apv added successfully.', FLASH_SUCCESS);
@@ -163,6 +162,8 @@ if (post('action') === 'save_draft') {
         $vendor_name = post('vendor_name');
         $vendor_tin = post('vendor_tin');
         $memo = post('memo');
+        $location = post('location');
+
         
         // Summary details
         $gross_amount = post('gross_amount');
@@ -171,6 +172,7 @@ if (post('action') === 'save_draft') {
         $vat_percentage_amount = post('vat_percentage_amount');
         $net_of_vat = post('net_of_vat');
         $tax_withheld_amount = post('tax_withheld_amount');
+        $tax_withheld_percentage = post('tax_withheld_percentage');
         $total_amount_due = post('total_amount_due');
         $created_by = post('created_by');
         $wtax_account_id = post('tax_withheld_account_id'); // Add this line
@@ -194,12 +196,14 @@ if (post('action') === 'save_draft') {
             $vendor_name,
             $vendor_tin,
             $memo,
+            $location,
             $gross_amount,
             $discount_amount,
             $net_amount_due,
             $vat_percentage_amount,
             $net_of_vat,
             $tax_withheld_amount,
+            $tax_withheld_percentage,
             $total_amount_due,
             $created_by,
             $items,
@@ -224,8 +228,8 @@ if (post('action') === 'save_draft') {
 
 if (post('action') === 'update_draft') {
     try {
+        // Retrieve form data
         $id = (int)post('id');
-        $apv_no = (string)post('apv_no');
         $ref_no = (string)post('ref_no');
         $po_no = (string)post('po_no');
         $rr_no = (string)post('rr_no');
@@ -237,16 +241,123 @@ if (post('action') === 'update_draft') {
         $vendor_name = (string)post('vendor_name');
         $vendor_tin = (string)post('vendor_tin');
         $memo = (string)post('memo');
+        $location = (int) post('location');
+
         $gross_amount = (float)post('gross_amount');
         $discount_amount = (float)post('discount_amount');
         $net_amount_due = (float)post('net_amount_due');
         $vat_percentage_amount = (float)post('vat_percentage_amount');
         $net_of_vat = (float)post('net_of_vat');
         $tax_withheld_amount = (float)post('tax_withheld_amount');
+        $tax_withheld_percentage = (float)post('tax_withheld_percentage');
+        $total_amount_due = (float)post('total_amount_due');
+        $wtax_account_id = (int)post('wtax_account_id');
+
+        // Validate required fields
+        if (empty($id)) {
+            throw new Exception("APV ID is required.");
+        }
+
+        // Decode item data
+        $items = json_decode(post('item_data'), true);
+        if (!$items || !is_array($items)) {
+            throw new Exception("Invalid item data.");
+        }
+
+        // Extract account IDs from the first item
+        $discount_account_id = $items[0]['discount_account_id'] ?? null;
+        $input_vat_account_id = $items[0]['input_vat_account_id'] ?? null;
+
+        // Get the session user name
+        $created_by = $_SESSION['user_name'] ?? 'system';
+
+        // Update the draft
+        $updateResult = APV::updateDraft(
+            $id,
+            $ref_no,  // This is passed but not used in the SQL query, so we will not bind it
+            $po_no,
+            $rr_no,
+            $apv_date,
+            $apv_due_date,
+            $terms_id,
+            $account_id,
+            $vendor_id,
+            $vendor_tin,
+            $memo,
+            $location,
+            $gross_amount,
+            $discount_amount,
+            $net_amount_due,
+            $vat_percentage_amount,
+            $net_of_vat,
+            $tax_withheld_amount,
+            $tax_withheld_percentage,
+            $total_amount_due,
+            $items,
+            $created_by,
+            $wtax_account_id,
+            $discount_account_id,
+            $input_vat_account_id
+        );
+
+        if (!$updateResult['success']) {
+            throw new Exception($updateResult['message'] ?? "Failed to update APV draft.");
+        }
+
+        // Prepare the success response
+        $response = [
+            'success' => true,
+            'id' => $id,
+            'message' => 'APV draft updated successfully'
+        ];
+    } catch (Exception $ex) {
+        // Prepare the error response
+        $response = [
+            'success' => false,
+            'message' => 'Error: ' . $ex->getMessage()
+        ];
+        error_log('Error updating draft APV: ' . $ex->getMessage());
+    }
+
+    // Send JSON response
+    header('Content-Type: application/json');
+    echo json_encode($response);
+    exit;
+}
+
+
+if (post('action') === 'save_final') {
+    try {
+        $id = (int)post('id');
+        $apv_no = (string)post('apv_no');
+        $ref_no = (string)post('ref_no');
+        $po_no = (string)post('po_no');
+        $rr_no = (string)post('rr_no');
+        $apv_date = (string)post('apv_date');
+        $apv_due_date = (string)post('apv_due_date');
+        $terms_id = (int)post('terms_id');
+        $account_id = (int)post('account_id');
+        $vendor_id = (int)post('vendor_id');
+        $vendor = Vendor::find($vendor_id);
+        $vendor_name = $vendor ? $vendor->vendor_name : '';
+        $vendor_tin = (string)post('vendor_tin');
+        $memo = (string)post('memo');
+        $memo = (int) post('memo');
+
+        $gross_amount = (float)post('gross_amount');
+        $discount_amount = (float)post('discount_amount');
+        $net_amount_due = (float)post('net_amount_due');
+        $vat_percentage_amount = (float)post('vat_percentage_amount');
+        $net_of_vat = (float)post('net_of_vat');
+        $tax_withheld_amount = (float)post('tax_withheld_amount');
+        $tax_withheld_percentage = (float)post('tax_withheld_percentage');
         $total_amount_due = (float)post('total_amount_due');
         $items = json_decode(post('item_data'), true);
         $created_by = $_SESSION['user_name'];
         $wtax_account_id = (int)post('wtax_account_id');
+        $discount_account_id = (int)post('discount_account_id');
+        $input_vat_account_id = (int)post('input_vat_account_id');
+
 
         if (!$id || !$apv_no || !$items) {
             throw new Exception("APV ID, number, and items are required.");
@@ -270,8 +381,8 @@ if (post('action') === 'update_draft') {
 
         if ($result) {
             // Call the updateDraft function
-            APV::updateDraft(
-                $id, // The ID of the draft to update
+            APV::saveFinal(
+                $id,
                 $apv_no,
                 $ref_no,
                 $po_no,
@@ -284,16 +395,20 @@ if (post('action') === 'update_draft') {
                 $vendor_name,
                 $vendor_tin,
                 $memo,
+                $location,
                 $gross_amount,
                 $discount_amount,
                 $net_amount_due,
                 $vat_percentage_amount,
                 $net_of_vat,
                 $tax_withheld_amount,
+                $tax_withheld_percentage,
                 $total_amount_due,
-                $created_by,
                 $items,
-                $wtax_account_id
+                $created_by,
+                $wtax_account_id,
+                $discount_account_id,
+                $input_vat_account_id
             );
 
             $response = [
@@ -314,6 +429,5 @@ if (post('action') === 'update_draft') {
     echo json_encode($response);
     exit;
 }
-
 // Redirect if no actions were performed
 redirect('../accounts_payable_voucher');

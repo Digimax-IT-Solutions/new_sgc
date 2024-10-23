@@ -1,8 +1,12 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
-
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('category');
 
 $categories = Category::all()
 
@@ -56,14 +60,15 @@ $categories = Category::all()
                                                 <td><?= $category->id ?></td>
                                                 <td><?= $category->name ?></td>
                                                 <td>
-                                                <a class="text-primary" href="view_category?action=update&id=<?= $category->id ?>">
-                                                    <i class="fas fa-edit"></i> Update
-                                                </a>
-                                                <a class="text-danger ml-2"
-                                                    href="api/category_controller.php?action=delete&id=<?= $category->id ?>">
-                                                    <i class="fas fa-trash-alt"></i> Delete
-                                                </a>
-                                            </td>
+                                                    <a class="text-primary"
+                                                        href="view_category?action=update&id=<?= $category->id ?>">
+                                                        <i class="fas fa-edit"></i> Update
+                                                    </a>
+                                                    <a class="text-danger ml-2"
+                                                        href="api/category_controller.php?action=delete&id=<?= $category->id ?>">
+                                                        <i class="fas fa-trash-alt"></i> Delete
+                                                    </a>
+                                                </td>
                                             </tr>
                                         <?php endforeach; ?>
                                     </tbody>

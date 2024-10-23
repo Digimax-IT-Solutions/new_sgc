@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 require_once __DIR__ . '/../_init.php';
 
@@ -19,20 +19,23 @@ class Apv
     public $terms_id;
     public $term_name;
     public $memo;
-    public $gross_amount;   
+    public $location;
+    public $gross_amount;
     public $discount_amount;
     public $net_amount_due;
     public $vat_percentage_amount;
     public $net_of_vat;
     public $tax_withheld_amount;
+    public $tax_withheld_percentage;
     public $total_amount_due;
     public $status;
     public $print_status;
     public $details;
-    
+
     public static $cache = null;
 
-    public function __construct($formData) {
+    public function __construct($formData)
+    {
         $this->id = $formData['id'] ?? null;
         $this->account_id = $formData['account_id'] ?? null;
         $this->account_name = $formData['account_name'] ?? null;
@@ -48,12 +51,14 @@ class Apv
         $this->terms_id = $formData['terms_id'] ?? null;
         $this->term_name = $formData['term_name'] ?? null;
         $this->memo = $formData['memo'] ?? null;
+        $this->location = $formData['location'] ?? null;
         $this->gross_amount = $formData['gross_amount'] ?? null;
         $this->discount_amount = $formData['discount_amount'] ?? null;
         $this->net_amount_due = $formData['net_amount_due'] ?? null;
         $this->vat_percentage_amount = $formData['vat_percentage_amount'] ?? null;
         $this->net_of_vat = $formData['net_of_vat'] ?? null;
         $this->tax_withheld_amount = $formData['tax_withheld_amount'] ?? null;
+        $this->tax_withheld_percentage = $formData['tax_withheld_percentage'] ?? null;
         $this->total_amount_due = $formData['total_amount_due'] ?? null;
         $this->print_status = $formData['print_status'] ?? null;
         $this->status = $formData['status'] ?? null;
@@ -70,7 +75,7 @@ class Apv
     }
 
     // ADD APV
-    public static function add($apv_no, $ref_no, $po_no, $rr_no, $apv_date, $apv_due_date, $terms_id, $account_id, $vendor_id, $vendor_name, $vendor_tin, $memo, $gross_amount, $discount_amount, $net_amount_due, $vat_percentage_amount, $net_of_vat, $tax_withheld_amount, $total_amount_due, $created_by, $items, $wtax_account_id)
+    public static function add($apv_no, $ref_no, $po_no, $rr_no, $apv_date, $apv_due_date, $terms_id, $account_id, $vendor_id, $vendor_name, $vendor_tin, $memo, $location, $gross_amount, $discount_amount, $net_amount_due, $vat_percentage_amount, $net_of_vat, $tax_withheld_amount, $tax_withheld_percentage, $total_amount_due, $created_by, $items, $wtax_account_id)
     {
         global $connection;
 
@@ -92,15 +97,17 @@ class Apv
             vendor_id,
             vendor_tin,
             memo,
+            location,
             gross_amount,
             discount_amount,
             net_amount_due,
             vat_percentage_amount,
             net_of_vat,
             tax_withheld_amount,
+            tax_withheld_percentage,
             wtax_account_id,
             total_amount_due,
-            created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+            created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             $stmt->execute([
                 $apv_no,
                 $ref_no,
@@ -113,14 +120,16 @@ class Apv
                 $vendor_id,
                 $vendor_tin,
                 $memo,
+                $location,
                 $gross_amount,
                 $discount_amount,
                 $net_amount_due,
                 $vat_percentage_amount,
                 $net_of_vat,
                 $tax_withheld_amount,
-                $total_amount_due,
+                $tax_withheld_percentage,
                 $wtax_account_id,
+                $total_amount_due,
                 $created_by
             ]);
 
@@ -135,6 +144,7 @@ class Apv
                 $transaction_type,
                 $apv_date,
                 $apv_no,
+                $location,
                 $vendor_name,
                 $account_id,
                 0.00,
@@ -148,8 +158,7 @@ class Apv
                     $apv_id,
                     $item['account_id'],
                     $item['cost_center_id'],
-                    $item['po_no'],
-                    $item['rr_no'],
+
                     $item['memo'],
                     $item['amount'],
                     $item['discount_percentage'],
@@ -168,6 +177,7 @@ class Apv
                     $transaction_type,
                     $apv_date,
                     $apv_no,
+                    $location,
                     $vendor_name,
                     $item['account_id'],
                     $item['net_amount'] + $item['discount_amount'],
@@ -186,6 +196,7 @@ class Apv
                 $transaction_type,
                 $apv_date,
                 $apv_no,
+                $location,
                 $vendor_name,
                 $items[0]['discount_account_id'],
                 0.00,
@@ -199,6 +210,7 @@ class Apv
                 $transaction_type,
                 $apv_date,
                 $apv_no,
+                $location,
                 $vendor_name,
                 $items[0]['input_vat_account_id'],
                 $total_input_vat,
@@ -212,6 +224,7 @@ class Apv
                 $transaction_type,
                 $apv_date,
                 $apv_no,
+                $location,
                 $vendor_name,
                 $wtax_account_id,
                 0.00,
@@ -228,7 +241,7 @@ class Apv
     }
 
     // ACCOUNTING LOGS
-    private static function logAuditTrail($general_journal_id, $transaction_type, $transaction_date, $ref_no, $vendor_name, $account_id, $debit, $credit,  $created_by)
+    private static function logAuditTrail($general_journal_id, $transaction_type, $transaction_date, $ref_no, $location, $vendor_name, $account_id, $debit, $credit, $created_by)
     {
         global $connection;
 
@@ -238,13 +251,14 @@ class Apv
                     transaction_type,
                     transaction_date,
                     ref_no,
+                    location,
                     name,
                     account_id,
                     debit,
                     credit,
                     created_by,
                     created_at
-                ) VALUES (?,?,?,?,?,?,?,?,?, NOW())
+                ) VALUES (?,?,?,?,?,?,?,?,?,?, NOW())
             ");
 
         $stmt->execute([
@@ -252,6 +266,7 @@ class Apv
             $transaction_type,
             $transaction_date,
             $ref_no,
+            $location,
             $vendor_name,
             $account_id,
             $debit,
@@ -261,16 +276,26 @@ class Apv
     }
 
     // Add ITEM Details APV
-    public static function addItem($transaction_id, $account_id, $cost_center_id, $po_no, $rr_no, $memo, $amount, $discount_percentage, $discount_amount, $net_amount_before_vat, $net_amount, $vat_percentage, $input_vat, $discount_account_id,
-    $input_vat_account_id)
-    {
+    public static function addItem(
+        $transaction_id,
+        $account_id,
+        $cost_center_id,
+        $memo,
+        $amount,
+        $discount_percentage,
+        $discount_amount,
+        $net_amount_before_vat,
+        $net_amount,
+        $vat_percentage,
+        $input_vat,
+        $discount_account_id,
+        $input_vat_account_id
+    ) {
         global $connection;
         $stmt = $connection->prepare("INSERT INTO apv_details (
             apv_id, 
             account_id, 
             cost_center_id,
-            po_no,
-            rr_no,
             memo, 
             amount, 
             discount_percentage,
@@ -281,14 +306,13 @@ class Apv
             input_vat,
             discount_account_id,
             input_vat_account_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->execute(
             [
                 $transaction_id,
                 $account_id,
                 $cost_center_id,
-                $po_no,
-                $rr_no,
+
                 $memo,
                 $amount,
                 $discount_percentage,
@@ -320,7 +344,8 @@ class Apv
         return $apv;
     }
     // GET LAST APV_NO 
-    public static function getLastApvNo() {
+    public static function getLastApvNo()
+    {
         global $connection;
         try {
             $stmt = $connection->prepare("
@@ -333,7 +358,7 @@ class Apv
             $stmt->execute();
             $stmt->setFetchMode(PDO::FETCH_ASSOC);
             $result = $stmt->fetch();
-    
+
             // Extract the numeric part of the last AP voucher number
             if ($result) {
                 $latestNo = $result['apv_no'];
@@ -346,7 +371,7 @@ class Apv
             }
             // Format the new number with leading zeros
             $newAPVoucherNo = 'AP' . str_pad($newNo, 9, '0', STR_PAD_LEFT);
-    
+
             return $newAPVoucherNo;
         } catch (PDOException $e) {
             // Handle potential exceptions
@@ -354,7 +379,7 @@ class Apv
             return null;
         }
     }
-    
+
     // GET LAST TRANSACTION ID
     public static function getLastTransactionId()
     {
@@ -491,33 +516,35 @@ class Apv
         $vendor_name,
         $vendor_tin,
         $memo,
+        $location,
         $gross_amount,
         $discount_amount,
         $net_amount_due,
         $vat_percentage_amount,
         $net_of_vat,
         $tax_withheld_amount,
+        $tax_withheld_percentage,
         $total_amount_due,
         $created_by,
         $items,
         $wtax_account_id
     ) {
         global $connection;
-    
+
         try {
             $connection->beginTransaction();
-    
+
             // Insert into apv table
             $sql = "INSERT INTO apv (
-                ref_no, rr_no, po_no, apv_date, apv_due_date, terms_id, account_id, vendor_id,  vendor_tin, memo,
+                ref_no, rr_no, po_no, apv_date, apv_due_date, terms_id, account_id, vendor_id,  vendor_tin, memo, location,
                 gross_amount, discount_amount, net_amount_due, vat_percentage_amount, net_of_vat,
-                tax_withheld_amount, total_amount_due, created_by, status, wtax_account_id
+                tax_withheld_amount, tax_withheld_percentage, total_amount_due, created_by, status, wtax_account_id
             ) VALUES (
-                :ref_no, :rr_no, :po_no, :apv_date, :apv_due_date, :terms_id, :account_id, :vendor_id, :vendor_tin, :memo,
+                :ref_no, :rr_no, :po_no, :apv_date, :apv_due_date, :terms_id, :account_id, :vendor_id, :vendor_tin, :memo, :location,
                 :gross_amount, :discount_amount, :net_amount_due, :vat_percentage_amount, :net_of_vat,
-                :tax_withheld_amount, :total_amount_due, :created_by, :status, :wtax_account_id
+                :tax_withheld_amount, :tax_withheld_percentage, :total_amount_due, :created_by, :status, :wtax_account_id
             )";
-    
+
             $stmt = $connection->prepare($sql);
             $stmt->bindParam(':ref_no', $ref_no);
             $stmt->bindParam(':rr_no', $rr_no);
@@ -529,23 +556,25 @@ class Apv
             $stmt->bindParam(':vendor_id', $vendor_id);
             $stmt->bindParam(':vendor_tin', $vendor_tin);
             $stmt->bindParam(':memo', $memo);
+            $stmt->bindParam(':location', $location);
             $stmt->bindParam(':gross_amount', $gross_amount);
             $stmt->bindParam(':discount_amount', $discount_amount);
             $stmt->bindParam(':net_amount_due', $net_amount_due);
             $stmt->bindParam(':vat_percentage_amount', $vat_percentage_amount);
             $stmt->bindParam(':net_of_vat', $net_of_vat);
             $stmt->bindParam(':tax_withheld_amount', $tax_withheld_amount);
+            $stmt->bindParam(':tax_withheld_percentage', $tax_withheld_percentage);
             $stmt->bindParam(':total_amount_due', $total_amount_due);
             $stmt->bindParam(':created_by', $created_by);
             $stmt->bindValue(':status', 4, PDO::PARAM_INT); // Set status to 4 for draft
             $stmt->bindParam(':wtax_account_id', $wtax_account_id);
 
-    
+
             $stmt->execute();
-    
+
             // Retrieve the last inserted ID
             $apv_id = $connection->lastInsertId();
-    
+
             // Insert draft items
             if (!empty($items)) {
                 $itemSql = "INSERT INTO apv_details (
@@ -555,9 +584,9 @@ class Apv
                     :apv_id, :account_id, :cost_center_id, :memo, :amount, :discount_percentage, :discount_amount,
                     :net_amount_before_vat, :net_amount, :vat_percentage, :input_vat, :discount_account_id, :input_vat_account_id	
                 )";
-    
+
                 $itemStmt = $connection->prepare($itemSql);
-    
+
                 foreach ($items as $item) {
                     $itemStmt->bindParam(':apv_id', $apv_id);
                     $itemStmt->bindParam(':account_id', $item['account_id']);
@@ -576,11 +605,11 @@ class Apv
                     $itemStmt->execute();
                 }
             }
-    
+
             // Commit the transaction
             $connection->commit();
             return true;
-    
+
         } catch (Exception $ex) {
             $connection->rollBack();
             error_log('Error in saveDraft: ' . $ex->getMessage());
@@ -588,11 +617,11 @@ class Apv
         }
     }
 
-    
+
     public static function updateDraftDetails($apv_id)
     {
         global $connection;
-    
+
         $stmt = $connection->prepare('
               SELECT 
                 ad.id,
@@ -615,11 +644,11 @@ class Apv
             INNER JOIN cost_center cc ON ad.cost_center_id = cc.id
             WHERE ad.apv_id = :apv_id
         ');
-    
+
         $stmt->bindParam(':apv_id', $apv_id, PDO::PARAM_INT);
         $stmt->execute();
         $stmt->setFetchMode(PDO::FETCH_ASSOC);
-    
+
         $result = $stmt->fetchAll();
 
         $apvDetails = [
@@ -630,9 +659,162 @@ class Apv
 
         return $apvDetails;
     }
-    
+
     public static function updateDraft(
-        $apv_id, // The ID of the draft to update
+        $apv_id,
+        $ref_no,  // This is passed but not used in the SQL query, so we will not bind it
+        $po_no,
+        $rr_no,
+        $apv_date,
+        $apv_due_date,
+        $terms_id,
+        $account_id,
+        $vendor_id,
+        $vendor_tin,
+        $memo,
+        $location,
+        $gross_amount,
+        $discount_amount,
+        $net_amount_due,
+        $vat_percentage_amount,
+        $net_of_vat,
+        $tax_withheld_amount,
+        $tax_withheld_percentage,
+        $total_amount_due,
+        $items,
+        $created_by,
+        $wtax_account_id,
+        $discount_account_id,
+        $input_vat_account_id
+    ) {
+        global $connection;
+    
+        try {
+            $connection->beginTransaction();
+    
+            // Update the main APV record
+            $stmt = $connection->prepare("
+                UPDATE apv 
+                SET po_no = :po_no,
+                    rr_no = :rr_no,
+                    ref_no = :ref_no,
+                    apv_date = :apv_date,
+                    apv_due_date = :apv_due_date,
+                    terms_id = :terms_id,
+                    account_id = :account_id,
+                    vendor_id = :vendor_id,
+                    vendor_tin = :vendor_tin,
+                    memo = :memo,
+                    location = :location,
+                    gross_amount = :gross_amount,
+                    discount_amount = :discount_amount,
+                    net_amount_due = :net_amount_due,
+                    vat_percentage_amount = :vat_percentage_amount,
+                    net_of_vat = :net_of_vat,
+                    tax_withheld_amount = :tax_withheld_amount,
+                    tax_withheld_percentage = :tax_withheld_percentage,
+                    wtax_account_id = :wtax_account_id,
+                    total_amount_due = :total_amount_due,
+                    created_by = :created_by,
+                    status = 4
+                WHERE id = :apv_id
+            ");
+    
+            // Bind the parameters
+            $stmt->bindParam(':apv_id', $apv_id, PDO::PARAM_INT);
+            $stmt->bindParam(':ref_no', $ref_no, PDO::PARAM_STR);
+            $stmt->bindParam(':po_no', $po_no, PDO::PARAM_STR);
+            $stmt->bindParam(':rr_no', $rr_no, PDO::PARAM_STR);
+            $stmt->bindParam(':apv_date', $apv_date, PDO::PARAM_STR);
+            $stmt->bindParam(':apv_due_date', $apv_due_date, PDO::PARAM_STR);
+            $stmt->bindParam(':terms_id', $terms_id, PDO::PARAM_INT);
+            $stmt->bindParam(':account_id', $account_id, PDO::PARAM_INT);
+            $stmt->bindParam(':vendor_id', $vendor_id, PDO::PARAM_INT);
+            $stmt->bindParam(':vendor_tin', $vendor_tin, PDO::PARAM_STR);
+            $stmt->bindParam(':memo', $memo, PDO::PARAM_STR);
+            $stmt->bindParam(':location', $location, PDO::PARAM_STR);
+            $stmt->bindParam(':gross_amount', $gross_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':discount_amount', $discount_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':net_amount_due', $net_amount_due, PDO::PARAM_STR);
+            $stmt->bindParam(':vat_percentage_amount', $vat_percentage_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':net_of_vat', $net_of_vat, PDO::PARAM_STR);
+            $stmt->bindParam(':tax_withheld_amount', $tax_withheld_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':tax_withheld_percentage', $tax_withheld_percentage, PDO::PARAM_STR);
+            $stmt->bindParam(':wtax_account_id', $wtax_account_id, PDO::PARAM_INT);
+            $stmt->bindParam(':total_amount_due', $total_amount_due, PDO::PARAM_STR);
+            $stmt->bindParam(':created_by', $created_by, PDO::PARAM_INT);
+    
+            // Execute the statement
+            $result = $stmt->execute();
+    
+            if (!$result) {
+                throw new Exception("Failed to update APV. " . implode(", ", $stmt->errorInfo()));
+            }
+    
+            // Delete existing APV details
+            $stmt = $connection->prepare("DELETE FROM apv_details WHERE apv_id = ?");
+            $stmt->execute([$apv_id]);
+    
+            // Check if $items is an array before proceeding
+            if (!is_array($items)) {
+                throw new Exception("Items must be an array.");
+            }
+    
+            // Prepare statement for inserting new APV details
+            $stmt = $connection->prepare("
+                INSERT INTO apv_details (
+                    apv_id, account_id, cost_center_id, memo, amount, discount_percentage,
+                    discount_amount, net_amount_before_vat, net_amount, vat_percentage, input_vat,
+                    discount_account_id, input_vat_account_id
+                ) VALUES (
+                    :apv_id, :account_id, :cost_center_id, :memo, :amount, :discount_percentage,
+                    :discount_amount, :net_amount_before_vat, :net_amount, :vat_percentage, :input_vat,
+                    :discount_account_id, :input_vat_account_id
+                )
+            ");
+    
+            // Insert new APV details
+            foreach ($items as $item) {
+                $stmt->execute([
+                    ':apv_id' => $apv_id,
+                    ':account_id' => $item['account_id'],
+                    ':cost_center_id' => $item['cost_center_id'],
+                    ':memo' => $item['memo'],
+                    ':amount' => $item['amount'],
+                    ':discount_percentage' => isset($item['discount_percentage']) ? $item['discount_percentage'] : 0,
+                    ':discount_amount' => isset($item['discount_amount']) ? $item['discount_amount'] : 0,
+                    ':net_amount_before_vat' => isset($item['net_amount_before_vat']) ? $item['net_amount_before_vat'] : 0,
+                    ':net_amount' => $item['net_amount'],
+                    ':vat_percentage' => isset($item['vat_percentage']) ? $item['vat_percentage'] : 0,
+                    ':input_vat' => isset($item['input_vat']) ? $item['input_vat'] : 0,
+                    // Use a default value for input_vat_account_id if it's null
+                    ':input_vat_account_id' => !empty($input_vat_account_id) ? $input_vat_account_id : 0,
+                    ':discount_account_id' => $discount_account_id
+                ]);
+            }
+
+            // Commit the transaction
+            $connection->commit();
+    
+            return [
+                'success' => true,
+                'apvId' => $apv_id
+            ];
+        } catch (Exception $ex) {
+            // Rollback transaction in case of an error
+            $connection->rollback();
+            error_log('Error updating draft APV: ' . $ex->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Error: ' . $ex->getMessage()
+            ];
+        }
+    }
+    
+
+
+    public static function saveFinal(
+        $apv_id,
         $apv_no,
         $ref_no,
         $po_no,
@@ -645,81 +827,151 @@ class Apv
         $vendor_name,
         $vendor_tin,
         $memo,
+        $location,
         $gross_amount,
         $discount_amount,
         $net_amount_due,
         $vat_percentage_amount,
         $net_of_vat,
         $tax_withheld_amount,
+        $tax_withheld_percentage,
         $total_amount_due,
-        $created_by,
         $items,
-        $wtax_account_id
+        $created_by,
+        $wtax_account_id,
+        $discount_account_id,
+        $input_vat_account_id
     ) {
         global $connection;
-    
+
         try {
-            // Start a transaction
             $connection->beginTransaction();
-    
+
             $transaction_type = "APVoucher";
-
-            // Fetch existing credit memo details
-            $apvDetails = self::updateDraftDetails($apv_id);
-            $existingDetails = $apvDetails['details'];
-            $discount_account_id = $apvDetails['discount_account_id'];
-            $input_vat_account_id = $apvDetails['input_vat_account_id'];
-
-            // Fetch the relevant data from the database
-            $stmt = $connection->prepare("
-            SELECT
-                apv_no,
-                apv_date,
-                account_id,
-                tax_withheld_amount,
-                wtax_account_id,
-                total_amount_due
-            FROM apv
-            WHERE id = ?
-            ");
-            $stmt->execute([$apv_id]);
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if ($result) {
-            $apv_no = $result['apv_no'];
-            $apv_date = $result['apv_date'];
-            $account_id = $result['account_id'];
-            $tax_withheld_amount = $result['tax_withheld_amount'];
-            $wtax_account_id = $result['wtax_account_id'];
-            $total_amount_due = $result['total_amount_due'];
-            } else {
-            throw new Exception("APV not found.");
-            }
-
-    
             $total_discount = 0;
             $total_input_vat = 0;
+
+            $existingDetails = self::updateDraftDetails($apv_id);
+
+            // Update the main APV record (unchanged)
+            $stmt = $connection->prepare("
+                UPDATE apv 
+                SET apv_no = :apv_no,
+                    po_no = :po_no,
+                    rr_no = :rr_no,
+                    ref_no = :ref_no,
+                    apv_date = :apv_date,
+                    apv_due_date = :apv_due_date,
+                    terms_id = :terms_id,
+                    account_id = :account_id,
+                    vendor_id = :vendor_id,
+                    vendor_tin = :vendor_tin,
+                    memo = :memo,
+                    location = :location,
+                    gross_amount = :gross_amount,
+                    discount_amount = :discount_amount,
+                    net_amount_due = :net_amount_due,
+                    vat_percentage_amount = :vat_percentage_amount,
+                    net_of_vat = :net_of_vat,
+                    tax_withheld_amount = :tax_withheld_amount,
+                    tax_withheld_percentage = :tax_withheld_percentage,
+                    wtax_account_id = :wtax_account_id,
+                    total_amount_due = :total_amount_due,
+                    created_by = :created_by
+                WHERE id = :apv_id
+            ");
+            
+            // Bind the parameters
+            $stmt->bindParam(':apv_id', $apv_id, PDO::PARAM_INT);
+            $stmt->bindParam(':apv_no', $apv_no, PDO::PARAM_STR);
+            $stmt->bindParam(':ref_no', $ref_no, PDO::PARAM_STR);
+            $stmt->bindParam(':po_no', $po_no, PDO::PARAM_STR);
+            $stmt->bindParam(':rr_no', $rr_no, PDO::PARAM_STR);
+            $stmt->bindParam(':apv_date', $apv_date, PDO::PARAM_STR);
+            $stmt->bindParam(':apv_due_date', $apv_due_date, PDO::PARAM_STR);
+            $stmt->bindParam(':terms_id', $terms_id, PDO::PARAM_INT);
+            $stmt->bindParam(':account_id', $account_id, PDO::PARAM_INT);
+            $stmt->bindParam(':vendor_id', $vendor_id, PDO::PARAM_INT);
+            $stmt->bindParam(':vendor_tin', $vendor_tin, PDO::PARAM_STR);
+            $stmt->bindParam(':memo', $memo, PDO::PARAM_STR);
+            $stmt->bindParam(':location', $location, PDO::PARAM_STR);
+            $stmt->bindParam(':gross_amount', $gross_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':discount_amount', $discount_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':net_amount_due', $net_amount_due, PDO::PARAM_STR);
+            $stmt->bindParam(':vat_percentage_amount', $vat_percentage_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':net_of_vat', $net_of_vat, PDO::PARAM_STR);
+            $stmt->bindParam(':tax_withheld_amount', $tax_withheld_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':tax_withheld_percentage', $tax_withheld_percentage, PDO::PARAM_STR);
+            $stmt->bindParam(':wtax_account_id', $wtax_account_id, PDO::PARAM_INT);
+            $stmt->bindParam(':total_amount_due', $total_amount_due, PDO::PARAM_STR);
+            $stmt->bindParam(':created_by', $created_by, PDO::PARAM_INT);
     
-            self::logAuditTrail(
-                $apv_id,
-                $transaction_type,
-                $apv_date,
-                $apv_no,
-                $vendor_name,
-                $account_id,
-                0.00,
-                $total_amount_due,
-                $created_by
-            );
     
-            foreach ($existingDetails as $item) {
+            if (!$stmt->execute()) {
+                throw new Exception("Failed to update APV. " . implode(", ", $stmt->errorInfo()));
+            }
     
-                // Audit updated APV Accounts
+            // Delete existing APV details
+            $stmt = $connection->prepare("DELETE FROM apv_details WHERE apv_id = ?");
+            $stmt->execute([$apv_id]);
+    
+            if (!is_array($items)) {
+                throw new Exception("Items must be an array.");
+            }
+    
+            // Prepare statement for inserting new APV details
+            $stmt = $connection->prepare("
+                INSERT INTO apv_details (
+                    apv_id, account_id, cost_center_id, memo, amount, discount_percentage,
+                    discount_amount, net_amount_before_vat, net_amount, vat_percentage, input_vat,
+                    discount_account_id, input_vat_account_id
+                ) VALUES (
+                    :apv_id, :account_id, :cost_center_id, :memo, :amount, :discount_percentage,
+                    :discount_amount, :net_amount_before_vat, :net_amount, :vat_percentage, :input_vat,
+                    :discount_account_id, :input_vat_account_id
+                )
+            ");
+    
+            foreach ($items as $item) {
+                // Ensure required keys exist and have default values if not set
+                $item['account_id'] = $item['account_id'] ?? null;
+                $item['cost_center_id'] = $item['cost_center_id'] ?? null;
+                $item['memo'] = $item['memo'] ?? '';
+                $item['amount'] = $item['amount'] ?? 0;
+                $item['discount_percentage'] = $item['discount_percentage'] ?? 0;
+                $item['discount_amount'] = $item['discount_amount'] ?? 0;
+                $item['net_amount_before_vat'] = $item['net_amount_before_vat'] ?? 0;
+                $item['net_amount'] = $item['net_amount'] ?? 0;
+                $item['vat_percentage'] = $item['vat_percentage'] ?? 0;
+                $item['input_vat'] = $item['input_vat'] ?? 0;
+    
+                if ($item['account_id'] === null) {
+                    throw new Exception("Account ID cannot be null for an APV detail.");
+                }
+    
+                $stmt->execute([
+                    ':apv_id' => $apv_id,
+                    ':account_id' => $item['account_id'],
+                    ':cost_center_id' => $item['cost_center_id'],
+                    ':memo' => $item['memo'],
+                    ':amount' => $item['amount'],
+                    ':discount_percentage' => $item['discount_percentage'],
+                    ':discount_amount' => $item['discount_amount'],
+                    ':net_amount_before_vat' => $item['net_amount_before_vat'],
+                    ':net_amount' => $item['net_amount'],
+                    ':vat_percentage' => $item['vat_percentage'],
+                    ':input_vat' => $item['input_vat'],
+                    ':discount_account_id' => $discount_account_id,
+                    ':input_vat_account_id' => $input_vat_account_id ?: 0
+                ]);
+    
+                // Log audit for each updated APV account
                 self::logAuditTrail(
                     $apv_id,
                     $transaction_type,
                     $apv_date,
                     $apv_no,
+                    $location,
                     $vendor_name,
                     $item['account_id'],
                     $item['net_amount'] + $item['discount_amount'],
@@ -727,84 +979,50 @@ class Apv
                     $created_by
                 );
     
-                // Accumulate total discount and input VAT
                 $total_discount += $item['discount_amount'];
                 $total_input_vat += $item['input_vat'];
             }
     
-            // Audit updated APV Discount Account (single entry for total discount)
-            self::logAuditTrail(
-                $apv_id,
-                $transaction_type,
-                $apv_date,
-                $apv_no,
-                $vendor_name,
-                $discount_account_id,
-                0.00,
-                $total_discount,
-                $created_by
-            );
+            // Audit discount and input VAT
+            self::logAuditTrail($apv_id, $transaction_type, $apv_date, $apv_no, $location, $vendor_name, $discount_account_id, 0.00, $total_discount, $created_by);
+            self::logAuditTrail($apv_id, $transaction_type, $apv_date, $apv_no, $location, $vendor_name, $input_vat_account_id, $total_input_vat, 0.00, $created_by);
     
-            // Audit updated APV Input VAT Account (single entry for total input VAT)
-            self::logAuditTrail(
-                $apv_id,
-                $transaction_type,
-                $apv_date,
-                $apv_no,
-                $vendor_name,
-                $input_vat_account_id,
-                $total_input_vat,
-                0.00,
-                $created_by
-            );
+            // Wtax Account
+            self::logAuditTrail($apv_id, $transaction_type, $apv_date, $apv_no, $location, $vendor_name, $wtax_account_id, 0.00, $tax_withheld_amount, $created_by);
     
-            // Audit Trail Wtax Account
-            self::logAuditTrail(
-                $apv_id,
-                $transaction_type,
-                $apv_date,
-                $apv_no,
-                $vendor_name,
-                $wtax_account_id,
-                0.00,
-                $tax_withheld_amount,
-                $created_by
-            );
-    
-            // Commit the transaction
             $connection->commit();
             return true;
     
-        } catch (PDOException $e) {
-            $connection->rollback();
+        } catch (Exception $e) {
+            $connection->rollBack();
             throw $e;
         }
     }
-    
+
     public static function void($id)
     {
         global $connection;
-    
+
         try {
             $connection->beginTransaction();
-            
+
             // Update the status to 3 (void) in the sales_invoice table
             $stmt = $connection->prepare("UPDATE apv SET status = 3 WHERE id = :id");
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
             $result = $stmt->execute();
-            
+
             if ($result) {
                 // Update the state to 2 in the audit_trail table
                 $auditStmt = $connection->prepare("UPDATE audit_trail SET state = 2 WHERE transaction_id = :id");
                 $auditStmt->bindParam(':id', $id, PDO::PARAM_INT);
                 $auditResult = $auditStmt->execute();
-                
+
                 if ($auditResult) {
                     // Delete from transaction_entries
                     $deleteStmt = $connection->prepare("DELETE FROM transaction_entries WHERE transaction_id = :id");
                     $deleteStmt->bindParam(':id', $id, PDO::PARAM_INT);
                     $deleteResult = $deleteStmt->execute();
-                    
+
                     if ($deleteResult) {
                         $connection->commit();
                         return true;
@@ -822,6 +1040,6 @@ class Apv
             throw $e;
         }
     }
-    
+
 }
 ?>

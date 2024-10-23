@@ -1,8 +1,12 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
-
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('location');
 $locations = Location::all();
 
 
@@ -55,7 +59,8 @@ $locations = Location::all();
                                                 <td><?= $location->id ?></td>
                                                 <td><?= $location->name ?></td>
                                                 <td>
-                                                    <a class="text-primary" href="view_location?action=update&id=<?= $location->id ?>">
+                                                    <a class="text-primary"
+                                                        href="view_location?action=update&id=<?= $location->id ?>">
                                                         <i class="fas fa-edit"></i> Update
                                                     </a>
                                                     <a class="text-danger ml-2"

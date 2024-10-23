@@ -1,7 +1,12 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('purchase_request');
 $products = Product::all();
 $cost_centers = CostCenter::all();
 $locations = Location::all();
@@ -89,9 +94,9 @@ $newPrNo = PurchaseRequest::getLastPrNo();
         }
     }
 </style>
+
 <div class="main">
     <?php require 'views/templates/navbar.php' ?>
-
     <!-- Content Wrapper. Contains page content -->
     <main class="content">
         <div class="container-fluid p-0">
@@ -115,7 +120,7 @@ $newPrNo = PurchaseRequest::getLastPrNo();
                 </div>
             </div>
 
-            <div class="row">
+            <div class="row d-flex">
                 <div class="col-12">
                     <!-- Purchase Order Form -->
                     <form id="purchaseOrderForm" action="api/purchase_request_controller.php?action=add" method="POST">
@@ -123,118 +128,106 @@ $newPrNo = PurchaseRequest::getLastPrNo();
                         <input type="hidden" name="id" id="itemId" value="" />
                         <input type="hidden" name="item_data" id="item_data" />
 
-                        <div class="row">
-                            <div class="col-12 col-lg-12">
-                                <div class="card h-100">
+                        <div class="row ">
+                            <div class="col-md-3">
+                                <div class="card mb-4 h-100">
                                     <div class="card-header">
-                                        <h5 class="card-title mb-0">Purchase Order Details</h5>
+                                        <h5 class="card-title mb-0">Purchase Request Details</h5>
                                     </div>
-
                                     <div class="card-body">
-
-                                        <div class="row g-2">
-                                            <!-- PR No -->
-                                            <div class="col-md-3 order-details">
-                                                <div class="form-group">
-                                                    <!-- PURCHASE ORDER NO -->
-                                                    <label for="pr_no">Purchase Request #:</label>
-                                                    <input type="text" class="form-control form-control-sm" id="pr_no"
-                                                        name="pr_no" value="<?php echo $newPrNo; ?>" readonly>
-                                                </div>
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <!-- PURCHASE ORDER NO -->
+                                                <label for="pr_no" class="form-label">Purchase Request #:</label>
+                                                <input type="text" class="form-control" id="pr_no"
+                                                    name="pr_no" value="<?php echo $newPrNo; ?>" readonly>
                                             </div>
-                                        </div>
-                                        <div class="row g-2">
-                                            <!-- Requesting Section -->
-                                            <div class="col-md-4 vendor-details">
+                                            <div class="col-md-6">
+                                                <label for="date" class="form-label">Date</label>
+                                                <input type="date" class="form-control" id="date" name="date" value="<?php echo date('Y-m-d'); ?>" required>
+                                            </div>
+                                            <div class="col-md-6">
                                                 <label for="location" class="form-label">Location</label>
-                                                <select class="form-select form-select-sm" id="location" name="location" required>
+                                                <select class="form-select" id="location" name="location"
+                                                    required>
                                                     <option value="">Select Location</option>
-                                                    <?php foreach ($locations as $location) : ?>
-                                                        <option value="<?= $location->name ?>"><?= $location->name ?>
+                                                    <?php foreach ($locations as $location): ?>
+                                                        <option value="<?= $location->id ?>"><?= $location->name ?>
                                                         </option>
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
-
-                                            <div class="col-md-3 order-details">
-                                                <!-- DATE -->
-                                                <div class="form-group">
-                                                    <label for="date">Date</label>
-                                                    <input type="date" class="form-control form-control-sm" id="date"
-                                                        name="date" value="<?php echo date('Y-m-d'); ?>">
-                                                </div>
+                                            <div class="col-md-6">
+                                                <label for="required_date" class="form-label">Required Date</label>
+                                                <input type="date" class="form-control" id="required_date" name="required_date"
+                                                    value="<?php echo date('Y-m-d'); ?>" required>
                                             </div>
-
-                                            <div class="col-md-3 order-details">
-                                                <!-- DELIVERY DATE -->
-                                                <div class="form-group">
-                                                    <label for="required_date">Required Date</label>
-                                                    <input type="date" class="form-control form-control-sm"
-                                                        id="required_date" name="required_date"
-                                                        value="<?php echo date('Y-m-d'); ?>">
-                                                </div>
+                                            <div class="col-md-12 order-details">
+                                                <!-- MEMO -->
+                                                <label for="requester" class="form-label">Requester</label>
+                                                <input type="text" class="form-control" id="requester"
+                                                    name="requester" required>
                                             </div>
-                                            <div class="col-md-3 order-details"></div>
-                                            <div class="col-md-3 order-details"></div>
-
-                                            <div class="col-md-8 order-details">
+                                            <div class="col-md-12 order-details">
                                                 <!-- MEMO -->
                                                 <label for="memo" class="form-label">Memo/Purpose</label>
-                                                <input type="text" class="form-control form-control-sm" id="memo"
-                                                    name="memo">
+                                                <input type="text" class="form-control" id="memo"
+                                                    name="memo" required>
                                             </div>
                                         </div>
-                                        <br>
-                                        <div class="row g-2">
-                                            <div class="col-md-12 text-center">
-                                                <button type="submit" class="btn btn-primary btn-sm">
-                                                    <i class="fas fa-save"></i> Save Purchase Request
-                                                </button>
-                                                <button type="button" class="btn btn-secondary btn-sm" id="saveDraftBtn">
-                                                    <i class="fas fa-save"></i> Save as Draft
-                                                </button>
-                                                <button type="reset" class="btn btn-danger btn-sm">
-                                                    <i class="fas fa-undo"></i> Clear
-                                                </button>
-                                            </div>
-                                        </div>
-
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Items Table Section -->
-                            <div class="row mt-4">
-                                <div class="col-12">
-                                    <div class="card">
-                                        <div class="card-header d-flex justify-content-between align-items-center">
-                                            <h5 class="card-title mb-0">Add Purchase Order</h5>
+                            <div class="col-md-9">
+                                <div class="card h-100">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="card-title mb-0">Purchase Request Items</h5>
+                                        <button type="button" class="btn btn-primary btn-sm" id="addItemBtn">
+                                            <i class="fas fa-plus"></i> Add Item
+                                        </button>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                                            <table class="table table-sm table-hover">
+                                                <thead class="sticky-header">
+                                                    <tr>
+                                                        <th>Item</th>
+                                                        <th>Cost Center</th>
+                                                        <th>Description</th>
+                                                        <th>Quantity</th>
+                                                        <th>Unit</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="itemTableBody">
+                                                    <!-- Items will be dynamically added here -->
+                                                </tbody>
+                                            </table>
                                         </div>
-                                        <div class="card-body">
-                                            <div class="table-responsive">
-                                                <table class="table table-sm table-hover" id="itemTable">
-                                                    <thead class="bg-light" style="font-size: 12px;">
-                                                        <tr>
-                                                            <th>Item</th>
-                                                            <th>Cost Center</th>
-                                                            <th>Description</th>
-                                                            <th style="width: 100px; background-color: #e6f3ff">Quantity</th>
-                                                            <th style="width: 100px">Unit</th>
-                                                            <th style="width: 50px"></th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody id="itemTableBody" style="font-size: 14px;">
-                                                        <!-- Items will be dynamically added here -->
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                            <button type="button" class="btn btn-primary btn-sm" id="addItemBtn">
-                                                <i class="fas fa-plus"></i> Add Item
+                                    </div>
+                                    <div class="card-footer">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span>Total Items: <span id="totalItems">0</span></span>
+                                            <button type="button" class="btn btn-outline-secondary btn-sm" id="saveDraftBtn">
+                                                <i class="fas fa-save"></i> Save as Draft
                                             </button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+                        </div>
+
+                        <div class="row mt-4">
+                            <div class="col-12 text-center">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Submit Purchase Request
+                                </button>
+                                <button type="reset" class="btn btn-danger">
+                                    <i class="fas fa-undo"></i> Clear Form
+                                </button>
+                            </div>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -242,7 +235,7 @@ $newPrNo = PurchaseRequest::getLastPrNo();
     </main>
     <div id="loadingOverlay" style="display: none;">
         <div class="spinner"></div>
-        <div class="message">Processing Purchase Order</div>
+        <div class="message">Processing Purchase Request</div>
     </div>
 </div>
 
@@ -271,13 +264,8 @@ $newPrNo = PurchaseRequest::getLastPrNo();
 
             $('#date, #required_date').val(new Date().toISOString().split('T')[0]);
 
-            Swal.fire({
-                icon: 'success',
-                title: 'Cleared',
-                text: 'All fields have been reset.',
-                timer: 1800,
-                showConfirmButton: false
-            });
+
+            updateTotalItems();
         });
 
         $('#saveDraftBtn').click(function(e) {
@@ -285,15 +273,17 @@ $newPrNo = PurchaseRequest::getLastPrNo();
             saveDraft();
         });
 
+        // Save draft function
         function saveDraft() {
             const items = gatherTableItems();
 
-            // Check if there are any items
-            if (items.length === 0) {
+            // Check if there are any items or validation failed
+            if (items === false || items.length === 0) {
+                if (items === false) return; // Prevent further execution if validation failed
                 Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Please add items before saving as draft'
+                    icon: 'warning',
+                    title: 'Warning',
+                    text: 'Please add items'
                 });
                 return;
             }
@@ -309,7 +299,7 @@ $newPrNo = PurchaseRequest::getLastPrNo();
 
             // Use AJAX to submit the form
             $.ajax({
-                url: 'api/purchase_order_controller.php',
+                url: 'api/purchase_request_controller.php',
                 type: 'POST',
                 dataType: 'json',
                 data: formData,
@@ -350,6 +340,7 @@ $newPrNo = PurchaseRequest::getLastPrNo();
             });
         }
 
+
         $('#location').select2({
             theme: 'classic', // Use 'bootstrap-5' for Bootstrap 5, 'bootstrap-4' for Bootstrap 4
             width: '100%',
@@ -361,7 +352,8 @@ $newPrNo = PurchaseRequest::getLastPrNo();
         const products = <?php echo json_encode($products); ?>;
         let itemDropdownOptions = '<option value="" selected disabled>Select An Item</option>';
         $.each(products, function(index, product) {
-            itemDropdownOptions += `<option value="${product.id}" data-description="${product.item_purchase_description}" data-uom="${product.uom_name}">${product.item_name}</option>`;
+            itemDropdownOptions += `<option value="${product.id}" data-description="${product.item_purchase_description}" data-uom="${product.uom_name}">${product.item_code} - ${product.item_name}</option>`;
+
         });
 
         const costCenterOptions = <?php echo json_encode($cost_centers); ?>;
@@ -369,18 +361,20 @@ $newPrNo = PurchaseRequest::getLastPrNo();
         costCenterOptions.forEach(function(costCenter) {
             costCenterDropdownOptions += `<option value="${costCenter.id}">${costCenter.code} - ${costCenter.particular}</option>`;
         });
+
         // Add a new row to the table
         function addRow() {
             const newRow = `
                 <tr>
                     <td><select class="form-control form-control-sm account-dropdown select2" name="item_id[]" onchange="populateFields(this)">${itemDropdownOptions}</select></td>
                     <td><select class="form-control form-control-sm cost-center-dropdown select2" name="cost_center_id[]">${costCenterDropdownOptions}</select></td>
-                    <td><input type="text" class="form-control form-control-sm description-field" name="description[]" readonly></td>
+                    <td><input type="text" class="form-control form-control-sm description-field" name="description[]"></td>
                     <td style="background-color: #e6f3ff;"><input type="text" class="form-control form-control-sm quantity" name="quantity[]" placeholder="Quantity"></td>
                     <td><input type="text" class="form-control form-control-sm uom" name="uom[]" readonly></td> 
                     <td><button type="button" class="btn btn-danger btn-sm removeRow"><i class="fas fa-trash"></i></button></td>
                 </tr>`;
             $('#itemTableBody').append(newRow);
+            updateTotalItems();
 
             $('#itemTableBody .select2').select2({
                 width: '100%',
@@ -388,41 +382,85 @@ $newPrNo = PurchaseRequest::getLastPrNo();
             });
         }
 
+
         $('#addItemBtn').click(addRow);
 
         $(document).on('click', '.removeRow', function() {
             $(this).closest('tr').remove();
+            updateTotalItems();
             calculateRowValues($(this).closest('tr'));
             calculateTotalAmount();
         });
 
+        // Update total items count
+        function updateTotalItems() {
+            var itemCount = $('#itemTableBody tr').length;
+            $('#totalItems').text(itemCount);
+        }
+
         // Gather table items and submit form
         function gatherTableItems() {
             const items = [];
+            let hasEmptyItem = false;
+            let hasEmptyQuantity = false;
+
             $('#itemTableBody tr').each(function(index) {
+                const item_id = $(this).find('select[name="item_id[]"]').val();
+                const quantity = $(this).find('input[name="quantity[]"]').val();
+
+                // Check if item_id or quantity is empty
+                if (!item_id) {
+                    hasEmptyItem = true; // Set flag if an item is not selected
+                    return false; // Exit the loop early if item is not selected
+                }
+
+                if (!quantity) {
+                    hasEmptyQuantity = true; // Set flag if quantity is empty
+                    return false; // Exit the loop early if quantity is empty
+                }
+
                 const item = {
-                    item_id: $(this).find('select[name="item_id[]"]').val(),
+                    item_id: item_id,
                     cost_center_id: $(this).find('select[name="cost_center_id[]"]').val(),
                     description: $(this).find('input[name="description[]"]').val(),
                     uom: $(this).find('input[name="uom[]"]').val(),
-                    quantity: $(this).find('input[name="quantity[]"]').val(),
+                    quantity: quantity,
                 };
                 items.push(item);
             });
+
+            // Show warnings based on which validation failed
+            if (hasEmptyItem) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Warning',
+                    text: 'Please select an item.'
+                });
+                return false;
+            }
+
+            if (hasEmptyQuantity) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Warning',
+                    text: 'Please enter a quantity for every item.'
+                });
+                return false;
+            }
+
             return items;
         }
-
-
 
         $('#purchaseOrderForm').submit(function(event) {
             event.preventDefault();
 
             const items = gatherTableItems();
 
-            if (items.length === 0) {
+            if (items === false || items.length === 0) {
+                if (items === false) return;
                 Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
+                    icon: 'warning',
+                    title: 'Warning',
                     text: 'Please add items first'
                 });
                 return;
@@ -430,7 +468,6 @@ $newPrNo = PurchaseRequest::getLastPrNo();
 
             $('#item_data').val(JSON.stringify(items));
 
-            // Show loading overlay
             $('#loadingOverlay').css('display', 'flex');
 
             $.ajax({
@@ -439,14 +476,25 @@ $newPrNo = PurchaseRequest::getLastPrNo();
                 dataType: 'json',
                 data: $(this).serialize(),
                 success: function(response) {
-                    // Hide loading overlay
                     $('#loadingOverlay').hide();
 
                     if (response.success) {
-                        // Redirect to purchase_request page on success
-                        window.location.href = 'purchase_request';
+                        const transactionId = response.id;
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: 'Request processed successfully. Purchase details have been saved',
+                            showCancelButton: true,
+                            confirmButtonText: 'Print',
+                            cancelButtonText: 'Close'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                updatePrintStatusAndPrint(transactionId, 1);
+                            } else {
+                                window.location.href = 'purchase_request';
+                            }
+                        });
                     } else {
-                        // Show error message in SweetAlert
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
@@ -455,13 +503,9 @@ $newPrNo = PurchaseRequest::getLastPrNo();
                     }
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
-                    // Hide loading overlay
                     $('#loadingOverlay').hide();
-
                     console.error('AJAX error:', textStatus, errorThrown);
                     console.log('Response Text:', jqXHR.responseText);
-
-                    // Show error message in SweetAlert
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
@@ -470,8 +514,66 @@ $newPrNo = PurchaseRequest::getLastPrNo();
                 }
             });
         });
-        
+
+        function updatePrintStatusAndPrint(id, printStatus) {
+            $.ajax({
+                url: 'api/purchase_request_controller.php',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    action: 'update_print_status',
+                    id: id,
+                    print_status: printStatus
+                },
+                success: function(response) {
+                    if (response.success) {
+                        console.log('Print status updated, now printing Credit:', id);
+
+                        // Now proceed with printing
+                        const printFrame = document.getElementById('printFrame');
+                        const printContentUrl = `print_purchase_request?action=print&id=${id}`;
+                        const submitButton = document.querySelector('.btn-primary[type="submit"]');
+                        submitButton.disabled = true;
+
+                        printFrame.src = printContentUrl;
+
+                        printFrame.onload = function() {
+                            printFrame.contentWindow.focus();
+                            printFrame.contentWindow.print();
+
+                            // Redirect after print dialog closes
+                            const originalOnFocus = window.onfocus;
+
+                            window.onfocus = function() {
+                                window.location.href = 'purchase_request';
+                            };
+
+                            // Clean up event handler after redirection
+                            printFrame.contentWindow.onafterprint = function() {
+                                window.onfocus = originalOnFocus;
+                            };
+                        };
+                    } else {
+                        console.error('Failed to update print status:', response.message);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Failed to update print status: ' + (response.message || 'Unknown error')
+                        });
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.error('AJAX error:', textStatus, errorThrown);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'An error occurred while updating print status: ' + textStatus
+                    });
+                }
+            });
+        }
     });
+
     // Function to populate multiple fields based on selected option
     function populateFields(select) {
         const selectedOption = $(select).find('option:selected');

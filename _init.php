@@ -5,9 +5,12 @@
 require_once '_config.php';
 require_once '_helper.php';
 require_once 'models/User.php';
+require_once 'models/Role.php';
+require_once 'models/CompanySetting.php';
 require_once 'models/Category.php';
 require_once 'models/Order.php';
 require_once 'models/OrderItem.php';
+require_once 'models/InventoryValuation.php';
 
 // Customer Center
 require_once 'models/Sales.php';
@@ -35,9 +38,10 @@ require_once 'models/Apv.php';
 
 // Warehouse
 require_once 'models/WarehouseReceiveItem.php';
+require_once 'models/MaterialIssuance.php';
 
 // MASTERLIST
-require_once 'models/masterlist/AccountType.php';
+require_once 'models/AccountType.php';
 require_once 'models/masterlist/Service.php';
 require_once 'models/masterlist/ChartOfAccount.php';
 require_once 'models/masterlist/Vendor.php';
@@ -45,6 +49,8 @@ require_once 'models/masterlist/OtherNameList.php';
 require_once 'models/masterlist/Uom.php';
 require_once 'models/masterlist/Product.php';
 require_once 'models/masterlist/Customer.php';
+require_once 'models/masterlist/FsClassification.php';
+require_once 'models/masterlist/FsNotesClassification.php';
 require_once 'models/masterlist/Location.php';
 require_once 'models/masterlist/Term.php';
 require_once 'models/masterlist/PaymentMethod.php';
@@ -79,6 +85,3 @@ try {
             - Make sure that the mysql server is running.
     ");
 }
-
-
-

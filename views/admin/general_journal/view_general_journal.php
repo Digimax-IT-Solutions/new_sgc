@@ -1,11 +1,17 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('general_journal');
 $accounts = ChartOfAccount::all();
 $cost_centers = CostCenter::all();
 
 $customers = Customer::all();
+$locations = Location::all();
 $vendors = Vendor::all();
 $other_names = OtherNameList::all();
 $general_journal = GeneralJournal::all();
@@ -104,6 +110,7 @@ $general_journal_details = GeneralJournal::getJournalDetails($journal_id);
             /* Ensure it's above other content */
             display: none;
         }
+
         #loadingOverlay {
             position: fixed;
             top: 0;
@@ -179,23 +186,49 @@ $general_journal_details = GeneralJournal::getJournalDetails($journal_id);
                                         <div class="form-group">
                                             <label for="journal_date">Entry Date</label>
                                             <input type="date" class="form-control form-control-sm" id="journal_date"
-                                                name="journal_date"
-                                                value="<?php echo date('Y-m-d', strtotime('+8 hours')); ?>">
+                                                name="journal_date" value="<?php echo date('Y-m-d', strtotime('+8 hours')); ?>">
                                         </div>
                                     </div>
+
                                     <div class="col-md-2">
                                         <div class="form-group">
                                             <label for="entry_no">Entry No</label>
                                             <input type="text" class="form-control form-control-sm" id="entry_no"
                                                 name="entry_no" placeholder="Enter Ref"
                                                 <?php if ($journal->status == 4): ?>
-                                                    value="<?php echo htmlspecialchars($newEntryNo); ?>" readonly>
-                                                <?php else: ?>
-                                                    value="<?php echo htmlspecialchars($journal->entry_no); ?>" disabled>
-                                                <?php endif; ?>
-
+                                                value="<?php echo htmlspecialchars($newEntryNo); ?>" readonly>
+                                        <?php else: ?>
+                                            value="<?php echo htmlspecialchars($journal->entry_no); ?>" disabled>
+                                        <?php endif; ?>
                                         </div>
                                     </div>
+
+                                    <div class="col-md-2 customer-details">
+                                        <div class="form-group">
+                                            <label for="location">Location</label>
+                                            <select class="form-control form-control-sm select2" id="location" name="location"
+                                                <?php if ($journal->status != 4) echo 'disabled'; ?>>
+                                                <?php
+                                                // Array to prevent duplicates
+                                                $used_locations = [];
+                                                $selected_location = $journal->location ?? ''; // Assuming this holds the selected location
+                                                // Locations
+                                                foreach ($locations as $location):
+                                                    if (!in_array($location->name, $used_locations)):
+                                                        $used_locations[] = $location->name; // Track used locations
+                                                ?>
+                                                        <option value="<?= htmlspecialchars($location->id) ?>"
+                                                            <?= $location->id == $selected_location ? 'selected' : '' ?>>
+                                                            <?= htmlspecialchars($location->name) ?>
+                                                        </option>
+                                                <?php
+                                                    endif;
+                                                endforeach;
+                                                ?>
+                                            </select>
+                                        </div>
+                                    </div>
+
 
                                     <div class="col-md-2">
                                         <div class="form-group">
@@ -260,31 +293,28 @@ $general_journal_details = GeneralJournal::getJournalDetails($journal_id);
                                                 <?php foreach ($general_journal_details as $detail): ?>
                                                     <tr>
                                                         <td>
-                                                            <select class="form-control form-control-sm account-dropdown" name="account_name[]">
+                                                            <select class="form-control form-control-sm account-dropdown" name="account_id[]">
                                                                 <?php foreach ($accounts as $account): ?>
                                                                     <?php
-                                                                        // Check if the current account should be selected
-                                                                        $selected = $detail['account_code'] == $account->account_code ? 'selected' : '';
-                                                                        // Set the option value to detail's account_id
-                                                                        $option_value = htmlspecialchars($account->id);  // Use the account's id for value
-                                                                        // Create the option text
-                                                                        $option_text = htmlspecialchars($account->account_code . ' - ' . $account->account_description);
+                                                                    $selected = $detail['account_id'] == $account->id ? 'selected' : '';
+                                                                    $option_value = htmlspecialchars($account->id);
+                                                                    $option_text = htmlspecialchars($account->account_code . ' - ' . $account->account_description);
                                                                     ?>
                                                                     <option value="<?= $option_value ?>" <?= $selected ?>><?= $option_text ?></option>
                                                                 <?php endforeach; ?>
                                                             </select>
                                                         </td>
                                                         <td>
-                                                            <input type="text" class="form-control form-control-sm debit" name="debit[]" value="<?= htmlspecialchars($detail['debit']) ?>">
+                                                            <input type="text" class="form-control form-control-sm debit" name="debit[]" value="<?= number_format($detail['debit'], 2, '.', ',') ?>">
                                                         </td>
                                                         <td>
-                                                            <input type="text" class="form-control form-control-sm credit" name="credit[]" value="<?= htmlspecialchars($detail['credit']) ?>">
+                                                            <input type="text" class="form-control form-control-sm credit" name="credit[]" value="<?= number_format($detail['credit'], 2, '.', ',') ?>">
                                                         </td>
                                                         <td>
                                                             <select class="form-control form-control-sm name-dropdown select2" name="name[]">
                                                                 <?php foreach ($combinedNames as $combinedName): ?>
                                                                     <?php
-                                                                        $selected = ($detail['name'] == $combinedName['name']) ? 'selected' : '';
+                                                                    $selected = ($detail['name'] == $combinedName['name']) ? 'selected' : '';
                                                                     ?>
                                                                     <option value="<?= htmlspecialchars($combinedName['name']) ?>" data-type="<?= htmlspecialchars($combinedName['type']) ?>" <?= $selected ?>>
                                                                         <?= htmlspecialchars($combinedName['name']) ?>
@@ -352,21 +382,22 @@ $general_journal_details = GeneralJournal::getJournalDetails($journal_id);
                                 <!-- Submit Button -->
                                 <div class="row">
                                     <div class="col-md-10 d-inline-block">
-                                    <?php if ($journal->status == 4): ?>
-                                        <!-- Buttons to show when invoice_status is 4 -->
-                                        <button type="submit" class="btn btn-info me-2">Save and Print</button>
-                                    <?php elseif ($journal->status == 3): ?>
-                                        <!-- Button to show when invoice_status is 3 -->
-                                        <a class="btn btn-primary" href="#" id="reprintButton">
-                                            <i class="fas fa-print"></i> Reprint
-                                        </a>
-                                    <?php else: ?>
-                                        <!-- Buttons to show when invoice_status is neither 3 nor 4 -->
-                                        <button type="button" class="btn btn-secondary me-2" id="voidButton">Void</button>
-                                        <a class="btn btn-primary" href="#" id="reprintButton">
-                                            <i class="fas fa-print"></i> Reprint
-                                        </a>
-                                    <?php endif; ?>
+                                        <?php if ($journal->status == 4): ?>
+                                            <!-- Buttons to show when invoice_status is 4 -->
+                                            <button type="button" id="saveDraftBtn" class="btn btn-secondary me-2">Update Draft</button>
+                                            <button type="submit" class="btn btn-info me-2">Save as Final</button>
+                                        <?php elseif ($journal->status == 3): ?>
+                                            <!-- Button to show when invoice_status is 3 -->
+                                            <a class="btn btn-primary" href="#" id="reprintButton">
+                                                <i class="fas fa-print"></i> Reprint
+                                            </a>
+                                        <?php else: ?>
+                                            <!-- Buttons to show when invoice_status is neither 3 nor 4 -->
+                                            <button type="button" class="btn btn-secondary me-2" id="voidButton">Void</button>
+                                            <a class="btn btn-primary" href="#" id="reprintButton">
+                                                <i class="fas fa-print"></i> Reprint
+                                            </a>
+                                        <?php endif; ?>
                                         </a>
                                     </div>
                                 </div>
@@ -387,405 +418,491 @@ $general_journal_details = GeneralJournal::getJournalDetails($journal_id);
     <?php require 'views/templates/footer.php' ?>
 
 
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        document.getElementById('reprintButton').addEventListener('click', function (e) {
-            e.preventDefault();
-            Swal.fire({
-                title: 'Reprint Invoice?',
-                text: "Are you sure you want to reprint this invoice?",
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, reprint it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    printGeneralJournal(<?= $journal->id ?>, 2);  // Pass 2 for reprint
-                }
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById('reprintButton').addEventListener('click', function(e) {
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Reprint Invoice?',
+                    text: "Are you sure you want to reprint this invoice?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, reprint it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        printGeneralJournal(<?= $journal->id ?>, 2); // Pass 2 for reprint
+                    }
+                });
+            });
+
+            // Attach event listener for the void button
+            document.getElementById('voidButton').addEventListener('click', function(e) {
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Void General Journal?',
+                    text: "Are you sure you want to void this general journal? This action cannot be undone.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, void it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        voidCheck(<?= $journal->id ?>);
+                    }
+                });
             });
         });
 
-        // Attach event listener for the void button
-        document.getElementById('voidButton').addEventListener('click', function (e) {
-            e.preventDefault();
-            Swal.fire({
-                title: 'Void General Journal?',
-                text: "Are you sure you want to void this general journal? This action cannot be undone.",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, void it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    voidCheck(<?= $journal->id ?>);
-                }
-            });
-        });
-    });
+        function showLoadingOverlay() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
 
-    function showLoadingOverlay() {
-        document.getElementById('loadingOverlay').style.display = 'flex';
-    }
+        function hideLoadingOverlay() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
 
-    function hideLoadingOverlay() {
-        document.getElementById('loadingOverlay').style.display = 'none';
-    }
+        function printGeneralJournal(id, printStatus) {
+            showLoadingOverlay();
 
-    function printGeneralJournal(id, printStatus) {
-        showLoadingOverlay();
+            $.ajax({
+                url: 'api/general_journal_controller.php',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    action: 'update_print_status',
+                    id: id,
+                    print_status: printStatus
+                },
+                success: function(response) {
+                    if (response.success) {
+                        const printContentUrl = `print_general_journal?action=print&id=${id}`;
 
-        $.ajax({
-            url: 'api/general_journal_controller.php',
-            type: 'POST',
-            dataType: 'json',
-            data: {
-                action: 'update_print_status',
-                id: id,
-                print_status: printStatus
-            },
-            success: function (response) {
-                if (response.success) {
-                    const printFrame = document.getElementById('printFrame');
-                    const printContentUrl = `print_general_journal?action=print&id=${id}`;
+                        // Open the print content in a new tab
+                        const printWindow = window.open(printContentUrl, '_blank');
 
-                    printFrame.src = printContentUrl;
-
-                    printFrame.onload = function () {
-                        printFrame.contentWindow.focus();
-                        printFrame.contentWindow.print();
+                        if (printWindow) {
+                            // Focus on the new tab and print the content once it has loaded
+                            printWindow.onload = function() {
+                                printWindow.focus();
+                                printWindow.print();
+                                hideLoadingOverlay();
+                            };
+                        } else {
+                            hideLoadingOverlay();
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Failed to open print window. Please check your browser settings.'
+                            });
+                        }
+                    } else {
                         hideLoadingOverlay();
-                    };
-                } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Failed to update print status: ' + (response.message || 'Unknown error')
+                        });
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
                     hideLoadingOverlay();
+                    console.error('AJAX error:', textStatus, errorThrown);
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: 'Failed to update print status: ' + (response.message || 'Unknown error')
+                        text: 'An error occurred while updating print status: ' + textStatus
                     });
                 }
-            },
-            error: function (jqXHR, textStatus, errorThrown) {
-                hideLoadingOverlay();
-                console.error('AJAX error:', textStatus, errorThrown);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'An error occurred while updating print status: ' + textStatus
-                });
-            }
-        });
-    }
+            });
+        }
 
-    function voidCheck(id) {
-        showLoadingOverlay(); // Show the loading overlay before making the request
 
-        $.ajax({
-            url: 'api/general_journal_controller.php',
-            type: 'POST',
-            dataType: 'json',
-            data: {
-                action: 'void_check',
-                id: id
-            },
-            success: function (response) {
-                hideLoadingOverlay(); // Hide the loading overlay on success
-                if (response.success) {
+        function voidCheck(id) {
+            showLoadingOverlay(); // Show the loading overlay before making the request
+
+            $.ajax({
+                url: 'api/general_journal_controller.php',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    action: 'void_check',
+                    id: id
+                },
+                success: function(response) {
+                    hideLoadingOverlay(); // Hide the loading overlay on success
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: 'General Journal has been voided successfully.'
+                        }).then(() => {
+                            location.reload(); // Reload the page to reflect changes
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Failed to void general: ' + (response.message || 'Unknown error')
+                        });
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    hideLoadingOverlay(); // Hide the loading overlay on error
+                    console.error('AJAX error:', textStatus, errorThrown);
                     Swal.fire({
-                        icon: 'success',
-                        title: 'Success',
-                        text: 'General Journal has been voided successfully.'
-                    }).then(() => {
-                        location.reload(); // Reload the page to reflect changes
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'An error occurred while voiding the general: ' + textStatus
                     });
+                }
+            });
+        }
+    </script>
+
+
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 for existing dropdowns
+            $('.account-dropdown, .cost-dropdown, .name-dropdown, #location').select2({
+                theme: 'classic',
+                width: '100%'
+            });
+
+            function isDataConsistent() {
+                let totalDebit = parseFloat($('#total_debit').val()) || 0;
+                let totalCredit = parseFloat($('#total_credit').val()) || 0;
+                let inconsistentAccounts = [];
+
+                $('#itemTableBody').find('tr').each(function() {
+                    let debit = parseFloat($(this).find('.debit').val()) || 0;
+                    let credit = parseFloat($(this).find('.credit').val()) || 0;
+                    if (debit !== 0 && credit !== 0) {
+                        let accountName = $(this).find('.account-dropdown option:selected').text().trim();
+                        if (!inconsistentAccounts.includes(accountName)) {
+                            inconsistentAccounts.push(accountName);
+                        }
+                    }
+                });
+
+                return totalDebit === totalCredit && inconsistentAccounts.length === 0;
+            }
+
+            function calculateTotals() {
+                let totalDebit = 0;
+                let totalCredit = 0;
+                let inconsistentAccounts = []; // Array to hold inconsistent accounts
+
+                $('#itemTableBody').find('tr').each(function() {
+                    let debit = parseFloat($(this).find('.debit').val()) || 0;
+                    let credit = parseFloat($(this).find('.credit').val()) || 0;
+
+                    totalDebit += debit;
+                    totalCredit += credit;
+
+                    // Check for inconsistencies
+                    if (debit !== 0 && credit !== 0) {
+                        let accountName = $(this).find('.account-dropdown option:selected').text().trim();
+                        if (!inconsistentAccounts.includes(accountName)) {
+                            inconsistentAccounts.push(accountName);
+                        }
+                    }
+                });
+
+                // Update the total displays with proper formatting
+                $('#totalDebit').text(totalDebit.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+                $('#totalCredit').text(totalCredit.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+
+                // Set totalDebit and totalCredit in the hidden inputs
+                $('#total_debit').val(totalDebit.toFixed(2));
+                $('#total_credit').val(totalCredit.toFixed(2));
+
+                // Check if debit and credit are balanced
+                if (totalDebit !== totalCredit) {
+                    $('#balanceAlert').show(); // Show the balance alert
+                    $('#save').prop('disabled', true); // Disable save button
                 } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Failed to void general: ' + (response.message || 'Unknown error')
-                    });
+                    $('#balanceAlert').hide(); // Hide the balance alert
+                    $('#save').prop('disabled', false); // Enable save button
                 }
-            },
-            error: function (jqXHR, textStatus, errorThrown) {
-                hideLoadingOverlay(); // Hide the loading overlay on error
-                console.error('AJAX error:', textStatus, errorThrown);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'An error occurred while voiding the general: ' + textStatus
+
+                // Check for inconsistent entries
+                checkInconsistentEntries();
+
+                let isConsistent = isDataConsistent();
+                $('#saveDraftBtn, button[type="submit"]').prop('disabled', !isConsistent);
+
+                if (!isConsistent) {
+                    $('#saveDraftBtn, button[type="submit"]').addClass('btn-secondary').removeClass('btn-info');
+                } else {
+                    $('#saveDraftBtn').removeClass('btn-secondary').addClass('btn-secondary');
+                    $('button[type="submit"]').removeClass('btn-secondary').addClass('btn-info');
+                }
+            }
+
+            // Function to check inconsistent entries
+            function checkInconsistentEntries() {
+                let inconsistentAccounts = []; // Array to hold inconsistent accounts
+
+                $('#itemTableBody').find('tr').each(function() {
+                    let debit = parseFloat($(this).find('.debit').val()) || 0;
+                    let credit = parseFloat($(this).find('.credit').val()) || 0;
+
+                    // Check for inconsistencies
+                    if (debit !== 0 && credit !== 0) {
+                        let accountName = $(this).find('.account-dropdown option:selected').text().trim();
+                        if (!inconsistentAccounts.includes(accountName)) {
+                            inconsistentAccounts.push(accountName);
+                        }
+                    }
                 });
-            }
-        });
-    }
 
-</script>
-
-
-<script>
-$(document).ready(function () {
-    // Initialize Select2 for existing dropdowns
-    $('.account-dropdown, .cost-dropdown, .name-dropdown').select2({
-            theme: 'bootstrap-5',
-            width: '100%'
-        });
-
-        function isDataConsistent() {
-        let totalDebit = parseFloat($('#total_debit').val()) || 0;
-        let totalCredit = parseFloat($('#total_credit').val()) || 0;
-        let inconsistentAccounts = [];
-
-        $('#itemTableBody').find('tr').each(function () {
-            let debit = parseFloat($(this).find('.debit').val()) || 0;
-            let credit = parseFloat($(this).find('.credit').val()) || 0;
-            if (debit !== 0 && credit !== 0) {
-                let accountName = $(this).find('.account-dropdown option:selected').text().trim();
-                if (!inconsistentAccounts.includes(accountName)) {
-                    inconsistentAccounts.push(accountName);
+                // Check for inconsistent entries
+                if (inconsistentAccounts.length > 0) {
+                    let inconsistentText = 'Inconsistent entries found. The following accounts have both debit and credit entries: ';
+                    inconsistentText += inconsistentAccounts.join(', ');
+                    $('#inconsistentAlert').text(inconsistentText).show(); // Show the inconsistent entries alert
+                    $('#save').prop('disabled', true); // Disable save button
+                } else {
+                    $('#inconsistentAlert').hide(); // Hide the inconsistent entries alert
                 }
             }
-        });
 
-        return totalDebit === totalCredit && inconsistentAccounts.length === 0;
-    }
-
-    // Function to calculate total debit and total credit
-    function calculateTotals() {
-        let totalDebit = 0;
-        let totalCredit = 0;
-        let inconsistentAccounts = []; // Array to hold inconsistent accounts
-
-        $('#itemTableBody').find('tr').each(function () {
-            let debit = parseFloat($(this).find('.debit').val()) || 0;
-            let credit = parseFloat($(this).find('.credit').val()) || 0;
-
-            totalDebit += debit;
-            totalCredit += credit;
-
-            // Check for inconsistencies
-            if (debit !== 0 && credit !== 0) {
-                let accountName = $(this).find('.account-dropdown option:selected').text().trim();
-                if (!inconsistentAccounts.includes(accountName)) {
-                    inconsistentAccounts.push(accountName);
-                }
+            // Function to generate options for combined names
+            function generateNameOptions() {
+                const combinedNames = <?php echo json_encode($combinedNames); ?>;
+                let options = '';
+                combinedNames.forEach(name => {
+                    options += `<option value="${name.name}" data-type="${name.type}">${name.name}</option>`;
+                });
+                return options;
             }
-        });
 
-        $('#totalDebit').text(totalDebit.toFixed(2));
-        $('#totalCredit').text(totalCredit.toFixed(2));
+            // Populate dropdowns with accounts from PHP
+            const accounts = <?php echo json_encode($accounts); ?>;
+            let accountDropdownOptions = '';
+            $.each(accounts, function(index, account) {
+                accountDropdownOptions += `<option value="${account.id}">${account.account_description}</option>`;
+            });
 
-        // Set totalDebit and totalCredit in the hidden inputs
-        $('#total_debit').val(totalDebit.toFixed(2));
-        $('#total_credit').val(totalCredit.toFixed(2));
+            // Populate dropdowns with cost centers from PHP
+            const costCenterOptions = <?php echo json_encode($cost_centers); ?>;
+            let costCenterDropdownOptions = '';
+            costCenterOptions.forEach(function(cost) {
+                costCenterDropdownOptions += `<option value="${cost.id}">${cost.code} - ${cost.particular}</option>`;
+            });
 
-        // Check if debit and credit are balanced
-        if (totalDebit !== totalCredit) {
-            $('#balanceAlert').show(); // Show the balance alert
-            $('#save').prop('disabled', true); // Disable save button
-        } else {
-            $('#balanceAlert').hide(); // Hide the balance alert
-            $('#save').prop('disabled', false); // Enable save button
-        }
-
-        // Check for inconsistent entries
-        checkInconsistentEntries();
-
-        let isConsistent = isDataConsistent();
-            $('#saveDraftBtn, button[type="submit"]').prop('disabled', !isConsistent);
-
-            if (!isConsistent) {
-                $('#saveDraftBtn, button[type="submit"]').addClass('btn-secondary').removeClass('btn-info');
-            } else {
-                $('#saveDraftBtn').removeClass('btn-secondary').addClass('btn-secondary');
-                $('button[type="submit"]').removeClass('btn-secondary').addClass('btn-info');
-            }
-    }
-
-    // Function to check inconsistent entries
-    function checkInconsistentEntries() {
-        let inconsistentAccounts = []; // Array to hold inconsistent accounts
-
-        $('#itemTableBody').find('tr').each(function () {
-            let debit = parseFloat($(this).find('.debit').val()) || 0;
-            let credit = parseFloat($(this).find('.credit').val()) || 0;
-
-            // Check for inconsistencies
-            if (debit !== 0 && credit !== 0) {
-                let accountName = $(this).find('.account-dropdown option:selected').text().trim();
-                if (!inconsistentAccounts.includes(accountName)) {
-                    inconsistentAccounts.push(accountName);
-                }
-            }
-        });
-
-        // Check for inconsistent entries
-        if (inconsistentAccounts.length > 0) {
-            let inconsistentText = 'Inconsistent entries found. The following accounts have both debit and credit entries: ';
-            inconsistentText += inconsistentAccounts.join(', ');
-            $('#inconsistentAlert').text(inconsistentText).show(); // Show the inconsistent entries alert
-            $('#save').prop('disabled', true); // Disable save button
-        } else {
-            $('#inconsistentAlert').hide(); // Hide the inconsistent entries alert
-        }
-    }
-
-    // Function to generate options for combined names
-    function generateNameOptions() {
-        const combinedNames = <?php echo json_encode($combinedNames); ?>;
-        let options = '';
-        combinedNames.forEach(name => {
-            options += `<option value="${name.name}" data-type="${name.type}">${name.name}</option>`;
-        });
-        return options;
-    }
-
-    // Populate dropdowns with accounts from PHP
-    const accounts = <?php echo json_encode($accounts); ?>;
-    let accountDropdownOptions = '';
-    $.each(accounts, function (index, account) {
-        accountDropdownOptions += `<option value="${account.id}">${account.account_description}</option>`;
-    });
-
-    // Populate dropdowns with cost centers from PHP
-    const costCenterOptions = <?php echo json_encode($cost_centers); ?>;
-    let costCenterDropdownOptions = '';
-    costCenterOptions.forEach(function (cost) {
-        costCenterDropdownOptions += `<option value="${cost.id}">${cost.code} - ${cost.particular}</option>`;
-    });
-
-    // Add a new row to the table
-    function addRow() {
-        const newRow = `
+            // Add a new row to the table
+            function addRow() {
+                const newRow = `
         <tr>
-            <td><select class="form-control form-control-sm account-dropdown" name="account_id[]" required>${accountDropdownOptions}</select></td>
+            <td><select class="form-control form-control-sm account-dropdown select2" name="account_id[]" required>${accountDropdownOptions}</select></td>
             <td class="debit-cell"><input type="text" class="form-control form-control-sm debit" name="debit[]" placeholder="0.00"></td>
             <td class="credit-cell"><input type="text" class="form-control form-control-sm credit" name="credit[]" placeholder="0.00"></td>
-            <td><select class="form-control form-control-sm name-dropdown" name="name[]" required>${generateNameOptions()}</select></td>
+            <td><select class="form-control form-control-sm name-dropdown select2" name="name[]" required>${generateNameOptions()}</select></td>
             <td class="memo-cell"><input type="text" class="form-control form-control-sm memo" name="memo[]" placeholder="Enter memo"></td>
-            <td><select class="form-control form-control-sm cost-dropdown" name="cost_center_id[]">${costCenterDropdownOptions}</select></td>
+            <td><select class="form-control form-control-sm cost-dropdown select2" name="cost_center_id[]">${costCenterDropdownOptions}</select></td>
             <td><button type="button" class="btn btn-sm btn-outline-danger removeRow"><i class="fas fa-trash"></i></button></td>
         </tr>`;
-        $('#itemTableBody').append(newRow);
+                $('#itemTableBody').append(newRow);
 
-        // Initialize Select2 for the new dropdowns
-        $('#itemTableBody tr:last-child .account-dropdown, #itemTableBody tr:last-child .name-dropdown, #itemTableBody tr:last-child .cost-dropdown').select2({
-            theme: 'bootstrap-5',
-            width: '100%'
-        });
-
-        calculateTotals();
-    }
-
-    // Event listener for adding rows
-    $('#addItemBtn').click(addRow);
-
-    // Event listener for removing rows
-    $(document).on('click', '.removeRow', function () {
-        // Destroy Select2 before removing the row to prevent memory leaks
-        $(this).closest('tr').find('.account-dropdown, .name-dropdown, .cost-dropdown').select2('destroy');
-        $(this).closest('tr').remove();
-        calculateTotals(); // Update totals when a row is removed
-    });
-
-    // Event listener for input in debit and credit fields
-    $(document).on('input', '.debit, .credit', function () {
-        calculateTotals(); // Update totals when input changes in debit or credit fields
-    });
-
-    // Calculate totals initially
-    calculateTotals();
-
-    // Gather table items for form submission
-    function gatherTableItems() {
-        const items = [];
-        $('#itemTableBody tr').each(function (index) {
-            const item = {
-                account_id: $(this).find('.account-dropdown').val(),
-                name: $(this).find('.name-dropdown').val(),
-                debit: $(this).find('.debit').val(),
-                credit: $(this).find('.credit').val(),
-                memo: $(this).find('.memo').val(),
-                cost_center_id: $(this).find('.cost-dropdown').val() // Added cost_center_id
-            };
-
-            items.push(item);
-        });
-        return items;
-    }
-
-    $('#generalJournalForm').submit(function (event) {
-        event.preventDefault();
-
-        // Check if the table has any rows
-        if ($('#itemTableBody tr').length === 0) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'No Items',
-                text: 'You must add at least one item before submitting the journal.'
-            });
-            return false;
-        }
-
-        const items = gatherTableItems();
-        $('#item_data').val(JSON.stringify(items));
-        const journalStatus = <?= json_encode($journal->status) ?>;
-        const id = <?= json_encode($journal->id) ?>;
-
-        // Show loading overlay
-        document.getElementById('loadingOverlay').style.display = 'flex';
-
-        const formData = new FormData(this);
-        formData.append('action', 'update');
-        formData.append('id', id);
-        formData.append('item_data', JSON.stringify(items));
-        formData.append('status', 0); // Explicitly set status to 0
-
-        $.ajax({
-            url: 'api/general_journal_controller.php',
-            type: 'POST',
-            dataType: 'json',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function (response) {
-                document.getElementById('loadingOverlay').style.display = 'none';
-                console.log('Response:', response);  // Log the response
-                if (response.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success',
-                        text: 'General journal updated successfully!',
-                        showCancelButton: true,
-                        confirmButtonText: 'Print',
-                        cancelButtonText: 'Close'
-                    }).then((result) => {
-                        if (result.isConfirmed && response.id) {
-                            printGeneralJournal(response.id, 1); // Pass 1 for initial print
-                        } else {
-                            location.reload();
-                        }
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Error updating general journal: ' + (response.message || 'Unknown error')
-                    });
-                }
-            },
-            error: function (jqXHR, textStatus, errorThrown) {
-                document.getElementById('loadingOverlay').style.display = 'none';
-                console.error('AJAX error:', textStatus, errorThrown);
-                console.log('Response Text:', jqXHR.responseText);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'An error occurred while updating the general journal: ' + textStatus
+                // Initialize Select2 for the new dropdowns
+                $('#itemTableBody tr:last-child .account-dropdown, #itemTableBody tr:last-child .name-dropdown, #itemTableBody tr:last-child .cost-dropdown').select2({
+                    theme: 'bootstrap-5',
+                    width: '100%'
                 });
-            }
-        });
-    });
-});
 
-</script>
-</div>
+                calculateTotals();
+            }
+
+            // Event listener for adding rows
+            $('#addItemBtn').click(addRow);
+
+            // Event listener for removing rows
+            $(document).on('click', '.removeRow', function() {
+                // Destroy Select2 before removing the row to prevent memory leaks
+                $(this).closest('tr').find('.account-dropdown, .name-dropdown, .cost-dropdown').select2('destroy');
+                $(this).closest('tr').remove();
+                calculateTotals(); // Update totals when a row is removed
+            });
+
+            // Event listener for input in debit and credit fields
+            $(document).on('input', '.debit, .credit', function() {
+                // Remove non-numeric characters except for decimal point
+                $(this).val($(this).val().replace(/[^0-9.]/g, ''));
+
+                // Ensure only one decimal point
+                if ($(this).val().split('.').length > 2) {
+                    $(this).val($(this).val().replace(/\.+$/, ''));
+                }
+
+                calculateTotals(); // Update totals when input changes in debit or credit fields
+            });
+
+            // Calculate totals initially
+            calculateTotals();
+
+            // Gather table items for form submission
+            function gatherTableItems() {
+                const items = [];
+                $('#itemTableBody tr').each(function(index) {
+                    const item = {
+                        id: $(this).data('id'), // Capture existing row IDs
+                        account_id: $(this).find('.account-dropdown').val(),
+                        name: $(this).find('.name-dropdown').val(),
+                        debit: parseFloat($(this).find('.debit').val().replace(/,/g, '')) || 0, // Convert to number, remove commas
+                        credit: parseFloat($(this).find('.credit').val().replace(/,/g, '')) || 0, // Convert to number, remove commas
+                        memo: $(this).find('.memo').val(),
+                        cost_center_id: $(this).find('.cost-dropdown').val()
+                    };
+                    items.push(item);
+                });
+                return items;
+            }
+
+
+
+
+
+            $('#generalJournalForm').submit(function(event) {
+                event.preventDefault();
+
+                if ($('#itemTableBody tr').length === 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'No Items',
+                        text: 'You must add at least one item before submitting the journal.'
+                    });
+                    return false;
+                }
+
+                const items = gatherTableItems();
+                const journalId = <?= json_encode($journal->id) ?>;
+
+                document.getElementById('loadingOverlay').style.display = 'flex';
+
+                $.ajax({
+                    url: 'api/general_journal_controller.php',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        action: 'save_final',
+                        id: journalId,
+                        journal_date: $('#journal_date').val(),
+                        entry_no: $('#entry_no').val(),
+                        memo: $('#memo').val(),
+                        location: $('#location').val(),
+                        total_debit: $('#total_debit').val(),
+                        total_credit: $('#total_credit').val(),
+                        item_data: JSON.stringify(items)
+                    },
+                    success: function(response) {
+                        document.getElementById('loadingOverlay').style.display = 'none';
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: 'General journal updated successfully!',
+                                showCancelButton: true,
+                                confirmButtonText: 'Print',
+                                cancelButtonText: 'Close'
+                            }).then((result) => {
+                                if (result.isConfirmed && response.id) {
+                                    printGeneralJournal(response.id, 1);
+                                } else {
+                                    location.reload();
+                                }
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Error updating general journal: ' + (response.message || 'Unknown error')
+                            });
+                        }
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        document.getElementById('loadingOverlay').style.display = 'none';
+                        console.error('AJAX error:', textStatus, errorThrown);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'An error occurred while updating the general journal: ' + textStatus
+                        });
+                    }
+                });
+            });
+
+            $('#saveDraftBtn').click(function(event) {
+                event.preventDefault();
+
+                if ($('#itemTableBody tr').length === 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'No Items',
+                        text: 'You must add at least one item before submitting the journal.'
+                    });
+                    return false;
+                }
+
+                const items = gatherTableItems();
+                const journalId = <?= json_encode($journal->id) ?>;
+
+                document.getElementById('loadingOverlay').style.display = 'flex';
+
+                $.ajax({
+                    url: 'api/general_journal_controller.php',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        action: 'update_draft',
+                        id: journalId,
+                        journal_date: $('#journal_date').val(),
+                        entry_no: $('#entry_no').val(),
+                        memo: $('#memo').val(),
+                        location: $('#location').val(),
+                        total_debit: $('#total_debit').val(),
+                        total_credit: $('#total_credit').val(),
+                        item_data: JSON.stringify(items)
+                    },
+                    success: function(response) {
+                        document.getElementById('loadingOverlay').style.display = 'none';
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: 'Draft updated successfully!',
+                                showCancelButton: true,
+                                cancelButtonText: 'Close'
+                            }).then((result) => {
+                                if (result.isConfirmed && response.journalId) {
+                                    saveAsPDF(response.journalId); // Assuming you have a saveAsPDF function
+                                } else {
+                                    location.reload();
+                                }
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Error updating draft: ' + (response.message || 'Unknown error')
+                            });
+                        }
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        document.getElementById('loadingOverlay').style.display = 'none';
+                        console.error('AJAX error:', textStatus, errorThrown);
+                        console.log('Response Text:', jqXHR.responseText);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'An error occurred while updating the general journal: ' + textStatus
+                        });
+                    }
+                });
+            });
+
+        });
+    </script>

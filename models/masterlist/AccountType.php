@@ -41,14 +41,16 @@ class AccountType
     public static function all()
     {
         global $connection;
-
-        if (static::$cache)
+        if (static::$cache) {
             return static::$cache;
+        }
 
-        $stmt = $connection->prepare('SELECT * FROM `account_types`');
+        $stmt = $connection->prepare('
+        SELECT * FROM `account_types`
+        ORDER BY CASE WHEN type_order = 0 THEN 1 ELSE 0 END, type_order ASC
+    ');
         $stmt->execute();
         $stmt->setFetchMode(PDO::FETCH_ASSOC);
-
         $result = $stmt->fetchAll();
 
         static::$cache = array_map(function ($item) {

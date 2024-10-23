@@ -178,104 +178,30 @@ if (post('action') === 'update_print_status') {
     exit;
 }
 
-
-
-// Check if action is 'update'
-if (post('action') === 'update') {
-    try {
-        // Retrieve sales_return ID for update
-        $id = post('id');
-
-        // Retrieve form data for update
-        $sales_return_number = post('sales_return_number');
-        $sales_return_date = post('sales_return_date');
-        $sales_return_account_id = post('sales_return_account_id');
-        $sales_return_due_date = post('sales_return_due_date');
-        $customer_id = post('customer_name');
-        $payment_method = post('payment_method');
-        $location = post('location');
-        $terms = post('terms');
-        $memo = post('memo');
-        $gross_amount = post('gross_amount');
-        $total_discount_amount = post('discount_amount');
-        $net_amount_due = post('net_amount_due');
-        $vat_amount = post('sales_tax_amount');
-        $vatable_amount = post('vatable_amount');
-        $zero_rated_amount = post('zero_rated_amount');
-        $vat_exempt_amount = post('vat_exempt_amount');
-        $tax_withheld_percentage = post('tax_withheld_percentage');
-        $tax_withheld_amount = post('tax_withheld_amount');
-        $total_amount_due = post('total_amount_due');
-
-        // Decode JSON data for items
-        $items = json_decode($_POST['item_data'], true);
-        // Update sales_return using sales_return class method
-        SalesReturn::update(
-            $id,
-            $sales_return_number,
-            $sales_return_date,
-            $sales_return_account_id,
-            $sales_return_due_date,
-            $customer_id,
-            $payment_method,
-            $location,
-            $terms,
-            $memo,
-            $gross_amount,
-            $total_discount_amount,
-            $net_amount_due,
-            $vat_amount,
-            $vatable_amount,
-            $zero_rated_amount,
-            $vat_exempt_amount,
-            $tax_withheld_percentage,
-            $tax_withheld_amount,
-            $total_amount_due
-        );
-
-        // Update sales_return details using sales_return class method
-        SalesReturn::updateDetails($id, $items);
-
-        flashMessage('update_sales_return', 'sales_return updated successfully.', FLASH_SUCCESS);
-    } catch (Exception $e) {
-        // Handle any exceptions that occur during update
-        flashMessage('update_sales_return', $e->getMessage(), FLASH_ERROR);
-    }
-
-    // Redirect after processing 'update' action
-    redirect('../sales_return');
-}
-
 // Add this to the existing switch statement or if-else block
 if (post('action') === 'void_check') {
     try {
         $id = post('id');
-
         if (!$id) {
-            throw new Exception("sales_return ID is required.");
+            throw new Exception("Credit_memo ID is required.");
         }
-
-        // Update the status to 3 (void) in the database
-        $stmt = $connection->prepare("UPDATE sales_return SET sales_return_status = 3 WHERE id = :id");
-        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-        $result = $stmt->execute();
-
+        
+        $result = SalesReturn::void($id);
+        
         if ($result) {
             $response = ['success' => true];
         } else {
-            throw new Exception("Failed to void sales_return.");
+            throw new Exception("Failed to void invoice.");
         }
     } catch (Exception $e) {
         $response = ['success' => false, 'message' => 'Error: ' . $e->getMessage()];
-        error_log('Error voiding sales_return: ' . $e->getMessage());
+        error_log('Error voiding invoice: ' . $e->getMessage());
     }
-
     // Send JSON response
     header('Content-Type: application/json');
     echo json_encode($response);
     exit;
 }
-
 
 if (post('action') === 'save_draft') {
     try {
@@ -356,71 +282,119 @@ if (post('action') === 'save_draft') {
     exit;
 }
 
-if (post('action') === 'update_draft_sales_return') {
-    try {
-        $id = post('id');
-        $sales_return_number = post('sales_return_number');
-        $items = json_decode(post('item_data'), true);
-        $sales_return_account_id = post('sales_return_account_id');
-        $customer_id = post('customer_id');
+if (post('action') === 'update_draft') {
+    $id = post('id');
+    $sales_return_number = post('sales_return_number');
+    $sales_return_date = post('sales_return_date');
+    $sales_return_due_date = post('sales_return_due_date');
+    $sales_return_account_id = post('sales_return_account_id');
 
-        if (!$id || !$sales_return_number) {
-            throw new Exception("sales_return ID and number are required.");
-        }
-
-        // Check if the sales_return account is an Accounts Receivable or Undeposited Funds type
-        $stmt = $connection->prepare("
-            SELECT at.name
-            FROM chart_of_account coa
-            JOIN account_types at ON coa.account_type_id = at.id
-            WHERE coa.id = ?
-        ");
-        $stmt->execute([$sales_return_account_id]);
-        $account_type_name = $stmt->fetchColumn();
-
-        // Determine the sales_return status and balance due based on the account type
-        $sales_return_status = 0;
-        if ($account_type_name == 'Other Current Assets') {
-            $sales_return_status = 1;
-        }
-
-        // Update the sales_return in the database
-        $stmt = $connection->prepare("
-            UPDATE sales_return 
-            SET sales_return_status = :sales_return_status, 
-                sales_return_number = :sales_return_number,
-                balance_due = :balance_due
-            WHERE id = :id
-        ");
-        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-        $stmt->bindParam(':sales_return_number', $sales_return_number, PDO::PARAM_STR);
-        $stmt->bindParam(':sales_return_status', $sales_return_status, PDO::PARAM_INT);
-        $stmt->bindParam(':balance_due', $balance_due, PDO::PARAM_STR);
-        $result = $stmt->execute();
-
-        if ($result) {
-            // Update sales_return details
-            SalesReturn::updateDetails($id, $items);
-
-            // If it's an Accounts Receivable, update the customer's balance
-            // if ($account_type_name == 'Accounts Receivable') {
-            //     $stmt = $connection->prepare("UPDATE customers SET credit_balance = credit_balance + ?, total_sales_returnd = total_sales_returnd + ? WHERE id = ?");
-            //     $stmt->execute([$total_amount_due, $total_amount_due, $customer_id]);
-            // }
-
-            $response = [
-                'success' => true,
-                'sales_returnId' => $id
-            ];
-            echo json_encode($response);
-            exit;
-        } else {
-            throw new Exception("Failed to update sales_return.");
-        }
-    } catch (Exception $ex) {
-        $response = ['success' => false, 'message' => 'Error: ' . $ex->getMessage()];
-        error_log('Error updating draft sales_return: ' . $ex->getMessage());
+    $sales_return_account_id = post('sales_return_account_id');
+    if (empty($sales_return_account_id)) {
+        throw new Exception("sales_return account ID is missing or empty.");
     }
+    $sales_return_due_date = post('sales_return_due_date');
+    $customer_po = post('customer_po');
+    $so_no = post('so_no');
+    $rep = post('rep');
+    $customer_id = post('customer_id');
+    $customer_name = post('customer_name');
+    $payment_method = post('payment_method');
+    $location = post('location');
+    $terms = post('terms');
+    $memo = post('memo');
+
+    // Summary details
+    $gross_amount = post('gross_amount');
+    $discount_amount = post('discount_amount');
+    $discount_account_ids = post('discount_account_ids');
+    $output_vat_ids = post('output_vat_ids');
+    $net_amount_due = post('net_amount_due');
+    $vat_amount = post('vat_amount');
+    $vatable_amount = post('vatable_amount');
+    $zero_rated_amount = post('zero_rated_amount');
+    $vat_exempt_amount = post('vat_exempt_amount');
+
+    // Tax withholding information
+
+    $tax_withheld_percentage = post('tax_withheld_percentage');
+    $tax_withheld_amount = post('tax_withheld_amount');
+    $tax_withheld_account_id = post('tax_withheld_account_id');
+
+    // Total amount and user information
+    $total_amount_due = post('total_amount_due');
+    $created_by = $_SESSION['user_name'];
+
+    // Decode JSON data for sales return items
+    $items = json_decode($_POST['item_data'], true);
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        throw new Exception("Error decoding item data: " . json_last_error_msg());
+    }
+
+
+    $response = SalesReturn::updateDraft(
+        $id,  $sales_return_number,  $sales_return_account_id,   $customer_name,  $customer_id,  $tax_withheld_account_id,  $tax_withheld_amount,  $total_amount_due,  $gross_amount,  $sales_return_date, $sales_return_due_date, $customer_po, $so_no, $rep, $payment_method, $location, $terms, $memo, $output_vat_ids, $vat_amount, $zero_rated_amount, $vat_exempt_amount, $vatable_amount, $tax_withheld_percentage, $discount_amount, $created_by, $items
+    );
+
+    // Send JSON response
+    header('Content-Type: application/json');
+    echo json_encode($response);
+    exit;
+}
+
+if (post('action') === 'save_final') {
+    $id = post('id');
+    $sales_return_number = post('sales_return_number');
+    $sales_return_date = post('sales_return_date');
+    $sales_return_due_date = post('sales_return_due_date');
+    $sales_return_account_id = post('sales_return_account_id');
+
+    $sales_return_account_id = post('sales_return_account_id');
+    if (empty($sales_return_account_id)) {
+        throw new Exception("sales_return account ID is missing or empty.");
+    }
+    $sales_return_due_date = post('sales_return_due_date');
+    $customer_po = post('customer_po');
+    $so_no = post('so_no');
+    $rep = post('rep');
+    $customer_id = post('customer_id');
+    $customer_name = post('customer_name');
+    $payment_method = post('payment_method');
+    $location = post('location');
+    $terms = post('terms');
+    $memo = post('memo');
+
+    // Summary details
+    $gross_amount = post('gross_amount');
+    $discount_amount = post('discount_amount');
+    $discount_account_ids = post('discount_account_ids');
+    $output_vat_ids = post('output_vat_ids');
+    $net_amount_due = post('net_amount_due');
+    $vat_amount = post('vat_amount');
+    $vatable_amount = post('vatable_amount');
+    $zero_rated_amount = post('zero_rated_amount');
+    $vat_exempt_amount = post('vat_exempt_amount');
+
+    // Tax withholding information
+
+    $tax_withheld_percentage = post('tax_withheld_percentage');
+    $tax_withheld_amount = post('tax_withheld_amount');
+    $tax_withheld_account_id = post('tax_withheld_account_id');
+
+    // Total amount and user information
+    $total_amount_due = post('total_amount_due');
+    $created_by = $_SESSION['user_name'];
+
+    // Decode JSON data for sales return items
+    $items = json_decode($_POST['item_data'], true);
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        throw new Exception("Error decoding item data: " . json_last_error_msg());
+    }
+
+
+    $response = SalesReturn::saveFinal(
+        $id,  $sales_return_number,  $sales_return_account_id,   $customer_name,  $customer_id,  $tax_withheld_account_id,  $tax_withheld_amount,  $total_amount_due,  $gross_amount,  $sales_return_date, $sales_return_due_date, $customer_po, $so_no, $rep, $payment_method, $location, $terms, $memo, $output_vat_ids, $vat_amount, $zero_rated_amount, $vat_exempt_amount, $vatable_amount, $tax_withheld_percentage, $discount_amount, $created_by, $items
+    );
 
     // Send JSON response
     header('Content-Type: application/json');

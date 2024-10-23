@@ -90,10 +90,6 @@ try {
         $pdf->Cell(0, 10, 'GENERAL JOURNAL', 0, 1, 'C');
         $pdf->Ln(15);
 
-        // $pdf->SetFont('Arial', '', 10);
-        // $pdf->Cell(175.8, 10, 'CV NO: ' . $journal->cv_no, 0, 1, 'R');
-        // $pdf->Ln(5);
-
         // Add journal data to the PDF
         // Set font and size
         $pdf->SetFont('Arial', '', 9);
@@ -141,14 +137,13 @@ try {
         $pdf->Ln(); // Move to the next line
         $pdf->Line($pdf->GetX(), $pdf->GetY(), $pdf->GetX() + 190, $pdf->GetY()); // Draw a line
 
-        $pdf->Cell(30, 10, 'Code', 0, 0, 'L');
-        $pdf->Cell(50, 10, 'Account', 0, 0, 'L');
-        $pdf->Cell(50, 10, 'Description', 0, 0, 'L');
+        $pdf->Cell(30, 10, 'Account Code', 0, 0, 'C');
+
+        $pdf->Cell(50, 10, 'Account', 0, 0, 'C');
         $pdf->Cell(30, 10, 'Debit', 0, 0, 'R');
         $pdf->Cell(30, 10, 'Credit', 0, 0, 'R');
         $pdf->Ln(); // Move to the next line
         $pdf->Line($pdf->GetX(), $pdf->GetY(), $pdf->GetX() + 190, $pdf->GetY()); // Draw a line
-
 
         // Initialize total debit and credit
         $totalDebit = 0;
@@ -169,20 +164,28 @@ try {
             // Determine if the account_description needs to be indented
             $indent = ($entry['credit'] != 0) ? '       ' : ''; // Using spaces for indentation if credit is not zero
 
+            // Split account code into GL and SL
+            $glCode = substr($entry['account_code'], 0, 5);
 
-            // Center align the table   
-            $pdf->Cell(30, 10, $entry['account_code'], 0, 0, 'L');
-            $pdf->Cell(50, 10, $indent . $entry['account_description'], 0, 0, 'L'); // Indent account_description if account_type is Bank
+
+            $startY = $pdf->GetY();
+            $pdf->Cell(30, 5, $glCode, 0, 0, 'C'); // Adjust width directly in Cell
+
+            // Use MultiCell for Account Title to allow text wrapping
+            $pdf->MultiCell(60, 5, $entry['account_description'], 0, 'L');
+            $endY = $pdf->GetY();
+
             $pdf->Cell(50, 10, '', 0, 0, 'C'); // This cell has no border
-            $pdf->Cell(30, 10, ($entry['debit'] != 0 ? number_format($entry['debit'], 2) : ''), 0, 0, 'R');
-            $pdf->Cell(30, 10, ($entry['credit'] != 0 ? number_format($entry['credit'], 2) : ''), 0, 0, 'R');
+            $pdf->Cell(90, 2, ($entry['debit'] != 0 ? number_format($entry['debit'], 2) : ''), 0, 0, 'R');
+            $pdf->Cell(30, 2, ($entry['credit'] != 0 ? number_format($entry['credit'], 2) : ''), 0, 0, 'R');
 
             $pdf->Ln(5);
         }
+
         // Add a row for total debit and credit
 
         $pdf->SetFont('Arial', 'B', 10); // 'B' indicates bold
-        $pdf->Cell(130, 10, 'TOTAL:', 0, 0, 'R');
+        $pdf->Cell(110, 10, 'TOTAL:', 0, 0, 'R');
         $pdf->Cell(30, 10, 'P' . number_format($totalDebit, 2), 0, 0, 'R');
         $pdf->Cell(30, 10, 'P' . number_format($totalCredit, 2), 0, 0, 'R');
         $pdf->Ln(15); // Move to the next line after the last row
@@ -190,10 +193,17 @@ try {
 
         $pdf->SetFont('Arial', '', 8);
         $pdf->Line($pdf->GetX(), $pdf->GetY(), $pdf->GetX() + 190, $pdf->GetY()); // Draw a line
-        $pdf->Cell(50, 10, 'PREPARED/POSTED BY:', 0, 0, 'L');
-        $pdf->Cell(50, 10, 'CHECKED/CERTIFIED BY:', 0, 0, 'L');
-        $pdf->Cell(50, 10, 'VERIFIED FOR PAYMENT BY:', 0, 0, 'L');
-        $pdf->Cell(40, 10, 'PAYMENT APPROVED BY:', 0, 0, 'L');
+        // First row with labels
+        $pdf->Cell(50, 10, 'PREPARED BY:', 0, 0, 'L');
+        $pdf->Cell(50, 10, 'VERIFIED BY:', 0, 0, 'L');
+        $pdf->Cell(50, 10, 'CERTIFIED BY:', 0, 0, 'L');
+        $pdf->Cell(40, 10, 'APPROVED BY:', 0, 1, 'L');
+
+        // Second row with names/values
+        $pdf->Cell(55, 5, 'LFS', 0, 0, 'L');
+        $pdf->Cell(50, 5, 'JCM/AVP', 0, 0, 'L');
+        $pdf->Cell(50, 5, 'ASP', 0, 0, 'L');
+        $pdf->Cell(40, 5, 'EQC', 0, 0, 'L');
         $pdf->Ln(15); // Move to the next line
         $pdf->Line($pdf->GetX(), $pdf->GetY(), $pdf->GetX() + 190, $pdf->GetY()); // Draw a line
 

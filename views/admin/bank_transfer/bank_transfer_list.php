@@ -1,10 +1,12 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
-
-//require_once 'api/category_controller.php';
-
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('balance_sheet');
 $uoms = Uom::all();
 
 $uom = null;
@@ -33,8 +35,8 @@ $page = 'uom_list';
                     <!-- Default box -->
                     <div class="card">
                         <div class="card-body">
-                            
-                          
+
+
                         </div>
                         <!-- /.card-body -->
                     </div>

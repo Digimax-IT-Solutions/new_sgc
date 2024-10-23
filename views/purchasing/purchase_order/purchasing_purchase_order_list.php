@@ -1,8 +1,12 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::purchasingOnly();
-
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('purchasing_purchase_order');
 $purchase_orders = PurchaseOrder::all();
 
 // Calculate summary statistics
@@ -15,9 +19,9 @@ $page = 'purchase_order';
 ?>
 
 <?php require 'views/templates/header.php' ?>
-<?php require 'views/templates/purchasing_sidebar.php' ?>
+<?php require 'views/templates/sidebar.php' ?>
 <div class="main">
-    <?php require 'views/templates/purchasing_navbar.php' ?>
+    <?php require 'views/templates/navbar.php' ?>
     <main class="content">
         <div class="container-fluid p-0">
             <div class="mb-3">

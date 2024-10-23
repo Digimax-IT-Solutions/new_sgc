@@ -81,11 +81,6 @@ function shouldSidebarBeCollapsed()
                             <i class="align-middle" data-feather="file-text"></i> Purchase Request
                         </a>
                     </li>
-                    <li class="sidebar-item <?php echo getCurrentPage() == 'purchase_order' ? 'active' : ''; ?>">
-                        <a class='sidebar-link' href='purchase_order'>
-                            <i class="align-middle" data-feather="shopping-cart"></i> Purchase Order
-                        </a>
-                    </li>
                 </ul>
             </li>
 

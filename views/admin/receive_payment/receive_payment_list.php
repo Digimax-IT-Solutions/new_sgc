@@ -1,7 +1,13 @@
 <?php
 // Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('receive_payment');
+
 
 $accounts = ChartOfAccount::all();
 $customers = Customer::all();
@@ -17,6 +23,25 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
 
 <?php require 'views/templates/header.php' ?>
 <?php require 'views/templates/sidebar.php' ?>
+<style>
+    .btn-lg {
+
+        border-radius: 8px;
+    }
+
+    .btn-outline-primary,
+    .btn-outline-danger,
+    .btn-outline-secondary {
+        transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .btn-outline-success:hover,
+    .btn-outline-danger:hover,
+    .btn-outline-secondary:hover {
+        color: #fff !important;
+        box-shadow: 0px 4px 12px rgba(0, 123, 255, 0.3);
+    }
+</style>
 <div class="main">
     <?php require 'views/templates/navbar.php' ?>
     <!-- Content Wrapper. Contains page content -->
@@ -30,90 +55,95 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                     <?php displayFlashMessage('update_payment_method') ?>
                     <!-- Default box -->
                     <div class="card">
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-sm-12 d-flex justify-content-between align-items-center mb-4">
-                                    <h1 class="h3 mb-3"><strong>Payment</strong></h1>
-                                    <!-- <div class="d-flex justify-content-end">
-                                        <a href="customer_payment" class="btn btn-secondary">
-                                            <i class="align-middle" data-feather="file-text"></i> Receive Payment
-                                        </a>
-                                    </div> -->
-                                    <div class="dropdown d-inline-block">
-                                        <a href="draft_payment" class="btn btn-sm btn-danger">
-                                            <i class="fab fa-firstdraft"></i> Draft
-                                        </a>
-                                        <a href="void_payment" class="btn btn-sm btn-secondary">
-                                            <i class="fas fa-ban"></i> Void
-                                        </a>
-                                        <button class="btn btn-sm btn-primary dropdown-toggle" type="button"
-                                            id="apvDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                             Receive Payment
-                                        </button>
-                                        <ul class="dropdown-menu" aria-labelledby="apvDropdown">
-                                            <li><a class="dropdown-item" href="official_receipt">Official Receipt</a></li>
-                                            <li><a class="dropdown-item" href="customer_payment">Collection Receipt</a>
-                                            </li>   
-                                        </ul>
-                                    </div>
+
+
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <a href="or_list" class="btn btn-lg btn-outline-secondary me-2 mb-2">
+                                        <i class="fab fa-list"></i> Cash Invoice
+                                    </a>
+                                    <a href="draft_payment" class="btn btn-lg btn-outline-secondary me-2 mb-2">
+                                        <i class="fab fa-firstdraft fa-lg me-2"></i> Drafts
+                                    </a>
+                                    <a href="void_payment" class="btn btn-lg btn-outline-danger me-2 mb-2">
+                                        <i class="fas fa-file-excel fa-lg me-2"></i> Voids
+                                    </a>
+
+                                    <a href="#" class="btn btn-lg btn-outline-success me-2 mb-2" id="apvDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="fas fa-plus fa-lg me-2"></i> Create Receive Payment
+                                    </a>
+                                    <ul class="dropdown-menu" aria-labelledby="apvDropdown">
+                                        <li><a class="dropdown-item" href="official_receipt">Cash Invoice</a></li>
+                                        <li><a class="dropdown-item" href="customer_payment">Collection Receipt</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="card-body">
+                                <div class="table-responsive" style="overflow-x: auto;">
+                                    <table class="table table-bordered" id="dataTable"
+                                        style="min-width: 1000px; width: 100%;" cellspacing="0">
+                                        <thead>
+                                            <tr>
+                                                <th style="white-space: nowrap;">Payment ID</th>
+                                                <th style="white-space: nowrap;">Customer Name</th>
+                                                <th style="white-space: nowrap;">Payment Date</th>
+                                                <th style="white-space: nowrap;">Payment Method</th>
+                                                <th style="white-space: nowrap;">Paid Amount</th>
+                                                <th style="white-space: nowrap;">Ref. No./ Check No.</th>
+                                                <th style="white-space: nowrap;">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($payments as $payment): ?>
+                                                <?php if ($payment->status != 3 && $payment->status != 4): ?>
+                                                    <tr>
+                                                        <td style="white-space: nowrap;"><?= htmlspecialchars($payment->cr_no) ?>
+                                                        </td>
+                                                        <td style="white-space: nowrap;">
+                                                            <?= htmlspecialchars($payment->customer_name) ?>
+                                                        </td>
+                                                        <td style="white-space: nowrap;">
+                                                            <?= htmlspecialchars($payment->payment_date) ?>
+                                                        </td>
+                                                        <td style="white-space: nowrap;">
+                                                            <?= htmlspecialchars($payment->payment_method_name) ?>
+                                                        </td>
+
+
+
+                                                        <td style="white-space: nowrap;">
+                                                            <b>₱<?= number_format($payment->summary_applied_amount, 2, '.', ','); ?></b>
+                                                        </td>
+
+                                                        <td style="white-space: nowrap;"><?= htmlspecialchars($payment->ref_no) ?>
+                                                        </td>
+                                                        <td style="white-space: nowrap;">
+                                                            <a href="view_payment?action=view&id=<?= htmlspecialchars($payment->id) ?>"
+                                                                class="btn btn-sm btn-info">
+                                                                <i class="fas fa-eye"></i> View
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                <?php endif; ?>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
-                        <div class="card-body">
-                            <div class="table-responsive" style="overflow-x: auto;">
-                                <table class="table table-bordered" id="dataTable"
-                                    style="min-width: 1000px; width: 100%;" cellspacing="0">
-                                    <thead>
-                                        <tr>
-                                            <th style="white-space: nowrap;">Payment ID</th>
-                                            <th style="white-space: nowrap;">Customer Name</th>
-                                            <th style="white-space: nowrap;">Payment Date</th>
-                                            <th style="white-space: nowrap;">Payment Method</th>
-                                            <th style="white-space: nowrap;">Paid Amount</th>
-                                            <th style="white-space: nowrap;">Ref. No./ Check No.</th>
-                                            <th style="white-space: nowrap;">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ($payments as $payment): ?>
-                                            <?php if ($payment->status != 3 && $payment->status != 4): ?>
-                                            <tr>
-                                                <td style="white-space: nowrap;"><?= htmlspecialchars($payment->cr_no) ?></td>
-                                                <td style="white-space: nowrap;">
-                                                    <?= htmlspecialchars($payment->customer_name) ?></td>
-                                                <td style="white-space: nowrap;">
-                                                    <?= htmlspecialchars($payment->payment_date) ?></td>
-                                                <td style="white-space: nowrap;">
-                                                    <?= htmlspecialchars($payment->payment_method_name) ?></td>
-                                                <td style="white-space: nowrap;">
-                                                    ₱<?= htmlspecialchars($payment->summary_applied_amount) ?></td>
-                                                <td style="white-space: nowrap;"><?= htmlspecialchars($payment->ref_no) ?>
-                                                </td>
-                                                <td style="white-space: nowrap;">
-                                                    <a href="view_payment?action=view&id=<?= htmlspecialchars($payment->id) ?>"
-                                                        class="btn btn-sm btn-info">
-                                                        <i class="fas fa-eye"></i> View
-                                                    </a>
-                                                </td>
-                                            </tr>
-                                            <?php endif; ?>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
                     </div>
+                    <!-- /.card -->
                 </div>
-                <!-- /.card -->
             </div>
-        </div>
     </main>
 </div>
 
 <?php require 'views/templates/footer.php' ?>
 
 <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
         var table = $('#dataTable').DataTable({
             responsive: true,
             ordering: true,
@@ -132,12 +162,26 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                 [10, 25, 50, 100, "All"]
             ],
             pageLength: 25,
-            columnDefs: [
-                { className: "text-start", targets: '_all' },
-                { width: "120px", targets: 0 },
-                { width: "150px", targets: [1, 2, 3, 4, 5] },
-                { width: "200px", targets: 6 },
-                { orderable: false, targets: 6 }
+            columnDefs: [{
+                    className: "text-start",
+                    targets: '_all'
+                },
+                {
+                    width: "120px",
+                    targets: 0
+                },
+                {
+                    width: "150px",
+                    targets: [1, 2, 3, 4, 5]
+                },
+                {
+                    width: "200px",
+                    targets: 6
+                },
+                {
+                    orderable: false,
+                    targets: 6
+                }
             ],
             dom: '<"top"Bf>rt<"bottom"lip><"clear">',
             buttons: [
@@ -151,7 +195,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                             search: 'none'
                         }
                     },
-                    customize: function (csv) {
+                    customize: function(csv) {
                         return getHeader() + csv;
                     }
                 },
@@ -177,7 +221,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                 },
                 {
                     text: 'Export TXT',
-                    action: function (e, dt, button, config) {
+                    action: function(e, dt, button, config) {
                         var header = getHeader();
                         var tableData = dt.rows().data().toArray();
                         var content = header;
@@ -194,7 +238,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                         content += separator;
 
                         // Add table rows
-                        tableData.forEach(function (row) {
+                        tableData.forEach(function(row) {
                             content += '|' + [
                                 row[0],
                                 row[1].substring(0, cellWidth - 1),
@@ -219,20 +263,20 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
 
         function getHeader() {
             var recordCount = table.rows().count();
-            var totalAmount = table.column(4).data().reduce(function (sum, value) {
+            var totalAmount = table.column(4).data().reduce(function(sum, value) {
                 return sum + parseFloat(value.replace(/[^\d.-]/g, ''));
             }, 0);
 
-            var dates = table.column(2).data().map(function (d) {
+            var dates = table.column(2).data().map(function(d) {
                 return new Date(d);
-            }).filter(function (d) {
+            }).filter(function(d) {
                 return !isNaN(d.getTime());
             });
 
             var minDate = new Date(Math.min.apply(null, dates));
             var maxDate = new Date(Math.max.apply(null, dates));
 
-            var formatDate = function (date) {
+            var formatDate = function(date) {
                 return date.toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: '2-digit',

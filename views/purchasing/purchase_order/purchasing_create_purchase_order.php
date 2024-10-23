@@ -1,7 +1,13 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::purchasingOnly();
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('purchasing_purchase_order');
+
 $accounts = ChartOfAccount::all();
 $vendors = Vendor::all();
 $products = Product::all();
@@ -15,7 +21,7 @@ $newPoNo = PurchaseOrder::getLastPoNo();
 ?>
 
 <?php require 'views/templates/header.php' ?>
-<?php require 'views/templates/purchasing_sidebar.php' ?>
+<?php require 'views/templates/sidebar.php' ?>
 
 <style>
     .form-label {
@@ -96,7 +102,7 @@ $newPoNo = PurchaseOrder::getLastPoNo();
     }
 </style>
 <div class="main">
-    <?php require 'views/templates/purchasing_navbar.php' ?>
+    <?php require 'views/templates/navbar.php' ?>
 
     <!-- Content Wrapper. Contains page content -->
     <main class="content">

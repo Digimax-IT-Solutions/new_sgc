@@ -2,9 +2,6 @@
 
 require_once __DIR__ . '/../../_init.php';
 
-// Guard
-Guard::adminOnly();
-
 require_once __DIR__ . '/../../vendor/autoload.php';
 
 use PhpOffice\PhpSpreadsheet\IOFactory;

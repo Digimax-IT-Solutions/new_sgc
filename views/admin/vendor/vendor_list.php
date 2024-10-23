@@ -1,7 +1,12 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('vendor_list');
 
 //require_once 'api/category_controller.php';
 
@@ -49,7 +54,7 @@ if (get('action') === 'update') {
                                 </div>
                             </div>
                             <br /><br /><br />
-                            <table id="vendorTable" class="table">
+                            <table id="vendorTable" class="table display compact">
                                 <thead>
                                     <tr>
                                         <th>Name</th>
@@ -61,7 +66,8 @@ if (get('action') === 'update') {
                                         <tr>
                                             <td><?= $vendor->vendor_name ?></td>
                                             <td>
-                                                <a class="text-primary" href="view_vendor?action=update&id=<?= $vendor->id ?>">
+                                                <a class="text-primary"
+                                                    href="view_vendor?action=update&id=<?= $vendor->id ?>">
                                                     <i class="fas fa-edit"></i> Update
                                                 </a>
                                                 <a class="text-danger ml-2"
@@ -84,53 +90,55 @@ if (get('action') === 'update') {
     </main>
 </div>
 
-    <?php require 'views/templates/footer.php' ?>
+<?php require 'views/templates/footer.php' ?>
 
 
-    <script>
-        $(function () {
-            $("#vendorTable").DataTable({
-                "responsive": true, "lengthChange": false, "autoWidth": false,
-                "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"]
-            }).buttons().container().appendTo('#vendorTable_wrapper .col-md-6:eq(0)');
+<script>
+    $(function() {
+        $("#vendorTable").DataTable({
+            "responsive": true,
+            "lengthChange": false,
+            "autoWidth": false,
+            "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"]
+        }).buttons().container().appendTo('#vendorTable_wrapper .col-md-6:eq(0)');
+    });
+</script>
+<script>
+    $(document).ready(function() {
+
+        $('#upload_button').on('click', function() {
+            $('#excel_file').click();
         });
-    </script>
-      <script>
-        $(document).ready(function () {
 
-            $('#upload_button').on('click', function () {
-                $('#excel_file').click();
-            });
+        $('#excel_file').on('change', function() {
+            if (this.files[0]) {
+                var formData = new FormData();
+                formData.append('excel_file', this.files[0]);
+                formData.append('action', 'upload'); // Add this line to specify the action
 
-            $('#excel_file').on('change', function () {
-                if (this.files[0]) {
-                    var formData = new FormData();
-                    formData.append('excel_file', this.files[0]);
-                    formData.append('action', 'upload'); // Add this line to specify the action
-
-                    $.ajax({
-                        url: 'api/masterlist/vendor_controller.php', // Update this path if needed
-                        type: 'POST',
-                        data: formData,
-                        async: true,
-                        cache: false,
-                        contentType: false,
-                        processData: false,
-                        dataType: 'json', // Add this line to expect JSON response
-                        success: function (response) {
-                            if (response.status === 'success') {
-                                alert(response.message);
-                                location.reload();
-                            } else {
-                                alert('Error: ' + response.message);
-                            }
-                        },
-                        error: function (xhr, status, error) {
-                            console.log(xhr.responseText); // Log the full response for debugging
-                            alert('An error occurred: ' + error);
+                $.ajax({
+                    url: 'api/masterlist/vendor_controller.php', // Update this path if needed
+                    type: 'POST',
+                    data: formData,
+                    async: true,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    dataType: 'json', // Add this line to expect JSON response
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            alert(response.message);
+                            location.reload();
+                        } else {
+                            alert('Error: ' + response.message);
                         }
-                    });
-                }
-            });
+                    },
+                    error: function(xhr, status, error) {
+                        console.log(xhr.responseText); // Log the full response for debugging
+                        alert('An error occurred: ' + error);
+                    }
+                });
+            }
         });
-    </script>
+    });
+</script>

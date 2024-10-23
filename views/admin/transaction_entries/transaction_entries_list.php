@@ -1,6 +1,11 @@
 <?php
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('transaction_entries');
 $page = 'transaction_entries_list';
 require 'views/templates/header.php';
 require 'views/templates/sidebar.php';

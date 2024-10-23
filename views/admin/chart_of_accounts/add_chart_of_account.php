@@ -1,7 +1,12 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('chart_of_accounts_list');
 
 $chart_of_accounts = ChartOfAccount::all();
 $account_types = AccountType::all();
@@ -9,125 +14,155 @@ $account_types = AccountType::all();
 ?>
 
 
-
 <?php require 'views/templates/header.php' ?>
 <?php require 'views/templates/sidebar.php' ?>
+
 <div class="main">
     <?php require 'views/templates/navbar.php' ?>
-    <!-- Content Wrapper. Contains page content -->
     <main class="content">
         <div class="container-fluid p-0">
-
-            <h1 class="h3 mb-3"><strong>Create New Account</strong></h1>
+            <h1 class="h3 mb-3">Create New Account</h1>
 
             <div class="row">
-                <div class="col-12">
-                    <?php displayFlashMessage('add') ?>
-                    <?php displayFlashMessage('delete') ?>
-                    <?php displayFlashMessage('update') ?>
-                    <!-- Default box -->
+                <div class="col-12 col-xl-8">
                     <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Account Details</h5>
+                        </div>
                         <div class="card-body">
-                            <form method="POST" action="api/masterlist/chart_of_account_controller.php">
+                            <?php displayFlashMessage('add') ?>
+                            <?php displayFlashMessage('delete') ?>
+                            <?php displayFlashMessage('update') ?>
+
+                            <form method="POST" action="api/masterlist/chart_of_account_controller.php" id="accountForm">
                                 <input type="hidden" name="action" id="modalAction" value="add" />
-                                <!-- Account Type -->
-                                <div class="row mb-3">
-                                    <label for="account_type_id" class="col-sm-2 col-form-label">Account Type</label>
-                                    <div class="col-sm-4">
-                                        <select class="form-control" id="account_type_id" name="account_type_id"
-                                            required>
-                                            <option value="">Account Type</option>
-                                            <?php foreach ($account_types as $account_type): ?>
-                                                <option value="<?= $account_type->id ?>">
-                                                    <?= $account_type->name ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
+
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="account_type_id">Account Type</label>
+                                            <select class="form-select form-select-sm" id="account_type_id" name="account_type_id" required>
+                                                <option value="">Select Account Type</option>
+                                                <?php foreach ($account_types as $account_type): ?>
+                                                    <option value="<?= $account_type->id ?>"><?= $account_type->name ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
                                     </div>
-                                    <label for="customer_contact" class="col-sm-2 col-form-label">Account Code</label>
-                                    <div class="col-sm-4">
-                                        <input type="text" class="form-control" id="account_code" name="account_code"
-                                            placeholder="GL CODE + SL CODE" readonly>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="account_code">Account Code</label>
+                                            <input type="text" class="form-control form-control-sm" id="account_code" name="account_code" placeholder="Enter Account Code">
+                                        </div>
                                     </div>
-                                </div>
-                                <!-- GL -->
-                                <div class="row mb-3">
-                                    <label for="gl_code" class="col-sm-2 col-form-label">GL CODE</label>
-                                    <div class="col-sm-4">
-                                        <input type="text" class="form-control" id="gl_code" name="gl_code"
-                                            placeholder="Enter GL Code" required>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="account_name">Account Name</label>
+                                            <input type="text" class="form-control form-control-sm" id="account_name" name="account_name" placeholder="Enter Account Name">
+                                        </div>
                                     </div>
-                                    <label for="gl_name" class="col-sm-2 col-form-label">GL NAME</label>
-                                    <div class="col-sm-4">
-                                        <input type="text" class="form-control" id="gl_name" name="gl_name"
-                                            placeholder="Enter GL Name" required>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="sub_account_id">Sub Account of</label>
+                                            <select class="form-select form-select-sm" id="sub_account_id" name="sub_account_id">
+                                                <option value="">Select Sub Account</option>
+                                                <?php foreach ($chart_of_accounts as $chart_of_account): ?>
+                                                    <option value="<?= $chart_of_account->id ?>"><?= $chart_of_account->account_name ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
                                     </div>
-                                </div>
-                                <!-- SL -->
-                                <div class="row mb-3">
-                                    <label for="sl_code" class="col-sm-2 col-form-label">SL CODE</label>
-                                    <div class="col-sm-4">
-                                        <input type="text" class="form-control" id="sl_code" name="sl_code"
-                                            placeholder="Enter SL Code">
-                                    </div>
-                                    <label for="sl_name" class="col-sm-2 col-form-label">SL NAME</label>
-                                    <div class="col-sm-4">
-                                        <input type="text" class="form-control" id="sl_name" name="sl_name"
-                                            placeholder="Enter SL Name">
+                                    <div class="col-12">
+                                        <div class="form-group mb-3">
+                                            <label for="account_description">Account Description</label>
+                                            <textarea class="form-control form-control-sm" id="account_description" name="account_description" rows="3" placeholder="Enter Description"></textarea>
+                                        </div>
                                     </div>
                                 </div>
 
-
-
-                                <!-- Account Description -->
-                                <div class="row mb-3">
-                                    <label for="account_description" class="col-sm-2 col-form-label">Account
-                                        Description</label>
-                                    <div class="col-sm-4">
-                                        <textarea class="form-control" id="account_description"
-                                            name="account_description" rows="3"
-                                            placeholder="Enter Description"></textarea>
-                                    </div>
+                                <div class="mt-3">
+                                    <button type="submit" class="btn btn-primary btn-sm">Create Account</button>
                                 </div>
-                                <br><br>
-                                <button type="submit" class="btn btn-primary">Submit</button>
                             </form>
                         </div>
-                        <!-- /.card-body -->
                     </div>
-                    <!-- /.card -->
                 </div>
             </div>
         </div>
     </main>
+</div>
 
+<?php require 'views/templates/footer.php' ?>
 
-    <?php require 'views/templates/footer.php' ?>
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
 
+    .card {
+        border: none;
+        box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+        border-radius: 0.375rem;
+    }
 
-    <script>
-        // Wait for the DOM to be fully loaded
-        document.addEventListener('DOMContentLoaded', function () {
-            // Select the input fields
-            const slCodeInput = document.getElementById('sl_code');
-            const glCodeInput = document.getElementById('gl_code');
-            const accountCodeInput = document.getElementById('account_code');
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+        padding: 0.75rem 1rem;
+    }
 
-            // Function to update the Account Code based on SL code and GL code
-            function updateAccountCode() {
-                // Get the values of SL code and GL code
-                const slCode = slCodeInput.value.trim();
-                const glCode = glCodeInput.value.trim();
+    .form-group label {
+        font-size: 0.875rem;
+        margin-bottom: 0.25rem;
+    }
 
-                // Concatenate SL code and GL code to form the Account Code
-                const accountCode = glCode + slCode;
+    .form-control-sm,
+    .form-select-sm {
+        font-size: 0.875rem;
+        padding: 0.25rem 0.5rem;
+        height: calc(1.8125rem + 2px);
+    }
 
-                // Update the value of Account Code input field
-                accountCodeInput.value = accountCode;
+    textarea.form-control-sm {
+        height: auto;
+    }
+
+    .btn-sm {
+        font-size: 0.875rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+
+    .btn-primary:hover {
+        background-color: #0056b3;
+        border-color: #0056b3;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('accountForm');
+        form.addEventListener('submit', function(event) {
+            let isValid = true;
+            const requiredFields = form.querySelectorAll('[required]');
+
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    isValid = false;
+                    field.classList.add('is-invalid');
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+
+            if (!isValid) {
+                event.preventDefault();
+                alert('Please fill in all required fields.');
             }
-
-            // Add event listeners to SL code and GL code inputs
-            slCodeInput.addEventListener('input', updateAccountCode);
-            glCodeInput.addEventListener('input', updateAccountCode);
         });
-    </script>
+    });
+</script>

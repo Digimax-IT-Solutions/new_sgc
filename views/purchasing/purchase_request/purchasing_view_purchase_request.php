@@ -1,17 +1,23 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::purchasingOnly();
-
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('purchasing_purchase_request');
 $locations = Location::all();
 $products = Product::all();
 $cost_centers = CostCenter::all();
+$newPrNo = PurchaseRequest::getLastPrNo();
 
-$page = 'view_purchase_request';
+
+$page = 'purchasing_purchase_request';
 ?>
 
 <?php require 'views/templates/header.php' ?>
-<?php require 'views/templates/purchasing_sidebar.php' ?>
+<?php require 'views/templates/sidebar.php' ?>
 
 <style>
     .form-label {
@@ -91,7 +97,7 @@ $page = 'view_purchase_request';
     }
 </style>
 <div class="main">
-    <?php require 'views/templates/purchasing_navbar.php' ?>
+    <?php require 'views/templates/navbar.php' ?>
 
     <!-- Content Wrapper. Contains page content -->
     <main class="content">
@@ -99,11 +105,11 @@ $page = 'view_purchase_request';
             <div class="row mb-4">
                 <div class="col-12 d-flex justify-content-between align-items-center">
                     <div>
-                        <h1 class="h3"><strong>Create Purchase Request</strong></h1>
+                        <h1 class="h3"><strong>View Purchase Request</strong></h1>
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb">
                                 <li class="breadcrumb-item"><a href="dashboard">Dashboard</a></li>
-                                <li class="breadcrumb-item"><a href="purchase_request">Purchase Request</a></li>
+                                <li class="breadcrumb-item"><a href="purchasing_purchase_request">Purchase Request</a></li>
                                 <li class="breadcrumb-item active" aria-current="page">Create Purchase Request</li>
                             </ol>
                         </nav>
@@ -126,8 +132,7 @@ $page = 'view_purchase_request';
 
                         if ($purchase_request) { ?>
                             <!-- Purchase Order Form -->
-                            <form id="purchaseOrderForm" action="api/purchase_request_controller.php?action=update"
-                                method="POST">
+                            <form id="purchaseOrderForm" action="api/purchase_request_controller.php?action=update" method="POST">
                                 <input type="hidden" name="action" id="modalAction" value="update" />
                                 <input type="hidden" name="id" id="itemId" value="" />
                                 <input type="hidden" name="item_data" id="item_data" />
@@ -148,7 +153,12 @@ $page = 'view_purchase_request';
                                                             <!-- PURCHASE ORDER NO -->
                                                             <label for="pr_no">Purchase Request #:</label>
                                                             <input type="text" class="form-control form-control-sm" id="pr_no"
-                                                                name="pr_no" value="<?= $purchase_request->pr_no ?>" readonly>
+                                                                name="pr_no" 
+                                                                <?php if ($purchase_request->status == 4): ?>
+                                                                        value="<?php echo htmlspecialchars($newPrNo); ?>" readonly>
+                                                                <?php else: ?>
+                                                                    value="<?php echo htmlspecialchars($purchase_request->pr_no); ?>" disabled>
+                                                                <?php endif; ?>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -156,8 +166,7 @@ $page = 'view_purchase_request';
                                                     <!-- Requesting Section -->
                                                     <div class="col-md-4 order-details">
                                                         <label for="location" class="form-label">Location</label>
-                                                        <select class="form-select form-select-sm" id="location" name="location"
-                                                            disabled>
+                                                        <select class="form-select form-select-sm" id="location" name="location" disabled>
                                                             <?php foreach ($locations as $location): ?>
                                                                 <option value="<?= $location->id ?>"
                                                                     <?= $location->id == $purchase_request->location ? 'selected' : '' ?>>
@@ -198,12 +207,21 @@ $page = 'view_purchase_request';
                                                 <br>
                                                 <div class="row g-2">
                                                     <div class="col-md-12 text-center">
-                                                        <button type="button" class="btn btn-secondary btn-sm">
-                                                            <i class="fas fa-save"></i> Void
-                                                        </button>
-                                                        <a class="btn btn-success btn-sm" href="#" id="reprintButton">
+                                                    <?php if ($purchase_request->status == 4): ?>
+                                                        <!-- Buttons to show when invoice_status is 4 -->
+                                                        <button type="submit" class="btn btn-info me-2">Save and Print</button>
+                                                    <?php elseif ($purchase_request->status == 3): ?>
+                                                        <!-- Button to show when invoice_status is 3 -->
+                                                        <a class="btn btn-primary" href="#" id="reprintButton">
                                                             <i class="fas fa-print"></i> Reprint
                                                         </a>
+                                                    <?php else: ?>
+                                                        <!-- Buttons to show when invoice_status is neither 3 nor 4 -->
+                                                        <button type="button" class="btn btn-secondary me-2" id="voidButton">Void</button>
+                                                        <a class="btn btn-primary" href="#" id="reprintButton">
+                                                            <i class="fas fa-print"></i> Reprint
+                                                        </a>
+                                                    <?php endif; ?>
                                                     </div>
                                                 </div>
 
@@ -226,9 +244,11 @@ $page = 'view_purchase_request';
                                                                     <th>Item</th>
                                                                     <th>Cost Center</th>
                                                                     <th>Description</th>
-                                                                    <th style="width: 100px; background-color: #e6f3ff;">
-                                                                        Quantity</th>
+                                                                    <th style="width: 100px; background-color: #e6f3ff;">Quantity</th>
+                                                                    <th style="width: 100px; background-color: #e6f3ff;">Ordered QTY</th>
+                                                                    <th style="width: 100px; background-color: #e6f3ff;">Balance QTY</th>
                                                                     <th style="width: 100px">Unit</th>
+                                                                    <th style="width: 80px; text-align: center">Closed</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody id="itemTableBody" style="font-size: 14px;">
@@ -240,10 +260,9 @@ $page = 'view_purchase_request';
                                                                                     class="form-control form-control-sm item-dropdown"
                                                                                     name="item_id[]" disabled>
                                                                                     <?php foreach ($products as $product): ?>
-                                                                                        <option
-                                                                                            value="<?= htmlspecialchars($product->id) ?>"
+                                                                                        <option value="<?= htmlspecialchars($product->id) ?>"
                                                                                             <?= ($product->id == $detail['item_id']) ? 'selected' : '' ?>>
-                                                                                            <?= htmlspecialchars($product->item_name) ?>
+                                                                                            <?= htmlspecialchars($product->item_code) ?> - <?= htmlspecialchars($product->item_name) ?>
                                                                                         </option>
                                                                                     <?php endforeach; ?>
                                                                                 </select>
@@ -269,18 +288,39 @@ $page = 'view_purchase_request';
                                                                                     readonly>
                                                                             </td>
                                                                             <td class="text-right" style="background-color: #e6f3ff;">
-                                                                                <input type="text"
-                                                                                    class="form-control form-control-sm quantity text-right"
-                                                                                    name="quantity[]"
-                                                                                    value="<?= htmlspecialchars($detail['quantity']) ?>"
-                                                                                    disabled>
+                                                                                <input type="text" class="form-control form-control-sm quantity text-right" name="quantity[]"
+                                                                                    value="<?= htmlspecialchars($detail['quantity']) ?>" disabled>
                                                                             </td>
+
+                                                                            <td class="text-right" style="background-color: #e6f3ff;">
+                                                                                <input type="text" class="form-control form-control-sm quantity text-right" name="quantity[]"
+                                                                                    value="<?= htmlspecialchars($detail['ordered_quantity']) ?>" disabled>
+                                                                            </td>
+
+                                                                            <td class="text-right" style="background-color: #e6f3ff;">
+                                                                                <input type="text" class="form-control form-control-sm quantity text-right" name="quantity[]"
+                                                                                    value="<?= htmlspecialchars($detail['balance_quantity']) ?>" disabled>
+                                                                            </td>
+
                                                                             <td>
                                                                                 <input type="text"
                                                                                     class="form-control form-control-sm uom_name"
                                                                                     name="uom_name[]"
                                                                                     value="<?= htmlspecialchars($detail['name']) ?>"
                                                                                     disabled>
+                                                                            </td>
+
+                                                                            <td style="text-align: center">
+                                                                                <input type="checkbox"
+                                                                                    value="<?= htmlspecialchars($detail['status']) ?>"
+                                                                                    <?= ($detail['status'] == 1) ? 'checked' : '' ?>
+                                                                                    class="green-checkbox" onclick="return false;">
+                                                                                <style>
+                                                                                    .green-checkbox {
+                                                                                        accent-color: green;
+                                                                                        pointer-events: none;
+                                                                                    }
+                                                                                </style>
                                                                             </td>
                                                                         </tr>
                                                                     <?php endforeach; ?>
@@ -297,7 +337,7 @@ $page = 'view_purchase_request';
                                     </div>
                                 </div>
                             </form>
-                            <?php
+                    <?php
                         } else {
                             // Handle the case where the check is not found
                             echo "PO not found.";
@@ -313,17 +353,23 @@ $page = 'view_purchase_request';
             </div>
         </div>
     </main>
-    <div id="loadingOverlay" style="display: none;">
+
+    <iframe id="printFrame" style="display:none;"></iframe>
+    <div id="loadingOverlay" class="loading-overlay" style="display:none;">
         <div class="spinner"></div>
         <div class="message">Processing Purchase Order</div>
     </div>
+
 </div>
 
 <?php require 'views/templates/footer.php' ?>
 
 <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
         initializeSelect2();
+
+       
+        
     });
 
     function initializeSelect2() {
@@ -337,5 +383,332 @@ $page = 'view_purchase_request';
             theme: 'classic',
             allowClear: false
         });
+    }
+    
+
+    document.getElementById('reprintButton').addEventListener('click', function(e) {
+        e.preventDefault();
+        Swal.fire({
+            title: 'Reprint Purchase Order?',
+            text: "Are you sure you want to reprint this purchase order?",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, reprint it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                printPurchaseOrder(<?= $purchase_request->id ?>, 2); // Pass 2 for reprint
+            }
+        });
+    });
+
+    // Attach event listener for the void button
+    document.getElementById('voidButton').addEventListener('click', function (e) {
+        e.preventDefault();
+        Swal.fire({
+            title: 'Void Purchase Request?',
+            text: "Are you sure you want to void this purchase request? This action cannot be undone.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, void it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                voidCheck(<?= $purchase_request->id ?>);
+            }
+        });
+    });
+
+    function showLoadingOverlay() {
+        document.getElementById('loadingOverlay').style.display = 'flex';
+    }
+
+    function hideLoadingOverlay() {
+        document.getElementById('loadingOverlay').style.display = 'none';
+    }
+    
+    function printPurchaseOrder(id, printStatus) {
+    showLoadingOverlay();
+
+    $.ajax({
+        url: 'api/purchase_request_controller.php',
+        type: 'POST',
+        dataType: 'json',
+        data: {
+            action: 'update_print_status',
+            id: id,
+            print_status: printStatus
+        },
+        success: function(response) {
+            if (response.success) {
+                const printFrame = document.getElementById('printFrame');
+                const printContentUrl = `print_purchase_request?action=print&id=${id}`;
+
+                printFrame.src = printContentUrl;
+
+                printFrame.onload = function() {
+                    printFrame.contentWindow.focus();
+                    printFrame.contentWindow.print();
+                    hideLoadingOverlay();
+                };
+            } else {
+                hideLoadingOverlay();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to update print status: ' + (response.message || 'Unknown error')
+                });
+            }
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            hideLoadingOverlay();
+            console.error('AJAX error:', textStatus, errorThrown);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'An error occurred while updating print status: ' + textStatus
+            });
+        }
+    });
+}
+
+    function voidCheck(id) {
+        showLoadingOverlay(); // Show the loading overlay before making the request
+
+        $.ajax({
+            url: 'api/purchase_request_controller.php',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                action: 'void_check',
+                id: id
+            },
+            success: function (response) {
+                hideLoadingOverlay(); // Hide the loading overlay on success
+                if (response.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'Purchase Request has been voided successfully.'
+                    }).then(() => {
+                        location.reload(); // Reload the page to reflect changes
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to void purchase request: ' + (response.message || 'Unknown error')
+                    });
+                }
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                hideLoadingOverlay(); // Hide the loading overlay on error
+                console.error('AJAX error:', textStatus, errorThrown);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred while voiding the purchase request: ' + textStatus
+                });
+            }
+        });
+    }
+
+
+
+</script>
+
+<script>
+    $(document).ready(function () {
+
+        // Add click event listener to the Clear button
+        $('button[type="reset"]').on('click', function (e) {
+            e.preventDefault(); // Prevent default reset behavior
+
+            $('input').not('#pr_no').val('');
+
+            $('select').each(function () {
+                $(this).val($(this).find("option:first").val()).trigger('change');
+            });
+
+            $('#itemTableBody').empty();
+
+            $('.select2').val(null).trigger('change');
+
+            $('#item_data').val('');
+
+            $('#date, #required_date').val(new Date().toISOString().split('T')[0]);
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Cleared',
+                text: 'All fields have been reset.',
+                timer: 1800,
+                showConfirmButton: false
+            });
+        });
+
+
+        $('#location').select2({
+            theme: 'classic', // Use 'bootstrap-5' for Bootstrap 5, 'bootstrap-4' for Bootstrap 4
+            width: '100%',
+            placeholder: 'Select Location',
+            allowClear: true
+        });
+
+        // Populate dropdowns with accounts from PHP
+        const products = <?php echo json_encode($products); ?>;
+        let itemDropdownOptions = '<option value="" selected disabled>Select An Item</option>';
+        $.each(products, function (index, product) {
+            itemDropdownOptions += `<option value="${product.id}" data-description="${product.item_purchase_description}" data-uom="${product.uom_name}">${product.item_code} - ${product.item_name}</option>`;
+            
+        });
+
+        const costCenterOptions = <?php echo json_encode($cost_centers); ?>;
+        let costCenterDropdownOptions = '';
+        costCenterOptions.forEach(function (costCenter) {
+            costCenterDropdownOptions += `<option value="${costCenter.id}">${costCenter.code} - ${costCenter.particular}</option>`;
+        });
+
+        // Add a new row to the table
+        function addRow() {
+            const newRow = `
+                <tr>
+                    <td><select class="form-control form-control-sm account-dropdown select2" name="item_id[]" onchange="populateFields(this)">${itemDropdownOptions}</select></td>
+                    <td><select class="form-control form-control-sm cost-center-dropdown select2" name="cost_center_id[]">${costCenterDropdownOptions}</select></td>
+                    <td><input type="text" class="form-control form-control-sm description-field" name="description[]"></td>
+                    <td style="background-color: #e6f3ff;"><input type="text" class="form-control form-control-sm quantity" name="quantity[]" placeholder="Quantity"></td>
+                    <td><input type="text" class="form-control form-control-sm uom" name="uom[]" readonly></td> 
+                    <td><button type="button" class="btn btn-danger btn-sm removeRow"><i class="fas fa-trash"></i></button></td>
+                </tr>`;
+            $('#itemTableBody').append(newRow);
+
+            $('#itemTableBody .select2').select2({
+                width: '100%',
+                theme: 'classic' // Use this if you're using Bootstrap 4
+            });
+        }
+
+
+        $('#addItemBtn').click(addRow);
+
+        $(document).on('click', '.removeRow', function () {
+            $(this).closest('tr').remove();
+            calculateRowValues($(this).closest('tr'));
+            calculateTotalAmount();
+        });
+
+        // Gather table items and submit form
+        function gatherTableItems() {
+            const items = [];
+            $('#itemTableBody tr').each(function (index) {
+                const item = {
+                    item_id: $(this).find('select[name="item_id[]"]').val(),
+                    cost_center_id: $(this).find('select[name="cost_center_id[]"]').val(),
+                    description: $(this).find('input[name="description[]"]').val(),
+                    uom: $(this).find('input[name="uom[]"]').val(),
+                    quantity: $(this).find('input[name="quantity[]"]').val(),
+                };
+                items.push(item);
+            });
+            return items;
+        }
+
+        $('#purchaseOrderForm').submit(function (event) {
+            event.preventDefault();
+
+            // Check if the table has any rows
+            if ($('#itemTableBody tr').length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No Items',
+                    text: 'You must add at least one item before submitting the invoice.'
+                });
+                document.getElementById('loadingOverlay').style.display = 'none';
+                return false;
+            }
+
+            const items = gatherTableItems();
+            $('#item_data').val(JSON.stringify(items));
+
+            const status = <?= json_encode($purchase_request->status) ?>;
+            const purchase_id = <?= json_encode($purchase_request->id) ?>;
+
+            // Log values to ensure they are defined
+            console.log('Purchase ID:', purchase_id);
+            console.log('PR No:', pr_no);
+
+            if (status == 4) {
+                // Show loading overlay
+                document.getElementById('loadingOverlay').style.display = 'flex';
+
+                $.ajax({
+                    url: 'api/purchase_request_controller.php',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        action: 'update_draft',
+                        id: purchase_id,
+                        pr_no: $('#pr_no').val(),
+
+                    },
+                    success: function (response) {
+                        document.getElementById('loadingOverlay').style.display = 'none';
+
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: 'Purchase Request submitted successfully!',
+                                showCancelButton: true,
+                                confirmButtonText: 'Print',
+                                cancelButtonText: 'Save as PDF'
+                            }).then((result) => {
+                                if (result.isConfirmed && response.id) {
+                                    printPurchaseOrder(response.id, 1); // Pass 1 for initial print
+                                } else {
+                                    location.reload();
+                                }
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Error saving purchase: ' + (response.message || 'Unknown error')
+                            });
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        document.getElementById('loadingOverlay').style.display = 'none';
+                        console.error('AJAX error:', textStatus, errorThrown);
+                        console.log('Response Text:', jqXHR.responseText);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'An error occurred while saving the purchase: ' + textStatus
+                        });
+                    }
+                });
+            }
+        });
+    });
+
+
+
+
+
+
+    // Function to populate multiple fields based on selected option
+    function populateFields(select) {
+        const selectedOption = $(select).find('option:selected');
+        const description = selectedOption.data('description');
+        const uom = selectedOption.data('uom');
+        // Add more fields as needed
+
+        const row = $(select).closest('tr');
+        row.find('.description-field').val(description);
+        row.find('.uom').val(uom);
+        // Populate more fields as needed
     }
 </script>

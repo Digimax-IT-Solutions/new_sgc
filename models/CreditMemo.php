@@ -20,12 +20,14 @@ class CreditMemo
     public $account_code;
     public $account_description;
     public $memo;
+    public $location;
     public $gross_amount;
     public $discount_amount;
     public $net_amount_due;
     public $vat_percentage_amount;
     public $net_of_vat;
     public $tax_withheld_amount;
+    public $tax_withheld_percentage;
     public $total_amount_due;
     public $print_status;
     public $status;
@@ -50,12 +52,14 @@ class CreditMemo
         $this->account_code = $data['account_code'] ?? null;
         $this->account_description = $data['account_description'] ?? null;
         $this->memo = $data['memo'] ?? null;
+        $this->location = $data['location'] ?? null;
         $this->credit_account = $data['credit_balance'] ?? null;
         $this->gross_amount = $data['gross_amount'] ?? null;
         $this->net_amount_due = $data['net_amount_due'] ?? null;
         $this->vat_percentage_amount = $data['vat_percentage_amount'] ?? null;
         $this->net_of_vat = $data['net_of_vat'] ?? null;
         $this->tax_withheld_amount = $data['tax_withheld_amount'] ?? null;
+        $this->tax_withheld_percentage = $data['tax_withheld_percentage'] ?? null;
         $this->total_amount_due = $data['total_amount_due'] ?? null;
         $this->print_status = $data['print_status'] ?? null;
         $this->status = $data['status'] ?? null;
@@ -68,7 +72,7 @@ class CreditMemo
         }
     }
     // add/insert credit_memo data
-    public static function add($credit_no, $credit_date, $customer_id, $customer_name, $credit_account_id, $memo, $gross_amount, $net_amount_due, $vat_percentage_amount, $net_of_vat, $tax_withheld_amount, $tax_withheld_account_id, $total_amount_due, $items, $created_by)
+    public static function add($credit_no, $credit_date,  $location, $customer_id, $customer_name, $credit_account_id, $memo, $gross_amount, $net_amount_due, $vat_percentage_amount, $net_of_vat, $tax_withheld_amount, $tax_withheld_percentage, $tax_withheld_account_id, $total_amount_due, $items, $created_by)
     {
         global $connection;
 
@@ -81,6 +85,7 @@ class CreditMemo
             $stmt = $connection->prepare("INSERT INTO credit_memo (
                 credit_no,
                 credit_date,
+                location,
                 customer_id,
                 credit_account,
                 memo,
@@ -89,11 +94,13 @@ class CreditMemo
                 vat_percentage_amount,
                 net_of_vat,
                 tax_withheld_amount,
-                total_amount_due) VALUES (?,?,?,?,?,?,?,?,?,?,?) ");
+                tax_withheld_percentage,
+                total_amount_due) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?) ");
     
             $stmt->execute([
                 $credit_no,
                 $credit_date,
+                $location,
                 $customer_id,
                 $credit_account_id,
                 $memo,
@@ -102,6 +109,7 @@ class CreditMemo
                 $vat_percentage_amount,
                 $net_of_vat,
                 $tax_withheld_amount,
+                $tax_withheld_percentage,
                 $total_amount_due
             ]);
 
@@ -131,6 +139,7 @@ class CreditMemo
                     $transaction_type,
                     $credit_date,
                     $credit_no,
+                    $location,
                     $customer_name,
                     $item['account_id'],
                     $item['net_amount'], // Added discount_amount here
@@ -144,6 +153,7 @@ class CreditMemo
                     $transaction_type,
                     $credit_date,
                     $credit_no,
+                    $location,
                     $customer_name,
                     $item['sales_tax_account_id'],
                     $item['sales_tax'], // Added discount_amount here
@@ -169,6 +179,7 @@ class CreditMemo
                 $transaction_type,
                 $credit_date,
                 $credit_no,
+                $location,
                 $customer_name,
                 $tax_withheld_account_id,
                 0.00,
@@ -182,6 +193,7 @@ class CreditMemo
                 $transaction_type,
                 $credit_date,
                 $credit_no,
+                $location,
                 $customer_name,
                 $credit_account_id,
                 0.00,
@@ -226,7 +238,7 @@ class CreditMemo
     }
     
     // ACCOUNTING LOGS
-    private static function logAuditTrail($general_journal_id, $transaction_type, $transaction_date, $ref_no, $customer_name, $account_id, $debit, $credit, $created_by)
+    private static function logAuditTrail($general_journal_id, $transaction_type, $transaction_date, $ref_no,  $location, $customer_name, $account_id, $debit, $credit, $created_by)
     {
         global $connection;
 
@@ -236,13 +248,14 @@ class CreditMemo
                     transaction_type,
                     transaction_date,
                     ref_no,
+                    location,
                     name,
                     account_id,
                     debit,
                     credit,
                     created_by,
                     created_at
-                ) VALUES (?,?,?,?,?,?,?,?,?, NOW())
+                ) VALUES (?,?,?,?,?,?,?,?,?,?, NOW())
             ");
 
         $stmt->execute([
@@ -250,6 +263,7 @@ class CreditMemo
             $transaction_type,
             $transaction_date,
             $ref_no,
+            $location,
             $customer_name,
             $account_id,
             $debit,
@@ -320,6 +334,7 @@ class CreditMemo
                 'business_style' => $row['business_style'],
                 'credit_account' => $row['credit_account'],
                 'memo' => $row['memo'],
+                'location' => $row['location'],
                 'gross_amount' => $row['gross_amount'],
                 'net_amount_due' => $row['net_amount_due'],
                 'vat_percentage_amount' => $row['vat_percentage_amount'],
@@ -353,13 +368,16 @@ class CreditMemo
             SELECT 
                 cm.id,
                 cm.credit_no,
+                cm.credit_account,
                 cm.credit_date,
                 cm.memo,
+                cm.location,
                 cm.gross_amount,
                 cm.net_amount_due,
                 cm.vat_percentage_amount,
                 cm.net_of_vat,
                 cm.tax_withheld_amount,
+                cm.tax_withheld_percentage,
                 cm.total_amount_due,
                 cm.print_status,
                 cm.status,
@@ -374,7 +392,6 @@ class CreditMemo
                 c.billing_address,
                 c.business_style,
                 c.credit_balance,
-                coas.id AS credit_account,
                 coas.account_type_id,
                 coas.gl_name,
                 coas.account_code,
@@ -460,14 +477,26 @@ class CreditMemo
     public static function addCreditBalance($total_amount_due, $customer_id)
     {
         global $connection;
-
-        $stmt = $connection->prepare('UPDATE customers SET total_credit_memo = :total_amount_due WHERE id = :customer_id');
-
-        $stmt->bindParam(":total_amount_due", $total_amount_due);
+    
+        // First, retrieve the current total_credit_memo for the customer
+        $stmt = $connection->prepare('SELECT total_credit_memo FROM customers WHERE id = :customer_id');
         $stmt->bindParam(":customer_id", $customer_id);
-
+        $stmt->execute();
+    
+        // Fetch the current total_credit_memo
+        $current_credit_memo = $stmt->fetchColumn();
+    
+        // Calculate the new total_credit_memo by adding the new amount
+        $new_total_credit_memo = $current_credit_memo + $total_amount_due;
+    
+        // Now update the total_credit_memo with the new amount
+        $stmt = $connection->prepare('UPDATE customers SET total_credit_memo = :new_total_credit_memo WHERE id = :customer_id');
+        $stmt->bindParam(":new_total_credit_memo", $new_total_credit_memo);
+        $stmt->bindParam(":customer_id", $customer_id);
+    
         $stmt->execute();
     }
+    
     // getTotalCounts of Invoice row
     public static function getTotalCount()
     {
@@ -555,8 +584,8 @@ class CreditMemo
     
 
     public static function saveDraft(
-        $credit_date, $customer_id, $credit_account_id, $memo, $gross_amount, $net_amount_due,
-        $vat_percentage_amount, $net_of_vat, $tax_withheld_amount, $tax_withheld_account_id,
+        $credit_date, $customer_id,  $location, $credit_account_id, $memo, $gross_amount, $net_amount_due,
+        $vat_percentage_amount, $net_of_vat, $tax_withheld_amount, $tax_withheld_percentage, $tax_withheld_account_id,
         $total_amount_due, $items
     ) {
         global $connection;
@@ -566,16 +595,17 @@ class CreditMemo
     
             // Insert into credit_memo table with draft status
             $sql = "INSERT INTO credit_memo (
-                credit_date, customer_id, credit_account, memo, gross_amount, net_amount_due,
-                vat_percentage_amount, net_of_vat, tax_withheld_amount, total_amount_due, status
+                credit_date, customer_id,  location, credit_account, memo, gross_amount, net_amount_due,
+                vat_percentage_amount, net_of_vat, tax_withheld_amount, tax_withheld_percentage,  total_amount_due, status
             ) VALUES (
-                :credit_date, :customer_id, :credit_account, :memo, :gross_amount, :net_amount_due,
-                :vat_percentage_amount, :net_of_vat, :tax_withheld_amount, :total_amount_due, :status
+                :credit_date, :customer_id,  :location,:credit_account, :memo, :gross_amount, :net_amount_due,
+                :vat_percentage_amount, :net_of_vat, :tax_withheld_amount, :tax_withheld_percentage, :total_amount_due, :status
             )";
     
             $stmt = $connection->prepare($sql);
             $stmt->bindParam(':credit_date', $credit_date);
             $stmt->bindParam(':customer_id', $customer_id);
+            $stmt->bindParam(':location', $location);
             $stmt->bindParam(':credit_account', $credit_account_id);
             $stmt->bindParam(':memo', $memo);
             $stmt->bindParam(':gross_amount', $gross_amount);
@@ -583,6 +613,7 @@ class CreditMemo
             $stmt->bindParam(':vat_percentage_amount', $vat_percentage_amount);
             $stmt->bindParam(':net_of_vat', $net_of_vat);
             $stmt->bindParam(':tax_withheld_amount', $tax_withheld_amount);
+            $stmt->bindParam(':tax_withheld_percentage', $tax_withheld_percentage);
             $stmt->bindParam(':total_amount_due', $total_amount_due);
             $stmt->bindValue(':status', 4, PDO::PARAM_INT); // Set status to 4 for draft
     
@@ -662,10 +693,114 @@ class CreditMemo
     }
     
     public static function updateDraft(
-        $credit_memo_id, $credit_no, $credit_date, $customer_id, $customer_name, 
+        $credit_memo_id, $credit_date, $credit_account, $location, $customer_id, $customer_name, 
+        $memo, $gross_amount, $net_amount_due, $vat_percentage_amount, $net_of_vat, 
+        $tax_withheld_percentage, $tax_withheld_amount, $total_amount_due, $items, $created_by
+    ) {
+        global $connection;
+    
+        try {
+            $connection->beginTransaction();
+    
+            // Update the main credit memo record
+            $stmt = $connection->prepare("
+                UPDATE credit_memo 
+                SET credit_date = :credit_date,
+                    credit_account = :credit_account,
+                    customer_id = :customer_id,
+                    memo = :memo,
+                    location = :location,
+                    gross_amount = :gross_amount,
+                    net_amount_due = :net_amount_due,
+                    vat_percentage_amount = :vat_percentage_amount,
+                    net_of_vat = :net_of_vat,
+                    tax_withheld_percentage = :tax_withheld_percentage,
+                    tax_withheld_amount = :tax_withheld_amount,
+                    total_amount_due = :total_amount_due,
+                    status = 4
+                WHERE id = :credit_memo_id
+            ");
+    
+            // Bind the parameters
+            $stmt->bindParam(':credit_memo_id', $credit_memo_id, PDO::PARAM_INT);
+            $stmt->bindParam(':credit_date', $credit_date, PDO::PARAM_STR);
+            $stmt->bindParam(':credit_account', $credit_account, PDO::PARAM_INT);
+            $stmt->bindParam(':location', $location, PDO::PARAM_INT);
+            $stmt->bindParam(':customer_id', $customer_id, PDO::PARAM_INT);
+            $stmt->bindParam(':memo', $memo, PDO::PARAM_STR);
+            $stmt->bindParam(':gross_amount', $gross_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':net_amount_due', $net_amount_due, PDO::PARAM_STR);
+            $stmt->bindParam(':vat_percentage_amount', $vat_percentage_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':net_of_vat', $net_of_vat, PDO::PARAM_STR);
+            $stmt->bindParam(':tax_withheld_percentage', $tax_withheld_percentage, PDO::PARAM_STR);
+            $stmt->bindParam(':tax_withheld_amount', $tax_withheld_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':total_amount_due', $total_amount_due, PDO::PARAM_STR);
+    
+            // Execute the update
+            $result = $stmt->execute();
+    
+            if ($result) {
+                // Delete existing credit memo details
+                $stmt = $connection->prepare("DELETE FROM credit_memo_details WHERE credit_memo_id = ?");
+                $stmt->execute([$credit_memo_id]);
+    
+                // Prepare to insert new credit memo details
+                $stmt = $connection->prepare("
+                    INSERT INTO credit_memo_details (
+                        credit_memo_id, account_id, cost_center_id, memo, amount, 
+                        net_amount, taxable_amount, vat_percentage, sales_tax, sales_tax_account_id
+                    ) VALUES (
+                        :credit_memo_id, :account_id, :cost_center_id, :memo, :amount, 
+                        :net_amount, :taxable_amount, :vat_percentage, :sales_tax, :sales_tax_account_id
+                    )
+                ");
+    
+                // Insert the new details
+                if (is_array($items)) {
+                    foreach ($items as $item) {
+                        $stmt->execute([
+                            ':credit_memo_id' => $credit_memo_id,
+                            ':account_id' => $item['account_id'],
+                            ':cost_center_id' => $item['cost_center_id'],
+                            ':memo' => $item['memo'],
+                            ':amount' => $item['amount'],
+                            ':net_amount' => $item['net_amount'],
+                            ':taxable_amount' => $item['taxable_amount'] ?? 0,
+                            ':vat_percentage' => $item['vat_percentage'] ?? 0,
+                            ':sales_tax' => $item['sales_tax'] ?? 0,
+                            ':sales_tax_account_id' => $item['sales_tax_account_id'] ?? 0
+                        ]);
+                    }
+                } else {
+                    throw new Exception("Invalid items data: expected an array.");
+                }
+    
+                // Commit the transaction
+                $connection->commit();
+                return [
+                    'success' => true,
+                    'id' => $credit_memo_id,
+                    'message' => "Credit memo updated successfully"
+                ];
+            } else {
+                throw new Exception("Failed to update credit memo.");
+            }
+        } catch (Exception $ex) {
+            // Rollback on failure
+            $connection->rollback();
+            error_log('Error updating credit memo draft: ' . $ex->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Error: ' . $ex->getMessage()
+            ];
+        }
+    }
+    
+    public static function saveFinal(
+        $credit_memo_id, $credit_no, $credit_date,  $location, $customer_id, $customer_name, 
         $credit_account_id, $memo, $gross_amount, $net_amount_due, 
         $vat_percentage_amount, $net_of_vat, $tax_withheld_amount, 
-        $tax_withheld_account_id, $total_amount_due, $items, $created_by
+        $tax_withheld_percentage, $total_amount_due, $items, $created_by
     ) {
         global $connection;
     
@@ -675,32 +810,113 @@ class CreditMemo
     
             $transaction_type = "Credit Memo";
     
-            // Fetch existing credit memo details
+            // Fetch existing draft details
             $existingDetails = self::updateDraftDetails($credit_memo_id);
     
-            // Fetch the credit_account_id and total_amount_due from the database
-            $stmt = $connection->prepare("SELECT credit_account, total_amount_due, tax_withheld_amount, credit_date FROM credit_memo WHERE id = ?");
-            $stmt->execute([$credit_memo_id]);
+            // Prepare the update statement for credit_memo
+            $stmt = $connection->prepare("
+                UPDATE credit_memo 
+                SET credit_no = :credit_no,
+                    credit_date = :credit_date,
+                    location = :location,
+                    customer_id = :customer_id,
+                    credit_account = :credit_account,
+                    memo = :memo,
+                    gross_amount = :gross_amount,
+                    net_amount_due = :net_amount_due,
+                    vat_percentage_amount = :vat_percentage_amount,
+                    net_of_vat = :net_of_vat,
+                    tax_withheld_amount = :tax_withheld_amount,
+                    tax_withheld_percentage = :tax_withheld_percentage,
+                    total_amount_due = :total_amount_due
+                WHERE id = :credit_memo_id
+            ");
+    
+            // Bind the parameters
+            $stmt->bindParam(':credit_memo_id', $credit_memo_id, PDO::PARAM_INT);
+            $stmt->bindParam(':credit_no', $credit_no, PDO::PARAM_STR);
+            $stmt->bindParam(':credit_date', $credit_date, PDO::PARAM_STR);
+            $stmt->bindParam(':location', $location, PDO::PARAM_STR);
+            $stmt->bindParam(':customer_id', $customer_id, PDO::PARAM_INT);
+            $stmt->bindParam(':credit_account', $credit_account_id, PDO::PARAM_INT);
+            $stmt->bindParam(':memo', $memo, PDO::PARAM_STR);
+            $stmt->bindParam(':gross_amount', $gross_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':net_amount_due', $net_amount_due, PDO::PARAM_STR);
+            $stmt->bindParam(':vat_percentage_amount', $vat_percentage_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':net_of_vat', $net_of_vat, PDO::PARAM_STR);
+            $stmt->bindParam(':tax_withheld_amount', $tax_withheld_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':tax_withheld_percentage', $tax_withheld_percentage, PDO::PARAM_STR);
+            $stmt->bindParam(':total_amount_due', $total_amount_due, PDO::PARAM_STR);
+    
+            // Execute the update statement
+            $stmt->execute();
+    
+            // Fetch the updated credit_memo details for audit trail purposes
+            $stmt = $connection->prepare("
+                SELECT credit_account, total_amount_due, tax_withheld_amount, credit_date 
+                FROM credit_memo 
+                WHERE id = :credit_memo_id
+            ");
+            $stmt->bindParam(':credit_memo_id', $credit_memo_id, PDO::PARAM_INT);
+            $stmt->execute();
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if ($result) {
-                $credit_account_id = $result['credit_account'];
-                $total_amount_due = $result['total_amount_due'];
-                $tax_withheld_amount = $result['tax_withheld_amount'];
-                $credit_date = $result['credit_date'];
-
-
-            } else {
-                throw new Exception("Credit memo not found.");
+    
+            if (!$result) {
+                throw new Exception("Updated credit memo record not found.");
+            }
+    
+            // Set variables for further use based on the latest data
+            $credit_account_id = $result['credit_account'];
+            $total_amount_due = $result['total_amount_due'];
+            $tax_withheld_amount = $result['tax_withheld_amount'];
+            $credit_date = $result['credit_date'];
+    
+            // Delete existing credit memo details before adding new ones
+            $stmt = $connection->prepare("DELETE FROM credit_memo_details WHERE credit_memo_id = ?");
+            $stmt->execute([$credit_memo_id]);
+    
+            // Insert new credit memo details
+            $stmt = $connection->prepare("
+                INSERT INTO credit_memo_details (
+                    credit_memo_id, account_id, cost_center_id, memo, amount, 
+                    net_amount, taxable_amount, vat_percentage, sales_tax, sales_tax_account_id
+                ) VALUES (
+                    :credit_memo_id, :account_id, :cost_center_id, :memo, :amount, 
+                    :net_amount, :taxable_amount, :vat_percentage, :sales_tax, :sales_tax_account_id
+                )
+            ");
+    
+            foreach ($items as $item) {
+                // Set default values if optional fields are not provided
+                $taxable_amount = isset($item['taxable_amount']) ? $item['taxable_amount'] : 0;
+                $sales_tax = isset($item['sales_tax']) ? $item['sales_tax'] : 0;
+                $vat_percentage = isset($item['vat_percentage']) ? $item['vat_percentage'] : 0;
+                $sales_tax_account_id = isset($item['sales_tax_account_id']) ? $item['sales_tax_account_id'] : 0; // Default to 0 if not provided
+    
+                // Execute insert for each item
+                $stmt->execute([
+                    ':credit_memo_id' => $credit_memo_id,
+                    ':account_id' => $item['account_id'],
+                    ':cost_center_id' => $item['cost_center_id'],
+                    ':memo' => $item['memo'],
+                    ':amount' => $item['amount'],
+                    ':net_amount' => $item['net_amount'],
+                    ':taxable_amount' => $taxable_amount,
+                    ':vat_percentage' => $vat_percentage,
+                    ':sales_tax' => $sales_tax,
+                    ':sales_tax_account_id' => $sales_tax_account_id
+                ]);
             }
     
             foreach ($existingDetails as $detail) {
+                // Additional logic for handling existing details, if needed
                 // Log the existing details into the audit trail
                 self::logAuditTrail(
                     $credit_memo_id,
                     $transaction_type,
                     $credit_date,
                     $credit_no,
+                    $location,
                     $customer_name,
                     $detail['account_id'],
                     $detail['net_amount'], 
@@ -713,6 +929,7 @@ class CreditMemo
                     $transaction_type,
                     $credit_date,
                     $credit_no,
+                    $location,
                     $customer_name,
                     $detail['sales_tax_account_id'],
                     $detail['sales_tax'],
@@ -727,8 +944,9 @@ class CreditMemo
                 $transaction_type,
                 $credit_date,
                 $credit_no,
+                $location,
                 $customer_name,
-                $tax_withheld_account_id,
+                $tax_withheld_percentage,
                 0.00,
                 $tax_withheld_amount,
                 $created_by
@@ -740,6 +958,7 @@ class CreditMemo
                 $transaction_type,
                 $credit_date,
                 $credit_no,
+                $location,
                 $customer_name,
                 $credit_account_id,  // Use the fetched credit_account_id here
                 0.00,
@@ -759,6 +978,7 @@ class CreditMemo
             throw $e;
         }
     }
+    
 
     public static function void($id)
     {

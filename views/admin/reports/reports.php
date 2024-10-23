@@ -1,7 +1,12 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('reports');
 ?>
 
 <?php require 'views/templates/header.php' ?>
@@ -63,22 +68,21 @@ Guard::adminOnly();
                                 <div class="row g-2">
                                     <?php
                                     $bookOfAccounts = [
-                                        'Sales Book',
-                                        'Purchase Book',
-                                        'Inventory Book',
-                                        'Disbursement Book',
-                                        'Cash Receipt Book',
-                                        'General Ledger',
-                                        'General Journal'
+                                        'Sales Book' => 'invoice',
+                                        'Purchase Book' => 'purchase_order',
+                                        'Inventory Book' => 'inventory_book',
+                                        'Disbursement Book' => 'disbursement_book',
+                                        'Cash Receipt Book' => 'cash_receipt_book',
+                                        'General Ledger' => 'general_ledger',
+                                        'General Journal' => 'general_journal'
                                     ];
 
-                                    foreach ($bookOfAccounts as $book) {
-                                        $link = strtolower(str_replace(' ', '_', $book)) . '.php';
+                                    foreach ($bookOfAccounts as $book => $link) {
                                         echo '<div class="col-md-4 col-sm-6">
-                                            <a href="' . $link . '" class="btn btn-outline-primary btn-sm w-100 text-start">
-                                                <i data-feather="book" class="feather-sm me-2"></i>' . $book . '
-                                            </a>
-                                        </div>';
+                                        <a href="' . $link . '" class="btn btn-outline-primary btn-sm w-100 text-start">
+                                            <i data-feather="book" class="feather-sm me-2"></i>' . $book . '
+                                        </a>
+                                    </div>';
                                     }
                                     ?>
                                 </div>
@@ -137,7 +141,7 @@ Guard::adminOnly();
                                         </div>
                                         <div class="list-group list-group-flush shadow-sm">
                                             ' . implode('', array_map(function ($item) {
-                                        $link = strtolower(str_replace(' ', '_', $item)) . '.php';
+                                        $link = strtolower(str_replace(' ', '_', $item));
                                         return '<a href="' . $link . '" class="list-group-item list-group-item-action">
                                                     <i data-feather="file-text" class="feather-sm me-2"></i>' . $item . '
                                                 </a>';
@@ -198,7 +202,6 @@ Guard::adminOnly();
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>

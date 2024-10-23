@@ -1,5 +1,6 @@
 <?php
 
+require_once '_guards.php';
 ?>
 
 <?php require 'templates/header.php' ?>
@@ -10,7 +11,7 @@
     <main class="content">
         <div class="container-fluid p-0">
 
-            <h1 class="h3 mb-3"><strong>PAGE</strong> not Found</h1>
+            <h1 class="h3 mb-3"><strong>PAGE CURRENTLY IN DEVELOPMENT,</strong> COMING SOON!</h1>
 
             <div class="row">
                 <div class="col-12">
@@ -19,6 +20,7 @@
                     <div class="card">
                         <div class="card-body">
                             <img src="./photos/404.jpg" class="img-fluid" alt="">
+
                         </div>
                         <!-- /.card-body -->
                     </div>

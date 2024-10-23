@@ -30,6 +30,7 @@ class PurchaseOrder
     public $vat_exempt;
     public $total_amount;
     public $memo;
+    public $location;
     public $po_status;
     public $status;
     public $po_account_id;
@@ -46,6 +47,7 @@ class PurchaseOrder
     public $discount;
     public $net;
     public $tax_amount;
+    public $taxable_amount;
     public $tax_type;
     public $vat;
     public $input_vat_percentage;
@@ -54,6 +56,7 @@ class PurchaseOrder
     public $item_id;
     public $pr_no;
     public $print_status;
+    public $item_asset_account_id;
 
 
 
@@ -85,12 +88,14 @@ class PurchaseOrder
         $this->vat_exempt = $formData['vat_exempt'] ?? null; // changed from 'zero_rated_amount'
         $this->total_amount = $formData['total_amount'] ?? null;
         $this->memo = $formData['memo'] ?? null;
+        $this->location = $formData['location'] ?? null;
         $this->po_status = $formData['po_status'] ?? null;
         $this->status = $formData['status'] ?? null;
         $this->po_account_id = $formData['po_account_id'] ?? null;
         $this->cost_center_id = $formData['cost_center_id'] ?? null;
         $this->item = $formData['item'] ?? null;
         $this->description = $formData['description'] ?? null;
+        $this->item_asset_account_id = $formData['item_asset_account_id'] ?? null;
         $this->unit = $formData['unit'] ?? null;
         $this->qty = $formData['qty'] ?? null;
         $this->quantity = $formData['quantity'] ?? null;
@@ -101,6 +106,7 @@ class PurchaseOrder
         $this->discount = $formData['discount'] ?? null;
         $this->net = $formData['net'] ?? null;
         $this->tax_amount = $formData['tax_amount'] ?? null;
+        $this->taxable_amount = $formData['taxable_amount'] ?? null;
         $this->tax_type = $formData['tax_type'] ?? null;
         $this->vat = $formData['vat'] ?? null;
         $this->input_vat_percentage = $formData['input_vat_percentage'] ?? null;
@@ -151,6 +157,7 @@ class PurchaseOrder
             po.vat_exempt,
             po.total_amount,
             po.memo,
+            po.location,
             po.po_status,
             po.status,
             po.print_status,
@@ -267,7 +274,7 @@ class PurchaseOrder
 
 
 
-    public static function add($po_no, $po_date, $delivery_date, $vendor_id, $terms, $gross_amount, $discount_amount, $net_amount_due, $input_vat_amount, $vatable_amount, $zero_rated_amount, $vat_exempt_amount, $total_amount_due, $memo, $items)
+    public static function add($po_no, $po_date, $delivery_date, $vendor_id, $terms, $gross_amount, $discount_amount, $net_amount_due, $input_vat_amount, $vatable_amount, $zero_rated_amount, $vat_exempt_amount, $total_amount_due, $memo, $location, $items)
     {
         global $connection;
 
@@ -279,8 +286,8 @@ class PurchaseOrder
                 INSERT INTO purchase_order (
                     po_no, date, delivery_date, vendor_id, terms, gross_amount,
                     discount_amount, net_amount, input_vat, vatable, zero_rated,
-                    vat_exempt, total_amount, memo
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    vat_exempt, total_amount, memo, location
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
 
             $stmt->execute([
@@ -297,7 +304,8 @@ class PurchaseOrder
                 $zero_rated_amount,
                 $vat_exempt_amount,
                 $total_amount_due,
-                $memo
+                $memo,
+                $location
             ]);
 
             // Get the ID of the newly inserted purchase order
@@ -330,12 +338,7 @@ class PurchaseOrder
                 JOIN purchase_request_details prd ON pr.id = prd.pr_id
                 WHERE pr.pr_no = :pr_no AND prd.item_id = :item_id
             ");
-                $stmt = $connection->prepare("
-                SELECT pr.id as pr_id, prd.id as prd_id, prd.quantity, prd.balance_quantity
-                FROM purchase_request pr
-                JOIN purchase_request_details prd ON pr.id = prd.pr_id
-                WHERE pr.pr_no = :pr_no AND prd.item_id = :item_id
-            ");
+
                 $stmt->execute([':pr_no' => $item['pr_no'], ':item_id' => $item['item_id']]);
                 $pr_data = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -474,17 +477,19 @@ class PurchaseOrder
                 cc.particular as cost_center_name,
                 i.item_name AS item,
                 i.item_purchase_description AS description,
+                i.item_asset_account_id AS item_asset_account_id,
                 uom.name AS unit,
                 pod.balance_qty AS quantity,
                 pod.received_qty as received_qty,
                 pod.cost,
                 pod.amount,
-                pod.qty AS qty,
-                pod.discount_percentage AS discount_percentage,
+                pod.qty,
+                pod.discount_percentage,
                 pod.discount AS discount,
                 pod.net_amount AS net,
                 pod.input_vat AS tax_amount,
                 pod.input_vat_percentage as input_vat_percentage,
+                pod.taxable_amount,
                 pod.input_vat AS vat
                 FROM 
                     purchase_order po
@@ -558,6 +563,7 @@ class PurchaseOrder
                 'date' => $row['date'],
                 'vendor_name' => $row['vendor_name'],
                 'total_amount' => $row['total_amount'],
+                'location' => $row['location'],
                 'po_status' => $row['po_status']
             ];
             $orders[] = new PurchaseOrder($order);
@@ -692,6 +698,7 @@ class PurchaseOrder
         $vat_exempt_amount,
         $total_amount_due,
         $memo,
+        $location,
         $items
     ) {
         global $connection;
@@ -703,11 +710,11 @@ class PurchaseOrder
             $sql = "INSERT INTO purchase_order (
                 date, delivery_date, vendor_id, terms, gross_amount,
                 discount_amount, net_amount, input_vat, vatable, zero_rated,
-                vat_exempt, total_amount, memo, po_status
+                vat_exempt, total_amount, memo, location, po_status
             ) VALUES (
                 :po_date, :delivery_date, :vendor_id, :terms, :gross_amount,
                 :discount_amount, :net_amount_due, :input_vat_amount, :vatable_amount, :zero_rated_amount,
-                :vat_exempt_amount, :total_amount_due, :memo, :po_status
+                :vat_exempt_amount, :total_amount_due, :memo, :location, :po_status
             )";
 
             $stmt = $connection->prepare($sql);
@@ -724,6 +731,7 @@ class PurchaseOrder
             $stmt->bindParam(':vat_exempt_amount', $vat_exempt_amount);
             $stmt->bindParam(':total_amount_due', $total_amount_due);
             $stmt->bindParam(':memo', $memo);
+            $stmt->bindParam(':location', $location);
             $stmt->bindValue(':po_status', 4, PDO::PARAM_INT); // Set status to 4 for draft
 
             $stmt->execute();
@@ -733,17 +741,18 @@ class PurchaseOrder
             // Insert purchase order items
             if (!empty($items)) {
                 $itemSql = "INSERT INTO purchase_order_details (
-                    po_id, item_id, cost_center_id, qty, cost, amount, discount_percentage,
-                    discount, net_amount, taxable_amount, input_vat_percentage, input_vat
+                    po_id, pr_no, item_id, cost_center_id, qty, cost, amount, discount_percentage,
+                    discount, net_amount, taxable_amount, input_vat_percentage, input_vat, discount_type_id, tax_type_id, balance_qty
                 ) VALUES (
-                    :po_id, :item_id, :cost_center_id, :qty, :cost, :amount, :discount_percentage,
-                    :discount, :net_amount, :taxable_amount, :input_vat_percentage, :input_vat
+                    :po_id, :pr_no, :item_id, :cost_center_id, :qty, :cost, :amount, :discount_percentage,
+                    :discount, :net_amount, :taxable_amount, :input_vat_percentage, :input_vat, :discount_type_id, :tax_type_id, :balance_qty
                 )";
 
                 $itemStmt = $connection->prepare($itemSql);
 
                 foreach ($items as $item) {
                     $itemStmt->bindParam(':po_id', $po_id);
+                    $itemStmt->bindParam(':pr_no', $item['pr_no']);
                     $itemStmt->bindParam(':item_id', $item['item_id']);
                     $itemStmt->bindParam(':cost_center_id', $item['cost_center_id']);
                     $itemStmt->bindParam(':qty', $item['qty']);
@@ -755,6 +764,9 @@ class PurchaseOrder
                     $itemStmt->bindParam(':taxable_amount', $item['taxable_amount']);
                     $itemStmt->bindParam(':input_vat_percentage', $item['input_vat_percentage']);
                     $itemStmt->bindParam(':input_vat', $item['input_vat']);
+                    $itemStmt->bindParam(':discount_type_id', $item['discount_account_id']); // Map discount_account_id to discount_type_id
+                    $itemStmt->bindParam(':tax_type_id', $item['input_vat_account_id']); // Map input_vat_account_id to tax_type_id
+                    $itemStmt->bindParam(':balance_qty', $item['qty']);
                     $itemStmt->execute();
                 }
             }
@@ -768,23 +780,40 @@ class PurchaseOrder
         }
     }
 
-    public static function getPurchaseRequestInfo($item_id)
-{
-    global $connection;
+    public static function getItemsByPRNo($pr_no)
+    {
+        global $connection;
 
-    // Query adjusted to avoid fetching rows where prd.pr_id = pr.id
-    $sql = "SELECT pr.pr_no 
+        $sql = "SELECT prd.item_id, i.item_name, i.item_sales_description, i.item_uom_id, uom.name AS uom_name, prd.balance_quantity AS balance_qty
+        FROM purchase_request_details prd 
+        JOIN items i ON prd.item_id = i.id
+        LEFT JOIN uom ON i.item_uom_id = uom.id
+        WHERE prd.pr_id = (SELECT id FROM purchase_request WHERE pr_no = :pr_no) 
+        AND (prd.status = 0 OR prd.status = 2)";
+
+        $stmt = $connection->prepare($sql);
+        $stmt->bindParam(':pr_no', $pr_no, PDO::PARAM_STR);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public static function isItemInPR($pr_no, $item_id)
+    {
+        global $connection;
+
+        $sql = "SELECT COUNT(*) 
             FROM purchase_request_details prd 
-            JOIN purchase_request pr ON prd.pr_id = pr.id 
-            WHERE prd.item_id = :item_id 
-            AND prd.status != 1"; // Filter to exclude rows where status is 0
+            WHERE prd.pr_id = (SELECT id FROM purchase_request WHERE pr_no = :pr_no) 
+            AND prd.item_id = :item_id";
 
-    $stmt = $connection->prepare($sql);
-    $stmt->bindParam(':item_id', $item_id, PDO::PARAM_INT);
-    $stmt->execute();
+        $stmt = $connection->prepare($sql);
+        $stmt->bindParam(':pr_no', $pr_no, PDO::PARAM_STR);
+        $stmt->bindParam(':item_id', $item_id, PDO::PARAM_INT);
+        $stmt->execute();
 
-    return $stmt->fetchAll(PDO::FETCH_COLUMN);
-}
+        return $stmt->fetchColumn() > 0;
+    }
 
     public static function getPRQuantity($pr_no, $item_id)
     {
@@ -822,6 +851,129 @@ class PurchaseOrder
 
             // Return a null or error value
             return null;
+        }
+    }
+
+    public static function updateDraft(
+        $id,
+        $po_date,
+        $delivery_date,
+        $vendor_id,
+        $terms,
+        $gross_amount,
+        $discount_amount,
+        $net_amount_due,
+        $input_vat_amount,
+        $vatable_amount,
+        $zero_rated_amount,
+        $vat_exempt_amount,
+        $total_amount_due,
+        $memo,
+        $location,
+        $items
+    ) {
+        global $connection;
+
+        try {
+            $connection->beginTransaction();
+
+            // Prepare the UPDATE statement for the purchase order
+            $stmt = $connection->prepare("
+                UPDATE purchase_order
+                SET date = :po_date,
+                    delivery_date = :delivery_date,
+                    vendor_id = :vendor_id,
+                    terms = :terms,
+                    gross_amount = :gross_amount,
+                    discount_amount = :discount_amount,
+                    net_amount = :net_amount_due,
+                    input_vat = :input_vat_amount,
+                    vatable = :vatable_amount,
+                    zero_rated = :zero_rated_amount,
+                    vat_exempt = :vat_exempt_amount,
+                    total_amount = :total_amount_due,
+                    memo = :memo,
+                    location = :location,
+                    po_status = 4
+                WHERE id = :id
+            ");
+
+            // Bind the parameters
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->bindParam(':po_date', $po_date, PDO::PARAM_STR);
+            $stmt->bindParam(':delivery_date', $delivery_date, PDO::PARAM_STR);
+            $stmt->bindParam(':vendor_id', $vendor_id, PDO::PARAM_INT);
+            $stmt->bindParam(':terms', $terms, PDO::PARAM_STR);
+            $stmt->bindParam(':gross_amount', $gross_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':discount_amount', $discount_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':net_amount_due', $net_amount_due, PDO::PARAM_STR);
+            $stmt->bindParam(':input_vat_amount', $input_vat_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':vatable_amount', $vatable_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':zero_rated_amount', $zero_rated_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':vat_exempt_amount', $vat_exempt_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':total_amount_due', $total_amount_due, PDO::PARAM_STR);
+            $stmt->bindParam(':memo', $memo, PDO::PARAM_STR);
+            $stmt->bindParam(':location', $location, PDO::PARAM_STR);
+
+            // Execute the statement
+            $result = $stmt->execute();
+
+            if ($result) {
+                // Delete existing purchase order details
+                $stmt = $connection->prepare("DELETE FROM purchase_order_details WHERE po_id = ?");
+                $stmt->execute([$id]);
+
+                // Prepare statement for inserting new purchase order details
+                $stmt = $connection->prepare("
+                    INSERT INTO purchase_order_details (
+                        po_id, pr_no, item_id, cost_center_id, qty, cost, amount, discount_percentage,
+                        discount, net_amount, taxable_amount, input_vat_percentage, input_vat, balance_qty, 
+                        last_ordered_qty, discount_type_id, tax_type_id
+                    ) VALUES (
+                        :po_id, :pr_no, :item_id, :cost_center_id, :qty, :cost, :amount, :discount_percentage,
+                        :discount, :net_amount, :taxable_amount, :input_vat_percentage, :input_vat, :balance_qty,
+                        :last_ordered_qty, :discount_type_id, :tax_type_id
+                    )
+                ");
+
+                foreach ($items as $item) {
+                    $stmt->execute([
+                        ':po_id' => $id,
+                        ':pr_no' => $item['pr_no'] ?? null,
+                        ':item_id' => $item['item_id'] ?? null,
+                        ':cost_center_id' => $item['cost_center_id'] ?? null,
+                        ':qty' => $item['qty'] ?? 0,
+                        ':cost' => $item['cost'] ?? 0,
+                        ':amount' => $item['amount'] ?? 0,
+                        ':discount_percentage' => $item['discount_percentage'] ?? 0,
+                        ':discount' => $item['discount'] ?? 0,
+                        ':net_amount' => $item['net_amount'] ?? 0,
+                        ':taxable_amount' => $item['taxable_amount'] ?? 0,
+                        ':input_vat_percentage' => $item['input_vat_percentage'] ?? 0,
+                        ':input_vat' => $item['input_vat'] ?? 0,
+                        ':balance_qty' => $item['qty'] ?? 0,
+                        ':last_ordered_qty' => $item['last_ordered_qty'] ?? 0,
+                        ':discount_type_id' => $item['discount_account_id'] ?? null,
+                        ':tax_type_id' => $item['input_vat_account_id'] ?? null
+                    ]);
+                }
+
+                // Commit the transaction
+                $connection->commit();
+                return [
+                    'success' => true,
+                    'poId' => $id
+                ];
+            } else {
+                throw new Exception("Failed to update purchase order.");
+            }
+        } catch (Exception $ex) {
+            $connection->rollback();
+            error_log('Error updating draft purchase order: ' . $ex->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Error: ' . $ex->getMessage()
+            ];
         }
     }
 }

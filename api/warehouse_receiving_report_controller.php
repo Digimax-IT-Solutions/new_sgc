@@ -21,6 +21,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
                     'purchase_order_detail_id' => $purchase->purchase_order_detail_id,
                     'po_account_id' => $purchase->po_account_id,
                     'po_no' => $purchase->po_no,
+                    'date' => $purchase->date,
+                    'delivery_date' => $purchase->delivery_date,
                     'cost_center_id' => $purchase->cost_center_id,
                     'cost_center_name' => $purchase->cost_center_name,
                     'item_id' => $purchase->item_id,

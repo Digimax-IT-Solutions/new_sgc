@@ -1,8 +1,14 @@
 <?php
+
+
+//Guard
 //Guard
 require_once '_guards.php';
-Guard::adminOnly();
-
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('audit_trail');
 $audit_trails = AuditTrail::all();
 
 // Initialize variables for date range
@@ -16,8 +22,59 @@ if (isset($_POST['from_date']) && isset($_POST['to_date'])) {
     $to_date = $_POST['to_date'];
     $audit_trails = AuditTrail::filterByDateRange($from_date, $to_date);
 
-    // Update the title with the selected date range
-    $title = "<h1 class='display-8'>AUDIT TRAIL</h1> </br>As of $from_date to $to_date";
+    // // Prepare data for Discord
+    // // Prepare data for Discord
+    // $discord_message = "**This is generated from Hisumco Accounting System**\n"; // Add title in bold
+    // $discord_message .= "Audit Trail filtered from $from_date to $to_date\n\n";
+    // $discord_message .= "```\n"; // Start of code block for better formatting
+    // $discord_message .= sprintf(
+    //     "%-10s | %-4s | %-4s | %-15s | %-15s | %-20s | %-8s | %-8s\n",
+    //     "Date",
+    //     "State",
+    //     "Created By",
+    //     "Transaction",
+    //     "Name",
+    //     "Account",
+    //     "Debit",
+    //     "Credit"
+    // );
+    // $discord_message .= str_repeat("-", 120) . "\n"; // Separator line
+
+    // $last_row = '';
+    // foreach ($audit_trails as $audit_trail) {
+    //     $state_label = $audit_trail->state == 1 ? 'latest' : ($audit_trail->state == 2 ? 'void' : ''); // Map state to labels
+
+    //     $current_row = sprintf(
+    //         "%-10s | %-4s | %-4s | %-15s | %-15s | %-20s | %8s | %8s",
+    //         date('Y-m-d', strtotime($audit_trail->created_at)), // Only date, no time
+    //         substr($state_label, 0, 4), // Display "latest" or "void"
+    //         substr($audit_trail->created_by, 0, 15),
+    //         substr($audit_trail->transaction_type, 0, 15),
+    //         substr($audit_trail->name, 0, 15),
+    //         substr($audit_trail->account_description, 0, 20),
+    //         $audit_trail->debit != 0 ? number_format($audit_trail->debit, 2) : '-',
+    //         $audit_trail->credit != 0 ? number_format($audit_trail->credit, 2) : '-'
+    //     );
+
+    //     if (isset($last_row)) {
+    //         $discord_message .= $last_row . "\n";
+    //     }
+    //     $last_row = $current_row;
+    // }
+
+    // // Add the last row without a newline
+    // if ($last_row) {
+    //     $discord_message .= $last_row;
+    // }
+
+    // $discord_message .= "```\n"; // End of code block
+
+    // // Send to Discord
+    // $response = sendToDiscord($discord_message);
+    // if ($response === false) {
+    //     // Handle error
+    //     error_log("Failed to send audit trail to Discord");
+    // }
 }
 ?>
 
@@ -152,13 +209,13 @@ if (isset($_POST['from_date']) && isset($_POST['to_date'])) {
     <?php require 'views/templates/footer.php'; ?>
 
     <script>
-        $(document).ready(function () {
+        $(document).ready(function() {
 
-            $('#upload_button').on('click', function () {
+            $('#upload_button').on('click', function() {
                 $('#excel_file').click();
             });
 
-            $('#excel_file').on('change', function () {
+            $('#excel_file').on('change', function() {
                 if (this.files[0]) {
                     var formData = new FormData();
                     formData.append('excel_file', this.files[0]);
@@ -172,8 +229,8 @@ if (isset($_POST['from_date']) && isset($_POST['to_date'])) {
                         cache: false,
                         contentType: false,
                         processData: false,
-                        success: function (response) {
-                            console.log('Raw response:', response);  // For debugging
+                        success: function(response) {
+                            console.log('Raw response:', response); // For debugging
                             if (response.status === 'success') {
                                 alert(response.message);
                                 location.reload();
@@ -181,7 +238,7 @@ if (isset($_POST['from_date']) && isset($_POST['to_date'])) {
                                 alert('Error: ' + response.message);
                             }
                         },
-                        error: function (xhr, status, error) {
+                        error: function(xhr, status, error) {
                             alert('An error occurred: ' + error);
                         }
                     });
@@ -199,17 +256,27 @@ if (isset($_POST['from_date']) && isset($_POST['to_date'])) {
                 buttons: [
                     'copy', 'csv', 'excel', 'pdf', 'print'
                 ],
-                order: [[0, 'desc']], // Sort by the first column (Entered) in descending order
+                order: [
+                    [0, 'desc']
+                ], // Sort by the first column (Entered) in descending order
                 pageLength: 25,
-                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
-                columnDefs: [
-                    { targets: [8, 9], className: 'text-right' }, // Right-align debit and credit columns
-                    { targets: [0, 5], type: 'date' } // Specify date columns for proper sorting
+                lengthMenu: [
+                    [10, 25, 50, -1],
+                    [10, 25, 50, "All"]
+                ],
+                columnDefs: [{
+                        targets: [8, 9],
+                        className: 'text-right'
+                    }, // Right-align debit and credit columns
+                    {
+                        targets: [0, 5],
+                        type: 'date'
+                    } // Specify date columns for proper sorting
                 ]
             });
 
             // Handle print button click
-            $('#print_button').on('click', function () {
+            $('#print_button').on('click', function() {
                 window.print();
             });
         });

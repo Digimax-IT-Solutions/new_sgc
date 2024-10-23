@@ -1,8 +1,12 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
-
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('item_list');
 $products = Product::all();
 
 ?>
@@ -26,8 +30,8 @@ $products = Product::all();
                     <div class="card">
                         <div class="card-body">
                             <div class="row">
-                            <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                                <h6 class="m-0 font-weight-bold text-primary">Items</h6>
+                                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                                    <h6 class="m-0 font-weight-bold text-primary">Items</h6>
                                     <div>
                                         <a class="btn btn-sm btn-outline-secondary me-2" id="upload_button">
                                             <i class="fas fa-upload"></i> Upload
@@ -35,13 +39,13 @@ $products = Product::all();
                                         <input type="file" name="excel_file" id="excel_file" accept=".xlsx, .xls"
                                             style="display: none;">
                                         <a href="add_item" class="btn btn-sm btn-primary">
-                                            <i class="fas fa-plus"></i> New Invoice
+                                            <i class="fas fa-plus"></i> Add New
                                         </a>
                                     </div>
                                 </div>
                             </div>
                             <br /><br /><br />
-                            <table id="itemListTable" class="table table-hover">
+                            <table id="itemListTable" class="table table-hover display compact">
                                 <thead>
                                     <tr>
                                         <th>Item Code</th>
@@ -59,7 +63,8 @@ $products = Product::all();
                                             <td><?= $product->item_sales_description ?></td>
                                             <td>₱<?= number_format($product->item_selling_price, 2, '.', ',') ?></td>
                                             <td>
-                                                <a class="text-primary" href="view_item?action=update&id=<?= $product->id ?>">
+                                                <a class="text-primary"
+                                                    href="view_item?action=update&id=<?= $product->id ?>">
                                                     <i class="fas fa-edit"></i> Update
                                                 </a>
                                                 <a class="text-danger ml-2"
@@ -81,23 +86,25 @@ $products = Product::all();
     </main>
     <?php require 'views/templates/footer.php' ?>
 
-<script>
-    $(function () {
-        $("#itemListTable").DataTable({
-            "responsive": true, "lengthChange": false, "autoWidth": false,
-            "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"]
-        }).buttons().container().appendTo('#itemListTable_wrapper .col-md-6:eq(0)');
-    });
-</script>
+    <script>
+        $(function() {
+            $("#itemListTable").DataTable({
+                "responsive": true,
+                "lengthChange": false,
+                "autoWidth": false,
+                "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"]
+            }).buttons().container().appendTo('#itemListTable_wrapper .col-md-6:eq(0)');
+        });
+    </script>
 
-<script>
-        $(document).ready(function () {
+    <script>
+        $(document).ready(function() {
 
-            $('#upload_button').on('click', function () {
+            $('#upload_button').on('click', function() {
                 $('#excel_file').click();
             });
 
-            $('#excel_file').on('change', function () {
+            $('#excel_file').on('change', function() {
                 if (this.files[0]) {
                     var formData = new FormData();
                     formData.append('excel_file', this.files[0]);
@@ -112,7 +119,7 @@ $products = Product::all();
                         contentType: false,
                         processData: false,
                         dataType: 'json', // Add this line to expect JSON response
-                        success: function (response) {
+                        success: function(response) {
                             if (response.status === 'success') {
                                 alert(response.message);
                                 location.reload();
@@ -120,7 +127,7 @@ $products = Product::all();
                                 alert('Error: ' + response.message);
                             }
                         },
-                        error: function (xhr, status, error) {
+                        error: function(xhr, status, error) {
                             console.log(xhr.responseText); // Log the full response for debugging
                             alert('An error occurred: ' + error);
                         }

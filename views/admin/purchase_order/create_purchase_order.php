@@ -1,7 +1,12 @@
 <?php
 //Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('purchase_order');
 $accounts = ChartOfAccount::all();
 $vendors = Vendor::all();
 $products = Product::all();
@@ -9,7 +14,9 @@ $terms = Term::all();
 $discounts = Discount::all();
 $input_vats = InputVat::all();
 $purchase_orders = PurchaseOrder::all();
+$purchase_requests = PurchaseRequest::all();
 $cost_centers = CostCenter::all();
+$locations = Location::all();
 
 $newPoNo = PurchaseOrder::getLastPoNo();
 ?>
@@ -95,9 +102,9 @@ $newPoNo = PurchaseOrder::getLastPoNo();
         }
     }
 </style>
+
 <div class="main">
     <?php require 'views/templates/navbar.php' ?>
-
     <!-- Content Wrapper. Contains page content -->
     <main class="content">
         <div class="container-fluid p-0">
@@ -190,48 +197,47 @@ $newPoNo = PurchaseOrder::getLastPoNo();
                                                 <h6 class="border-bottom pb-2">Order Information</h6>
                                             </div>
 
-                                            <div class="col-md-3 order-details">
-                                                <div class="form-group">
-                                                    <!-- PURCHASE ORDER NO -->
-                                                    <label for="po_no">PO No:</label>
-                                                    <input type="text" class="form-control form-control-sm" id="po_no"
-                                                        name="po_no" value="<?php echo $newPoNo; ?>" readonly>
+                                            <div class="row order-details">
+                                                <div class="col-md-3">
+                                                    <div class="form-group">
+                                                        <!-- PURCHASE ORDER NO -->
+                                                        <label for="po_no">PO No:</label>
+                                                        <input type="text" class="form-control form-control-sm" id="po_no" name="po_no" 
+                                                            value="<?php echo $newPoNo; ?>" readonly>
+                                                    </div>
                                                 </div>
-                                            </div>
 
-                                            <div class="col-md-3 order-details">
-                                                <!-- TERMS -->
-                                                <div class="form-group">
-                                                    <label for="terms" class="form-label">Terms</label>
-                                                    <select class="form-select form-select-sm" id="invoice_terms"
-                                                        name="terms">
-                                                        <option value="">Select Terms</option>
-                                                        <?php foreach ($terms as $term): ?>
-                                                            <option value="<?= $term->term_name ?>"
-                                                                data-days="<?= $term->term_days_due ?>">
-                                                                <?= $term->term_name ?>
-                                                            </option>
-                                                        <?php endforeach; ?>
-                                                    </select>
+                                                <div class="col-md-3">
+                                                    <!-- TERMS -->
+                                                    <div class="form-group">
+                                                        <label for="terms" class="form-label">Terms</label>
+                                                        <select class="form-select form-select-sm" id="invoice_terms" name="terms">
+                                                            <option value="">Select Terms</option>
+                                                            <?php foreach ($terms as $term): ?>
+                                                                <option value="<?= $term->term_name ?>" data-days="<?= $term->term_days_due ?>">
+                                                                    <?= $term->term_name ?>
+                                                                </option>
+                                                            <?php endforeach; ?>
+                                                        </select>
+                                                    </div>
                                                 </div>
-                                            </div>
 
-                                            <div class="col-md-3 order-details">
-                                                <!-- DATE -->
-                                                <div class="form-group">
-                                                    <label for="po_date">Date</label>
-                                                    <input type="date" class="form-control form-control-sm" id="po_date"
-                                                        name="po_date" value="<?php echo date('Y-m-d'); ?>">
+                                                <div class="col-md-3">
+                                                    <!-- DATE -->
+                                                    <div class="form-group">
+                                                        <label for="po_date">Date</label>
+                                                        <input type="date" class="form-control form-control-sm" id="po_date" name="po_date" 
+                                                            value="<?php echo date('Y-m-d'); ?>">
+                                                    </div>
                                                 </div>
-                                            </div>
 
-                                            <div class="col-md-3 order-details">
-                                                <!-- DELIVERY DATE -->
-                                                <div class="form-group">
-                                                    <label for="delivery_date">Delivery Date</label>
-                                                    <input type="date" class="form-control form-control-sm"
-                                                        id="delivery_date" name="delivery_date"
-                                                        value="<?php echo date('Y-m-d'); ?>">
+                                                <div class="col-md-3">
+                                                    <!-- DELIVERY DATE -->
+                                                    <div class="form-group">
+                                                        <label for="delivery_date">Delivery Date</label>
+                                                        <input type="date" class="form-control form-control-sm" id="delivery_date" name="delivery_date" 
+                                                            value="<?php echo date('Y-m-d'); ?>">
+                                                    </div>
                                                 </div>
                                             </div>
 
@@ -240,6 +246,17 @@ $newPoNo = PurchaseOrder::getLastPoNo();
                                                 <label for="memo" class="form-label">Memo</label>
                                                 <input type="text" class="form-control form-control-sm" id="memo"
                                                     name="memo">
+                                            </div>
+                                            <div class="col-md-4 customer-details">
+                                                <label for="location" class="form-label">Location</label>
+                                                <select class="form-select form-select-sm" id="location" name="location"
+                                                    required>
+                                                    <option value="">Select Location</option>
+                                                    <?php foreach ($locations as $location): ?>
+                                                        <option value="<?= $location->id ?>"><?= $location->name ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </select>
                                             </div>
                                         </div>
                                     </div>
@@ -283,7 +300,7 @@ $newPoNo = PurchaseOrder::getLastPoNo();
 
                                         <!-- VAT PERCENTAGE -->
                                         <div class="row">
-                                            <label class="col-sm-6 col-form-label">VAT:</label>
+                                            <label class="col-sm-6 col-form-label">Input VAT:</label>
                                             <div class="col-sm-6">
                                                 <input type="text" class="form-control-plaintext text-end"
                                                     id="total_input_vat_amount" name="total_input_vat_amount"
@@ -351,8 +368,8 @@ $newPoNo = PurchaseOrder::getLastPoNo();
                                                 <table class="table table-sm table-hover" id="itemTable">
                                                     <thead class="bg-light" style="font-size: 12px;">
                                                         <tr>
-                                                            <th style="width: 250px">Item</th>
-                                                            <th style="width: 200px">PR No.</th>
+                                                            <th style="width: 250px">PR No.</th>
+                                                            <th style="width: 200px">Item</th>
                                                             <th style="width: 250px">Cost Center</th>
                                                             <th>Description</th>
                                                             <th>Quantity</th>
@@ -362,9 +379,9 @@ $newPoNo = PurchaseOrder::getLastPoNo();
                                                             <th>Discount Type</th>
                                                             <th>Discount</th>
                                                             <th>Net</th>
-                                                            <th>Tax Amount</th>
+                                                            <th>Taxable Amount</th>
                                                             <th>Tax Type</th>
-                                                            <th>VAT</th>
+                                                            <th>Input Vat</th>
                                                             <th></th>
                                                         </tr>
                                                     </thead>
@@ -396,32 +413,6 @@ $newPoNo = PurchaseOrder::getLastPoNo();
 <iframe id="printFrame" style="display:none;"></iframe>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const poDateInput = document.getElementById('po_date');
-        const termsSelect = document.getElementById('invoice_terms');
-        const deliveryDateInput = document.getElementById('delivery_date');
-
-        function updateDeliveryDate() {
-            const poDate = new Date(poDateInput.value);
-            const selectedOption = termsSelect.options[termsSelect.selectedIndex];
-            const termDaysDue = parseInt(selectedOption.dataset.days, 10);
-
-            if (!isNaN(poDate.getTime()) && !isNaN(termDaysDue)) {
-                const deliveryDate = new Date(poDate);
-                deliveryDate.setDate(deliveryDate.getDate() + termDaysDue);
-
-                // Format the date as YYYY-MM-DD for the input
-                const formattedDate = deliveryDate.toISOString().split('T')[0];
-                deliveryDateInput.value = formattedDate;
-            }
-        }
-
-        poDateInput.addEventListener('change', updateDeliveryDate);
-        termsSelect.addEventListener('change', updateDeliveryDate);
-    });
-
-
-
     $(document).ready(function() {
 
         // Add click event listener to the Clear button
@@ -469,12 +460,13 @@ $newPoNo = PurchaseOrder::getLastPoNo();
         function saveDraft() {
             const items = gatherTableItems();
 
-            // Check if there are any items
-            if (items.length === 0) {
+            // Check if there are any items or validation failed
+            if (items === false || items.length === 0) {
+                if (items === false) return; // Prevent further execution if validation failed
                 Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Please add items before saving as draft'
+                    icon: 'warning',
+                    title: 'Warning',
+                    text: 'Please add items'
                 });
                 return;
             }
@@ -501,9 +493,9 @@ $newPoNo = PurchaseOrder::getLastPoNo();
 
                     if (response.success) {
                         Swal.fire({
-                            icon: 'success',
+                            icon: 'info',
                             title: 'Success',
-                            text: 'Purchase Order saved as draft successfully!',
+                            text: 'Purchase Order saved as draft!',
                             confirmButtonText: 'OK'
                         }).then((result) => {
                             if (result.isConfirmed) {
@@ -544,27 +536,18 @@ $newPoNo = PurchaseOrder::getLastPoNo();
             placeholder: 'Select Vendor',
             allowClear: true
         });
-
-
-        // $('#terms').change(function () {
-        //     var terms = $(this).val();
-        //     var deliveryDate = calculateDeliveryDate(terms);
-        //     $('#delivery_date').val(deliveryDate);
-        // });
-
-        function calculateDeliveryDate(terms) {
-            var currentDate = new Date();
-            var deliveryDate = new Date(currentDate);
-
-            if (terms === 'Due on Receipt') {
-                // Delivery date is the same as the current date
-                return currentDate.toISOString().split('T')[0];
-            } else {
-                var daysToAdd = parseInt(terms.replace('NET ', ''));
-                deliveryDate.setDate(deliveryDate.getDate() + daysToAdd);
-                return deliveryDate.toISOString().split('T')[0];
-            }
-        }
+        $('#location').select2({
+            theme: 'classic', // Use 'bootstrap-5' for Bootstrap 5, 'bootstrap-4' for Bootstrap 4
+            width: '100%',
+            placeholder: 'Select Vendor',
+            allowClear: true
+        });
+        $('#invoice_terms').select2({
+            theme: 'classic', // Use 'bootstrap-5' for Bootstrap 5, 'bootstrap-4' for Bootstrap 4
+            width: '100%',
+            placeholder: 'Select Vendor',
+            allowClear: true
+        });
 
         // Populate dropdowns with accounts from PHP
         const products = <?php echo json_encode($products); ?>;
@@ -592,12 +575,18 @@ $newPoNo = PurchaseOrder::getLastPoNo();
             inputVatDropdownOptions += `<option value="${input_vat.input_vat_rate}" data-account-id="${input_vat.input_vat_account_id}">${input_vat.input_vat_name}</option>`;
         });
 
+        const prOption = <?php echo json_encode($purchase_requests); ?>;
+        let prDropdownOptions = '';
+        prOption.forEach(function(purchase_request) {
+            prDropdownOptions += `<option value="${purchase_request.pr_no}">${purchase_request.pr_no}</option>`;
+        });
+
         // Add a new row to the table
         function addRow() {
             const newRow = `
         <tr>
+            <td><select class="form-control form-control-sm pr-no-dropdown select2" name="pr_no[]"><option value="">Select PR No.</option>${prDropdownOptions}</select></td>
             <td><select class="form-control form-control-sm account-dropdown select2" name="item_id[]" onchange="populateFields(this)">${itemDropdownOptions}</select></td>
-            <td><select class="form-control form-control-sm pr-no-dropdown select2" name="pr_no[]"><option value="">Select PR No.</option></select></td>
             <td><select class="form-control form-control-sm cost-center-dropdown select2" name="cost_center_id[]">${costCenterDropdownOptions}</select></td>
             <td><input type="text" class="form-control form-control-sm description-field" name="description[]" readonly></td>
             <td><input type="text" class="form-control form-control-sm quantity" name="quantity[]" placeholder="Qty"></td>
@@ -606,8 +595,8 @@ $newPoNo = PurchaseOrder::getLastPoNo();
             <td><input type="text" class="form-control form-control-sm amount" name="amount[]" placeholder="Amount" readonly></td>
             <td><select class="form-control form-control form-control-sm discount_percentage select2" name="discount_percentage[]">${discountDropdownOptions}</select></td>
             <td><input type="text" class="form-control form-control-sm discount_amount" name="discount_amount[]" placeholder="" readonly></td>
-            <td><input type="text" class="form-control form-control-sm net_amount_before_input_vat" name="net_amount_before_input_vat[]" placeholder="" readonly></td>
-            <td><input type="text" class="form-control form-control-sm net_amount" name="net_amount[]" placeholder=""></td>
+            <td><input type="text" class="form-control form-control-sm net_amount_before_input_vat" name="net_amount[]" placeholder="" readonly></td>
+            <td><input type="text" class="form-control form-control-sm net_amount" name="taxable_amount[]" placeholder=""></td>
             <td><select class="form-control form-control-sm input_vat_percentage select2" name="input_vat_percentage[]">${inputVatDropdownOptions}</select></td>
             <td><input type="text" class="form-control form-control-sm input_vat_amount" name="input_vat_amount[]" placeholder="" readonly></td>
             <td><button type="button" class="btn btn-danger btn-sm removeRow"><i class="fas fa-trash"></i></button></td>
@@ -642,15 +631,20 @@ $newPoNo = PurchaseOrder::getLastPoNo();
             const amount = quantity * cost;
             const discountAmount = (amount * discountPercentage) / 100;
 
+
+            const salesTaxDecimal = salesTaxPercentage / 100; // Convert to decimal (0.12 for 12%)
+            const vat = 1 + salesTaxDecimal; // Convert to decimal (1.12 for 12%)
+
             const netAmountBeforeTax = amount - discountAmount;
-            const salesTaxAmount = (netAmountBeforeTax * salesTaxPercentage) / 100;
+
+            const salesTaxAmount = (netAmountBeforeTax / vat) * salesTaxDecimal;
             const netAmount = netAmountBeforeTax - salesTaxAmount;
 
             row.find('.amount').val(amount.toFixed(2));
             row.find('.discount_amount').val(discountAmount.toFixed(2));
             row.find('.net_amount_before_input_vat').val(netAmountBeforeTax.toFixed(2));
-            row.find('.input_vat_amount').val(salesTaxAmount.toFixed(2));
             row.find('.net_amount').val(netAmount.toFixed(2));
+            row.find('.input_vat_amount').val(salesTaxAmount.toFixed(2));
         }
 
 
@@ -733,25 +727,60 @@ $newPoNo = PurchaseOrder::getLastPoNo();
         // Gather table items and submit form
         function gatherTableItems() {
             const items = [];
+            let hasEmptyItem = false;
+            let hasEmptyQuantity = false;
+            let hasEmptyCost = false;
+            let firstEmptyItemRow;
+            let firstEmptyQuantityRow;
+            let firstEmptyCostRow;
+
             $('#itemTableBody tr').each(function(index) {
+                const item_id = $(this).find('select[name="item_id[]"]').val();
+                const qty = $(this).find('input[name="quantity[]"]').val();
+                const cost = $(this).find('input[name="cost[]"]').val();
+
+                // Check if item_id or quantity is empty
+                if (!item_id) {
+                    hasEmptyItem = true;
+                    if (!firstEmptyItemRow) {
+                        firstEmptyItemRow = $(this); // Store the first row with empty item_id
+                    }
+                    return true; // Continue to the next row
+                }
+
+                if (!qty) {
+                    hasEmptyQuantity = true;
+                    if (!firstEmptyQuantityRow) {
+                        firstEmptyQuantityRow = $(this); // Store the first row with empty quantity
+                    }
+                    return true; // Continue to the next row
+                }
+
+                if (!cost) {
+                    hasEmptyCost = true;
+                    if (!firstEmptyCostRow) {
+                        firstEmptyCostRow = $(this); // Store the first row with empty quantity
+                    }
+                    return true; // Continue to the next row
+                }
+
                 const item = {
-                    pr_no: $(this).find('select[name="pr_no[]"]').val(),
-                    item_id: $(this).find('select[name="item_id[]"]').val(),
+                    pr_no: $(this).find('select[name="pr_no[]"]').val(), // Add this line
+                    item_id: item_id,
                     cost_center_id: $(this).find('select[name="cost_center_id[]"]').val(),
                     description: $(this).find('input[name="description[]"]').val(),
                     uom: $(this).find('input[name="uom[]"]').val(),
-                    qty: $(this).find('input[name="quantity[]"]').val(),
-                    cost: $(this).find('input[name="cost[]"]').val(),
+                    qty: qty,
+                    cost: cost,
                     amount: $(this).find('input[name="amount[]"]').val(),
                     discount_percentage: $(this).find('select[name="discount_percentage[]"]').val(),
                     discount: $(this).find('input[name="discount_amount[]"]').val(),
-                    taxable_amount: $(this).find('input[name="net_amount_before_input_vat[]"]').val(),
                     net_amount: $(this).find('input[name="net_amount[]"]').val(),
+                    taxable_amount: $(this).find('input[name="taxable_amount[]"]').val(),
                     input_vat_percentage: $(this).find('select[name="input_vat_percentage[]"]').val(),
                     input_vat: $(this).find('input[name="input_vat_amount[]"]').val(),
                     discount_account_id: $(this).find('.discount_percentage option:selected').data('account-id'),
                     input_vat_account_id: $(this).find('.input_vat_percentage option:selected').data('account-id')
-
                 };
 
                 if (index === 0) {
@@ -761,6 +790,44 @@ $newPoNo = PurchaseOrder::getLastPoNo();
 
                 items.push(item);
             });
+
+            // Show warnings based on which validation failed
+            if (hasEmptyItem) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Warning',
+                    text: 'Please select an item.'
+                }).then(() => {
+                    // Highlight the first row with an empty item
+                    firstEmptyItemRow.find('select[name="item_id[]"]').focus().css('border', '2px solid red');
+                });
+                return false;
+            }
+
+            if (hasEmptyQuantity) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Warning',
+                    text: 'Please enter a quantity for every item.'
+                }).then(() => {
+                    // Highlight the first row with an empty quantity
+                    firstEmptyQuantityRow.find('input[name="quantity[]"]').focus().css('border', '2px solid red');
+                });
+                return false;
+            }
+
+            if (hasEmptyCost) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Warning',
+                    text: 'Please enter item cost.'
+                }).then(() => {
+                    // Highlight the first row with an empty quantity
+                    firstEmptyCostRow.find('input[name="cost[]"]').focus().css('border', '2px solid red');
+                });
+                return false;
+            }
+
             return items;
         }
 
@@ -771,15 +838,15 @@ $newPoNo = PurchaseOrder::getLastPoNo();
 
             const items = gatherTableItems();
 
-            if (items.length === 0) {
+            if (items === false || items.length === 0) {
+                if (items === false) return;
                 Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
+                    icon: 'warning',
+                    title: 'Warning',
                     text: 'Please add items first'
                 });
                 return;
             }
-
             $('#item_data').val(JSON.stringify(items));
 
             // Show loading overlay
@@ -796,7 +863,21 @@ $newPoNo = PurchaseOrder::getLastPoNo();
 
                     if (response.success) {
                         const transactionId = response.id;
-                        updatePrintStatusAndPrint(transactionId, 1);
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: 'Purchase order processed succesfully, Purchase details have beed saved',
+                            showCancelButton: true,
+                            confirmButtonText: 'Print',
+                            cancelButtonText: 'Close'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                updatePrintStatusAndPrint(transactionId, 1);
+                            } else {
+                                window.location.href = 'purchase_request';
+                            }
+                        });
+
                     } else {
                         Swal.fire({
                             icon: 'error',
@@ -835,17 +916,28 @@ $newPoNo = PurchaseOrder::getLastPoNo();
                         console.log('Print status updated, now printing Credit:', id);
 
                         // Now proceed with printing
-                        // var printWindow = window.open(`print_purchase_order?action=print&id=${id}`, '_blank');
-
                         const printFrame = document.getElementById('printFrame');
-                        const printContentUrl = `print_purchase_order?action=print&id=${id}, '_blank'`;
-
+                        const printContentUrl = `print_purchase_order?action=print&id=${id}`;
+                        const submitButton = document.querySelector('.btn-info[type="submit"]');
+                        submitButton.disabled = true;
 
                         printFrame.src = printContentUrl;
 
                         printFrame.onload = function() {
                             printFrame.contentWindow.focus();
                             printFrame.contentWindow.print();
+
+                            // Redirect after print dialog closes
+                            const originalOnFocus = window.onfocus;
+
+                            window.onfocus = function() {
+                                window.location.href = 'purchase_order';
+                            };
+
+                            // Clean up event handler after redirection
+                            printFrame.contentWindow.onafterprint = function() {
+                                window.onfocus = originalOnFocus;
+                            };
                         };
                     } else {
                         console.error('Failed to update print status:', response.message);
@@ -867,114 +959,90 @@ $newPoNo = PurchaseOrder::getLastPoNo();
             });
         }
     });
+
     let warningTimeout;
 
     function populateFields(select) {
-        clearTimeout(warningTimeout); // Clear any existing timeout
-
         const selectedOption = $(select).find('option:selected');
         const description = selectedOption.data('description');
         const uom = selectedOption.data('uom');
         const item_id = selectedOption.val();
+        const pr_no = $(select).closest('tr').find('.pr-no-dropdown').val();
 
         console.log('Selected item_id:', item_id); // Log selected item ID
         console.log('Selected description:', description); // Log item description
         console.log('Selected UOM:', uom); // Log item unit of measure
-
-        const row = $(select).closest('tr');
-        row.find('.description-field').val(description);
-        row.find('.uom').val(uom);
+        console.log('Associated PR No:', pr_no); // Log associated PR No
 
         if (!item_id) {
             console.log('No item selected, clearing fields'); // Debug log
-            row.find('.description-field, .uom').val('');
-            row.find('.pr-no-dropdown').empty().append('<option value="">Select PR No.</option>');
             return;
         }
 
-        // Fetch PR information
+        // Check if item belongs to the selected PR
         $.ajax({
             url: 'api/purchase_order_controller.php',
             type: 'POST',
             dataType: 'json',
             data: {
-                action: 'get_pr_info',
-                item_id: item_id
-            },
-            success: function(response) {
-                console.log('AJAX response for PR info:', response); // Debug log
-
-                const prDropdown = row.find('.pr-no-dropdown');
-                prDropdown.empty().append('<option value="">Select PR No.</option>');
-
-                if (response.success && response.pr_numbers && response.pr_numbers.length > 0) {
-                    response.pr_numbers.forEach(function(pr_no) {
-                        prDropdown.append(`<option value="${pr_no}">${pr_no}</option>`);
-                    });
-                } else {
-                    console.log('No PR numbers found, showing alert'); // Debug log
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'No Purchase Request',
-                        text: 'No Purchase Request found for this item. Please select another item.'
-                    }).then(() => {
-                        console.log('SweetAlert closed'); // Debug log
-                    });
-
-                    // Clear the selected item
-                    $(select).val('').trigger('change');
-
-                    // Clear only the description and UOM fields
-                    row.find('.description-field, .uom').val('');
-                }
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                console.error('AJAX error:', textStatus, errorThrown); // Debug log
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'An error occurred while fetching Purchase Request information.'
-                }).then(() => {
-                    console.log('Error SweetAlert closed'); // Debug log
-                });
-
-                // Clear the selected item in case of error
-                $(select).val('').trigger('change');
-
-                // Clear only the description and UOM fields
-                row.find('.description-field, .uom').val('');
-            }
-        });
-    }
-
-
-    $(document).on('change', '.pr-no-dropdown', function() {
-        const pr_no = $(this).val();
-        const row = $(this).closest('tr');
-        const item_id = row.find('.account-dropdown').val(); // Assuming you have a select input for the item
-
-        console.log('Selected PR No:', pr_no); // Log selected PR No.
-        console.log('Associated item_id:', item_id); // Log associated item ID
-
-        // Fetch Quantity
-        $.ajax({
-            url: 'api/purchase_order_controller.php',
-            type: 'POST',
-            dataType: 'json',
-            data: {
-                action: 'get_pr_quantity',
+                action: 'check_item_in_pr',
                 pr_no: pr_no,
                 item_id: item_id
             },
             success: function(response) {
-                console.log('AJAX response for PR quantity:', response); // Debug log
-                if (response.success) {
-                    row.find('.quantity').val(response.quantity);
-                } else {
+                if (!response.success) {
                     Swal.fire({
                         icon: 'warning',
-                        title: 'No Quantity',
-                        text: response.message
+                        title: 'Item Not Found in PR',
+                        text: 'The selected item is not part of the selected Purchase Request.'
+                    });
+                    $(select).val('').trigger('change');
+                    return;
+                }
+
+                // Populate fields if item is valid
+                const row = $(select).closest('tr');
+                row.find('.description-field').val(description);
+                row.find('.uom').val(uom);
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('AJAX error:', textStatus, errorThrown); // Debug log
+            }
+        });
+    }
+
+    $(document).on('change', '.pr-no-dropdown', function() {
+        const pr_no = $(this).val();
+        const row = $(this).closest('tr');
+
+        console.log('Selected PR No:', pr_no); // Log selected PR No.
+
+        // Fetch Items based on selected PR No.
+        $.ajax({
+            url: 'api/purchase_order_controller.php',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                action: 'get_items_by_pr_no',
+                pr_no: pr_no
+            },
+            success: function(response) {
+                console.log('AJAX response for items:', response); // Debug log
+
+                const itemDropdown = row.find('.account-dropdown');
+                itemDropdown.empty().append('<option value="">Select Item</option>');
+
+                if (response.success && response.items && response.items.length > 0) {
+                    response.items.forEach(function(item) {
+                        const uomName = item.uom_name ? item.uom_name : 'No UOM'; // Default to 'No UOM' if uom_name is null
+                        itemDropdown.append(`<option value="${item.item_id}" data-description="${item.item_sales_description}" data-uom="${uomName}">${item.item_name}</option>`);
+                    });
+                } else {
+                    console.log('No items found, showing alert'); // Debug log
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'No Items',
+                        text: 'No items found for this Purchase Request. Please select another PR No.'
                     });
                 }
             },

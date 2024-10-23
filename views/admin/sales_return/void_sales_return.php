@@ -1,8 +1,12 @@
 <?php
 // Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
-
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('sales_return');
 // Fetch all salesReturn
 $salesReturn = SalesReturn::all();
 ?>
@@ -24,18 +28,15 @@ $salesReturn = SalesReturn::all();
 
                     <!-- Default box -->
                     <div class="card">
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                                <h6 class="m-0 font-weight-bold text-primary">Sales Return</h6>
+                    <div class="card shadow mb-4">
+                            <div class="card-header py-3 d-flex justify-content-between align-items-center">
                                 <div>
-                                        <a href="sales_return" class="btn btn-sm btn-secondary">
-                                            <i class="fas fa-arrow-left"></i> Go Back
-                                        </a>
-                                        <a href="create_sales_return" class="btn btn-sm btn-primary">
-                                            <i class="fas fa-plus"></i> New Sales Return
-                                        </a>
-                                    </div>
+                                    <a href="sales_return" class="btn btn-lg btn-outline-secondary me-2 mb-2">
+                                            <i class="fas fa-arrow-left  fa-lg me-2"></i> Go Back
+                                    </a>
+                                    <a href="create_sales_return" class="btn btn-lg btn-outline-success me-2 mb-2">
+                                        <i class="fas fa-plus fa-lg me-2"></i> Create Sales Return
+                                    </a>
                                 </div>
                             </div>
 
@@ -55,7 +56,7 @@ $salesReturn = SalesReturn::all();
                                             </thead>
                                             <tbody>
                                                 <?php foreach ($salesReturn as $salesReturn): ?>
-                                                    <?php if ($salesReturn->sales_return_status == 3): // Only include invoices with status 3 ?>
+                                                    <?php if ($salesReturn->status == 3): // Only include invoices with status 3 ?>
                                                     <tr>
                                                         <td><?= htmlspecialchars($salesReturn->sales_return_number); ?></td>
                                                         <td><?= htmlspecialchars($salesReturn->sales_return_date); ?></td>
@@ -63,7 +64,7 @@ $salesReturn = SalesReturn::all();
                                                         <td><b>₱<?= number_format($salesReturn->total_amount_due, 2, '.', ','); ?></b></td>
                                                         <td class="text-center">
                                                             <?php
-                                                            switch ($salesReturn->sales_return_status) {
+                                                            switch ($salesReturn->status) {
                                                                 case 3:
                                                                     echo '<span class="badge bg-danger">Unpaid</span>';
                                                                     break;

@@ -18,12 +18,16 @@ class WriteCheck
     public $account_id;
     public $account_description;
     public $memo;
+    public $location;
     public $gross_amount;
     public $discount_amount;
     public $net_amount_due;
     public $vat_percentage_amount;
     public $net_of_vat;
     public $tax_withheld_amount;
+    public $tax_withheld_percentage;
+    public $tax_withheld_account_id;
+
     public $total_amount_due;
     public $print_status;
     public $status;
@@ -46,12 +50,15 @@ class WriteCheck
         $this->account_id = $data['account_id'] ?? null;
         $this->account_description = $data['account_description'] ?? null;
         $this->memo = $data['memo'] ?? null;
+        $this->location = $data['location'] ?? null;
         $this->gross_amount = $data['gross_amount'] ?? null;
         $this->discount_amount = $data['discount_amount'] ?? null;
         $this->net_amount_due = $data['net_amount_due'] ?? null;
         $this->vat_percentage_amount = $data['vat_percentage_amount'] ?? null;
         $this->net_of_vat = $data['net_of_vat'] ?? null;
         $this->tax_withheld_amount = $data['tax_withheld_amount'] ?? null;
+        $this->tax_withheld_percentage = $data['tax_withheld_percentage'] ?? null;
+        $this->tax_withheld_account_id = $data['tax_withheld_account_id'] ?? null;
         $this->total_amount_due = $data['total_amount_due'] ?? null;
         $this->print_status = $data['print_status'] ?? null;
         $this->status = $data['status'] ?? null;
@@ -70,47 +77,72 @@ class WriteCheck
         }
     }
     // add/insert wchecks data 
-    public static function add($cv_no, $check_no, $ref_no, $check_date, $bank_account_id, $payee_type, $payee_id, $payee_name, $memo, $gross_amount, $discount_amount, $net_amount_due, $vat_percentage_amount, $net_of_vat, $tax_withheld_amount, $total_amount_due, $created_by, $items, $wtax_account_id)
+    public static function add($cv_no, $check_no, $ref_no, $check_date, $bank_account_id, $payee_type, $payee_id, $payee_name, $memo, $location, $gross_amount, $discount_amount, $net_amount_due, $vat_percentage_amount, $net_of_vat, $tax_withheld_amount, $total_amount_due, $created_by, $items, $wtax_account_id)
     {
         global $connection;
-
+    
         try {
             // Start a transaction
             $connection->beginTransaction();
-
+    
             // Get the next transaction ID
             $nextId = self::getNextTransactionId();
             $transaction_type = "Check Expense";
-
-
+    
             $stmt = $connection->prepare("INSERT INTO wchecks (
                 id, cv_no, check_no, ref_no, check_date, account_id, payee_type, payee_id,
-                memo, gross_amount, discount_amount, net_amount_due, vat_percentage_amount,
+                memo, location, gross_amount, discount_amount, net_amount_due, vat_percentage_amount,
                 net_of_vat, tax_withheld_amount, total_amount_due, created_by) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    
             $stmt->execute([
-                $nextId, $cv_no, $check_no, $ref_no, $check_date, $bank_account_id, 
-                $payee_type, $payee_id, $memo, $gross_amount, $discount_amount, 
-                $net_amount_due, $vat_percentage_amount, $net_of_vat, $tax_withheld_amount, 
-                $total_amount_due, $created_by
+                $nextId,
+                $cv_no,
+                $check_no,
+                $ref_no,
+                $check_date,
+                $bank_account_id,
+                $payee_type,
+                $payee_id,
+                $memo,
+                $location,
+                $gross_amount,
+                $discount_amount,
+                $net_amount_due,
+                $vat_percentage_amount,
+                $net_of_vat,
+                $tax_withheld_amount,
+                $total_amount_due,
+                $created_by
             ]);
-            
-
+    
             // Retrieve the ID of the newly inserted write check entry
             $wcheck_id = $connection->lastInsertId();
-
+    
             $total_discount = 0;
             $total_input_vat = 0;
-
+    
+            // Ensure $items is an array before proceeding
+            if (!is_array($items)) {
+                throw new Exception('Items must be an array');
+            }
+    
             foreach ($items as $item) {
+                // Ensure that the amount is a number and remove any commas
+                $amount = isset($item['amount']) ? preg_replace('/[^\d.]/', '', $item['amount']) : 0;
+    
+                // Ensure numeric values are cast to floats before calculations
+                $item['discount_amount'] = (float)$item['discount_amount'];
+                $item['net_amount'] = (float)$item['net_amount'];
+                $item['input_vat'] = (float)$item['input_vat'];
+    
                 // Insert check details
                 self::addItem(
                     $wcheck_id,
                     $item['account_id'],
                     $item['cost_center_id'],
                     $item['memo'],
-                    $item['amount'],
+                    $amount, // Cleaned numeric amount
                     $item['discount_percentage'],
                     $item['discount_amount'],
                     $item['net_amount_before_vat'],
@@ -118,87 +150,94 @@ class WriteCheck
                     $item['vat_percentage'],
                     $item['input_vat']
                 );
-
+    
                 // Audit Check Accounts Account
                 self::logAuditTrail(
                     $wcheck_id,
                     $transaction_type,
                     $check_date,
                     $cv_no, // previous ref_no
+                    $location,
                     $payee_name,
                     $item['account_id'],
                     $item['net_amount'] + $item['discount_amount'], // Added discount_amount here
                     0.00,
                     $created_by
                 );
-
+    
                 // Accumulate total discount and input VAT
                 $total_discount += $item['discount_amount'];
                 $total_input_vat += $item['input_vat'];
             }
-
-
-            // Audit Check Discount Account (single entry for total discount)
-            self::logAuditTrail(
-                $wcheck_id,
-                $transaction_type,
-                $check_date,
-                $cv_no, // previous ref_no
-                $payee_name,
-                $items[0]['discount_account_id'], // Assuming all items have the same discount account
-                0.00,
-                $total_discount,
-                $created_by
-            );
-
-            // Audit Check Input VAT Account (single entry for total input VAT)
-            self::logAuditTrail(
-                $wcheck_id,
-                $transaction_type,
-                $check_date,
-                $cv_no, // previous ref_no
-                $payee_name,
-                $items[0]['input_vat_account_id'], // Assuming all items have the same input VAT account
-                $total_input_vat,
-                0.00,
-                $created_by
-            );
-
+    
+            // Ensure we have at least one item before accessing array index 0
+            if (!empty($items)) {
+                // Audit Check Discount Account (single entry for total discount)
+                self::logAuditTrail(
+                    $wcheck_id,
+                    $transaction_type,
+                    $check_date,
+                    $cv_no, // previous ref_no
+                    $location,
+                    $payee_name,
+                    $items[0]['discount_account_id'], // Assuming all items have the same discount account
+                    0.00,
+                    $total_discount,
+                    $created_by
+                );
+    
+                // Audit Check Input VAT Account (single entry for total input VAT)
+                self::logAuditTrail(
+                    $wcheck_id,
+                    $transaction_type,
+                    $check_date,
+                    $cv_no, // previous ref_no
+                    $location,
+                    $payee_name,
+                    $items[0]['input_vat_account_id'], // Assuming all items have the same input VAT account
+                    $total_input_vat,
+                    0.00,
+                    $created_by
+                );
+            }
+    
             // Audit Trail Wtax Account
             self::logAuditTrail(
                 $wcheck_id,
                 $transaction_type,
                 $check_date,
                 $cv_no, // previous ref_no
+                $location,
                 $payee_name,
                 $wtax_account_id,
                 0.00,
                 $tax_withheld_amount,
                 $created_by
             );
-
+    
             // Audit Trail Bank Account
             self::logAuditTrail(
                 $wcheck_id,
                 $transaction_type,
                 $check_date,
                 $cv_no, // previous ref_no
+                $location,
                 $payee_name,
                 $bank_account_id,
                 0.00,
                 $total_amount_due,
                 $created_by
             );
-
+    
             // Commit the transaction
             $connection->commit();
-        } catch (PDOException $e) {
+        } catch (Exception $e) {
             $connection->rollback();
             throw $e;
         }
     }
     // ACCOUNTING LOGS
-    private static function logAuditTrail($general_journal_id, $transaction_type, $transaction_date, $ref_no, $customer_name, $account_id, $debit, $credit, $created_by)
+    private static function logAuditTrail($general_journal_id, $transaction_type, $transaction_date, $ref_no, $location, $customer_name, $account_id, $debit, $credit, $created_by)
     {
         global $connection;
 
@@ -208,13 +247,14 @@ class WriteCheck
                     transaction_type,
                     transaction_date,
                     ref_no,
+                    location,
                     name,
                     account_id,
                     debit,
                     credit,
                     created_by,
                     created_at
-                ) VALUES (?,?,?,?,?,?,?,?,?, NOW())
+                ) VALUES (?,?,?,?,?,?,?,?,?,?, NOW())
             ");
 
         $stmt->execute([
@@ -222,6 +262,7 @@ class WriteCheck
             $transaction_type,
             $transaction_date,
             $ref_no,
+            $location,
             $customer_name,
             $account_id,
             $debit,
@@ -261,7 +302,6 @@ class WriteCheck
                 $input_vat
             ]
         );
-
     }
     // select all columns in wchecks
     public static function all()
@@ -316,7 +356,7 @@ class WriteCheck
             }
 
             $writeData['details'] = self::getWriteDetails($id);
-            
+
             return new WriteCheck($writeData);
         } catch (PDOException $e) {
             error_log("Database error in find(): " . $e->getMessage());
@@ -575,9 +615,10 @@ class WriteCheck
         }
     }
 
-    public static function getLastCheckNo() {
+    public static function getLastCheckNo()
+    {
         global $connection;
-    
+
         try {
             // Prepare and execute the query to get the highest check number, ignoring null or empty values
             $stmt = $connection->prepare("
@@ -590,7 +631,7 @@ class WriteCheck
             $stmt->execute();
             $stmt->setFetchMode(PDO::FETCH_ASSOC);
             $result = $stmt->fetch();
-    
+
             if ($result) {
                 $latestNo = $result['cv_no'];
                 // Assuming the format is 'WC' followed by digits
@@ -600,10 +641,10 @@ class WriteCheck
                 // If no valid check number exists, start with 1
                 $newNo = 1;
             }
-    
+
             // Format the new number with leading zeros
             $newWriteCvNo = 'CV' . str_pad($newNo, 9, '0', STR_PAD_LEFT);
-    
+
             return $newWriteCvNo;
         } catch (PDOException $e) {
             // Handle potential exceptions
@@ -611,7 +652,7 @@ class WriteCheck
             return null;
         }
     }
-    
+
 
     public static function voidCheck($id)
     {
@@ -631,14 +672,31 @@ class WriteCheck
             error_log("Error in voidCheck(): " . $e->getMessage());
             throw $e;
         }
-}
+    }
 
 
     public static function saveDraft(
-        $check_no, $check_date, $bank_account_id, $ref_no, $payee_type, $payee_id, $memo, 
-        $gross_amount, $discount_amount, $net_amount_due, $vat_percentage_amount, $net_of_vat, 
-        $tax_withheld_amount, $total_amount_due, $discount_account_id, $tax_withheld_account_id, 
-        $input_vat_account_id, $created_by, $items
+        $check_no,
+        $check_date,
+        $bank_account_id,
+        $ref_no,
+        $payee_type,
+        $payee_id,
+        $memo,
+        $location,
+        $gross_amount,
+        $discount_amount,
+        $net_amount_due,
+        $vat_percentage_amount,
+        $net_of_vat,
+        $tax_withheld_amount,
+        $tax_withheld_percentage,
+        $total_amount_due,
+        $discount_account_id,
+        $tax_withheld_account_id,
+        $input_vat_account_id,
+        $created_by,
+        $items
     ) {
         global $connection;
         try {
@@ -646,14 +704,14 @@ class WriteCheck
 
             // Corrected SQL query
             $sql = "INSERT INTO wchecks (
-                check_no, check_date, account_id, ref_no, payee_type, payee_id, memo,
+                check_no, check_date, account_id, ref_no, payee_type, payee_id, memo, location,
                 gross_amount, discount_amount, net_amount_due, vat_percentage_amount, net_of_vat, 
-                tax_withheld_amount, total_amount_due, discount_account_id, input_vat_account_id, 
+                tax_withheld_amount, tax_withheld_percentage, total_amount_due, discount_account_id, input_vat_account_id, 
                 tax_withheld_account_id, status, created_by
             ) VALUES (
-                :check_no, :check_date, :account_id, :ref_no, :payee_type, :payee_id, :memo,
+                :check_no, :check_date, :account_id, :ref_no, :payee_type, :payee_id, :memo, :location,
                 :gross_amount, :discount_amount, :net_amount_due, :vat_percentage_amount, :net_of_vat, 
-                :tax_withheld_amount, :total_amount_due, :discount_account_id, :input_vat_account_id, 
+                :tax_withheld_amount, :tax_withheld_percentage, :total_amount_due, :discount_account_id, :input_vat_account_id, 
                 :tax_withheld_account_id, :status, :created_by
             )";
 
@@ -667,12 +725,14 @@ class WriteCheck
             $stmt->bindParam(':payee_type', $payee_type);
             $stmt->bindParam(':payee_id', $payee_id);
             $stmt->bindParam(':memo', $memo);
+            $stmt->bindParam(':location', $location);
             $stmt->bindParam(':gross_amount', $gross_amount);
             $stmt->bindParam(':discount_amount', $discount_amount);
             $stmt->bindParam(':net_amount_due', $net_amount_due);
             $stmt->bindParam(':vat_percentage_amount', $vat_percentage_amount);
             $stmt->bindParam(':net_of_vat', $net_of_vat);
             $stmt->bindParam(':tax_withheld_amount', $tax_withheld_amount);
+            $stmt->bindParam(':tax_withheld_percentage', $tax_withheld_percentage);
             $stmt->bindParam(':total_amount_due', $total_amount_due);
             $stmt->bindParam(':discount_account_id', $discount_account_id);
 
@@ -768,49 +828,301 @@ class WriteCheck
     }
 
     public static function updateDraft(
-        $wcheck_id, $cv_no, $check_no, $ref_no, $check_date, $bank_account_id, 
-        $payee_type, $payee_id, $payee_name, $memo, $gross_amount, $discount_amount, 
-        $net_amount_due, $vat_percentage_amount, $net_of_vat, $tax_withheld_amount, 
-        $total_amount_due, $items, $created_by, $wtax_account_id
+        $wcheck_id,
+        $cv_no,
+        $check_no,
+        $ref_no,
+        $check_date,
+        $bank_account_id,
+        $payee_type,
+        $payee_id,
+        $memo,
+        $location,
+        $gross_amount,
+        $discount_amount,
+        $net_amount_due,
+        $vat_percentage_amount,
+        $net_of_vat,
+        $tax_withheld_amount,
+        $tax_withheld_percentage,
+        $total_amount_due,
+        $items,
+        $created_by,
+        $discount_account_id,
+        $tax_withheld_account_id,
+        $input_vat_account_id
     ) {
         global $connection;
     
         try {
-            // Start a transaction
             $connection->beginTransaction();
     
-            $transaction_type = "Check Expense";
-    
-            // Fetch existing draft details
-            $existingDetails = self::getDraftDetails($wcheck_id);
-    
-            // Fetch the bank_account_id, total_amount_due, and tax_withheld_amount from the database
+            // Update the main wcheck record
             $stmt = $connection->prepare("
-                SELECT account_id, total_amount_due, tax_withheld_amount, tax_withheld_account_id, check_date, 
-                       input_vat_account_id, discount_account_id, vat_percentage_amount, discount_amount 
-                FROM wchecks 
-                WHERE id = ?
+                UPDATE wchecks 
+                SET cv_no = :cv_no,
+                    check_no = :check_no,
+                    ref_no = :ref_no,
+                    check_date = :check_date,
+                    account_id = :bank_account_id,
+                    payee_type = :payee_type,
+                    payee_id = :payee_id,
+                    memo = :memo,
+                    location = :location,
+                    gross_amount = :gross_amount,
+                    discount_amount = :discount_amount,
+                    net_amount_due = :net_amount_due,
+                    vat_percentage_amount = :vat_percentage_amount,
+                    net_of_vat = :net_of_vat,
+                    tax_withheld_amount = :tax_withheld_amount,
+                    tax_withheld_percentage = :tax_withheld_percentage,
+                    total_amount_due = :total_amount_due,
+                    status = 4
+                WHERE id = :wcheck_id
             ");
-            $stmt->execute([$wcheck_id]);
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
     
-            if ($result) {
-                $bank_account_id = $result['account_id'];
-                $total_amount_due = $result['total_amount_due'];
-                $tax_withheld_amount = $result['tax_withheld_amount'];
-                $wtax_account_id = $result['tax_withheld_account_id'];
-                $check_date = $result['check_date'];
-                $input_vat_account_id = $result['input_vat_account_id'];
-                $vat_percentage_amount = $result['vat_percentage_amount'];
-                $discount_account_id = $result['discount_account_id'];
-                $discount_amount = $result['discount_amount'];
-            } else {
-                throw new Exception("Check record not found.");
+            // Bind the parameters
+            $stmt->bindParam(':wcheck_id', $wcheck_id, PDO::PARAM_INT);
+            $stmt->bindParam(':cv_no', $cv_no, PDO::PARAM_STR);
+            $stmt->bindParam(':check_no', $check_no, PDO::PARAM_STR);
+            $stmt->bindParam(':ref_no', $ref_no, PDO::PARAM_STR);
+            $stmt->bindParam(':check_date', $check_date, PDO::PARAM_STR);
+            $stmt->bindParam(':bank_account_id', $bank_account_id, PDO::PARAM_INT);
+            $stmt->bindParam(':payee_type', $payee_type, PDO::PARAM_STR);
+            $stmt->bindParam(':payee_id', $payee_id, PDO::PARAM_INT);
+            $stmt->bindParam(':memo', $memo, PDO::PARAM_STR);
+            $stmt->bindParam(':location', $location, PDO::PARAM_STR);
+            $stmt->bindParam(':gross_amount', $gross_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':discount_amount', $discount_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':net_amount_due', $net_amount_due, PDO::PARAM_STR);
+            $stmt->bindParam(':vat_percentage_amount', $vat_percentage_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':net_of_vat', $net_of_vat, PDO::PARAM_STR);
+            $stmt->bindParam(':tax_withheld_amount', $tax_withheld_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':tax_withheld_percentage', $tax_withheld_percentage, PDO::PARAM_STR);
+            $stmt->bindParam(':total_amount_due', $total_amount_due, PDO::PARAM_STR);
+    
+            // Execute the statement
+            $result = $stmt->execute();
+    
+            if (!$result) {
+                throw new Exception("Failed to update wcheck. " . implode(", ", $stmt->errorInfo()));
             }
     
+            // Delete existing check details
+            $stmt = $connection->prepare("DELETE FROM wchecks_details WHERE wcheck_id = ?");
+            $stmt->execute([$wcheck_id]);
+    
+            // Check if $items is an array before proceeding
+            if (!is_array($items)) {
+                throw new Exception("Items must be an array.");
+            }
+    
+            // Prepare statement for inserting new check details
+            $stmt = $connection->prepare("
+                INSERT INTO wchecks_details (
+                    wcheck_id, account_id, cost_center_id, memo, amount, discount_percentage, 
+                    discount_amount, net_amount_before_vat, net_amount, vat_percentage, input_vat
+                ) VALUES (
+                    :wcheck_id, :account_id, :cost_center_id, :memo, :amount, :discount_percentage, 
+                    :discount_amount, :net_amount_before_vat, :net_amount, :vat_percentage, :input_vat
+                )
+            ");
+    
+            // Insert new check details
+            foreach ($items as $item) {
+                $stmt->execute([
+                    ':wcheck_id' => $wcheck_id,
+                    ':account_id' => $item['account_id'],
+                    ':cost_center_id' => $item['cost_center_id'],
+                    ':memo' => $item['memo'],
+                    ':amount' => $item['amount'],
+                    ':discount_percentage' => isset($item['discount_percentage']) ? $item['discount_percentage'] : 0,
+                    ':discount_amount' => isset($item['discount_amount']) ? $item['discount_amount'] : 0,
+                    ':net_amount_before_vat' => isset($item['net_amount_before_vat']) ? $item['net_amount_before_vat'] : 0,
+                    ':net_amount' => $item['net_amount'],
+                    ':vat_percentage' => isset($item['vat_percentage']) ? $item['vat_percentage'] : 0,
+                    ':input_vat' => isset($item['input_vat']) ? $item['input_vat'] : 0
+                ]);
+            }
+    
+            // Commit the transaction
+            $connection->commit();
+    
+            return [
+                'success' => true,
+                'wcheckId' => $wcheck_id
+            ];
+        } catch (Exception $ex) {
+            // Rollback transaction in case of an error
+            $connection->rollback();
+            error_log('Error updating draft wcheck: ' . $ex->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Error: ' . $ex->getMessage()
+            ];
+        }
+    }
+    
+    public static function saveFinal(
+        $wcheck_id,
+        $cv_no,
+        $check_no,
+        $ref_no,
+        $check_date,
+        $bank_account_id,
+        $payee_type,
+        $payee_id,
+        $payee_name,
+        $memo,
+        $location,
+        $gross_amount,
+        $discount_amount,
+        $net_amount_due,
+        $vat_percentage_amount,
+        $net_of_vat,
+        $tax_withheld_amount,
+        $tax_withheld_percentage,
+        $total_amount_due,
+        $items,
+        $created_by,
+        $discount_account_id,
+        $tax_withheld_account_id,
+        $input_vat_account_id
+    ) {
+        global $connection;
+
+        try {
+            // Start a transaction
+            $connection->beginTransaction();
+
+            $transaction_type = "Check Expense";
+
+            // Fetch existing draft details
+            $existingDetails = self::getDraftDetails($wcheck_id);
+
+            // Prepare the update statement for wchecks
+            $stmt = $connection->prepare("
+                UPDATE wchecks 
+                SET cv_no = :cv_no,
+                    check_no = :check_no,
+                    ref_no = :ref_no,
+                    check_date = :check_date,
+                    account_id = :account_id,
+                    payee_type = :payee_type,
+                    payee_id = :payee_id,
+                    memo = :memo,
+                    location = :location,
+                    gross_amount = :gross_amount,
+                    discount_amount = :discount_amount,
+                    net_amount_due = :net_amount_due,
+                    vat_percentage_amount = :vat_percentage_amount,
+                    net_of_vat = :net_of_vat,
+                    tax_withheld_amount = :tax_withheld_amount,
+                    tax_withheld_percentage = :tax_withheld_percentage,
+                    total_amount_due = :total_amount_due
+                WHERE id = :wcheck_id
+            ");
+
+            // Bind the parameters
+            $stmt->bindParam(':wcheck_id', $wcheck_id, PDO::PARAM_INT);
+            $stmt->bindParam(':cv_no', $cv_no, PDO::PARAM_STR);
+            $stmt->bindParam(':check_no', $check_no, PDO::PARAM_STR);
+            $stmt->bindParam(':ref_no', $ref_no, PDO::PARAM_STR);
+            $stmt->bindParam(':check_date', $check_date, PDO::PARAM_STR);
+            $stmt->bindParam(':account_id', $bank_account_id, PDO::PARAM_INT);
+            $stmt->bindParam(':payee_type', $payee_type, PDO::PARAM_STR);
+            $stmt->bindParam(':payee_id', $payee_id, PDO::PARAM_INT);
+            $stmt->bindParam(':memo', $memo, PDO::PARAM_STR);
+            $stmt->bindParam(':location', $location, PDO::PARAM_STR);
+            $stmt->bindParam(':gross_amount', $gross_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':discount_amount', $discount_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':net_amount_due', $net_amount_due, PDO::PARAM_STR);
+            $stmt->bindParam(':vat_percentage_amount', $vat_percentage_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':net_of_vat', $net_of_vat, PDO::PARAM_STR);
+            $stmt->bindParam(':tax_withheld_amount', $tax_withheld_amount, PDO::PARAM_STR);
+            $stmt->bindParam(':tax_withheld_percentage', $tax_withheld_percentage, PDO::PARAM_STR);
+            $stmt->bindParam(':total_amount_due', $total_amount_due, PDO::PARAM_STR);
+            // $stmt->bindParam(':discount_account_id', $discount_account_id, PDO::PARAM_INT);
+
+            // Handle array parameters (encoding arrays to JSON if necessary)
+            // $stmt->bindValue(':input_vat_account_id', is_array($input_vat_account_id) ? json_encode($input_vat_account_id) : $input_vat_account_id, PDO::PARAM_STR);
+            // $stmt->bindValue(':tax_withheld_account_id', is_array($tax_withheld_account_id) ? json_encode($tax_withheld_account_id) : $tax_withheld_account_id, PDO::PARAM_STR);
+
+            // Execute the update statement
+            $stmt->execute();
+
+            // Fetch the updated wcheck details for audit trail purposes
+            $stmt = $connection->prepare("
+                SELECT account_id, total_amount_due, tax_withheld_amount, tax_withheld_account_id, 
+                    check_date, input_vat_account_id, discount_account_id, vat_percentage_amount, 
+                    discount_amount 
+                FROM wchecks 
+                WHERE id = :wcheck_id
+            ");
+            $stmt->bindParam(':wcheck_id', $wcheck_id, PDO::PARAM_INT);
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$result) {
+                throw new Exception("Updated check record not found.");
+            }
+
+            // Set variables for further use based on the latest data
+            $bank_account_id = $result['account_id'];
+            $total_amount_due = $result['total_amount_due'];
+            $tax_withheld_amount = $result['tax_withheld_amount'];
+            $wtax_account_id = $result['tax_withheld_account_id'];
+            $check_date = $result['check_date'];
+            $input_vat_account_id = $result['input_vat_account_id'];
+            $vat_percentage_amount = $result['vat_percentage_amount'];
+            $discount_account_id = $result['discount_account_id'];
+            $discount_amount = $result['discount_amount'];
+
+
+            // Delete existing check details before adding new ones
+            $stmt = $connection->prepare("DELETE FROM wchecks_details WHERE wcheck_id = ?");
+            $stmt->execute([$wcheck_id]);
+
+            // Insert new check details
+            $stmt = $connection->prepare("
+                INSERT INTO wchecks_details (
+                    wcheck_id, account_id, cost_center_id, memo, amount, discount_percentage, 
+                    discount_amount, net_amount_before_vat, net_amount, vat_percentage, input_vat
+                ) VALUES (
+                    :wcheck_id, :account_id, :cost_center_id, :memo, :amount, :discount_percentage, 
+                    :discount_amount, :net_amount_before_vat, :net_amount, :vat_percentage, :input_vat
+                )
+            ");
+
+            foreach ($items as $item) {
+                // Set default values if optional fields are not provided
+                $discount_percentage = isset($item['discount_percentage']) ? $item['discount_percentage'] : 0;
+                $discount_amount = isset($item['discount_amount']) ? $item['discount_amount'] : 0;
+                $net_amount_before_vat = isset($item['net_amount_before_vat']) ? $item['net_amount_before_vat'] : 0;
+                $vat_percentage = isset($item['vat_percentage']) ? $item['vat_percentage'] : 0;
+                $input_vat = isset($item['input_vat']) ? $item['input_vat'] : 0;
+
+                // Execute insert for each item
+                $stmt->execute([
+                    ':wcheck_id' => $wcheck_id,
+                    ':account_id' => $item['account_id'],
+                    ':cost_center_id' => $item['cost_center_id'],
+                    ':memo' => $item['memo'],
+                    ':amount' => $item['amount'],
+                    ':discount_percentage' => $discount_percentage,
+                    ':discount_amount' => $discount_amount,
+                    ':net_amount_before_vat' => $net_amount_before_vat,
+                    ':net_amount' => $item['net_amount'],
+                    ':vat_percentage' => $vat_percentage,
+                    ':input_vat' => $input_vat
+                ]);
+            }
+
+
+            // Initialize variables for total discount and VAT
             $total_discount = 0.00;
             $total_input_vat = 0.00;
-    
+
             foreach ($existingDetails as $detail) {
                 // Log the existing details into the audit trail
                 self::logAuditTrail(
@@ -818,40 +1130,43 @@ class WriteCheck
                     $transaction_type,
                     $check_date,
                     $cv_no, // previous ref_no
+                    $location,
                     $payee_name,
                     $detail['account_id'],
                     $detail['net_amount'] + $detail['discount_amount'], // Added discount_amount here
                     0.00,
                     $created_by
                 );
-    
+
                 // Accumulate total discount and input VAT
                 $total_discount += $detail['discount_amount'];
                 $total_input_vat += $detail['input_vat'];
             }
-    
+
             // Audit Check Discount Account (single entry for total discount)
             if ($discount_account_id !== null) {
                 self::logAuditTrail(
                     $wcheck_id,
                     $transaction_type,
                     $check_date,
-                    $cv_no, // previous ref_no
+                    $cv_no,
+                    $location,
                     $payee_name,
                     $discount_account_id,
                     0.00,
-                    $total_discount,
+                    $discount_amount,
                     $created_by
                 );
             }
-    
+
             // Audit Check Input VAT Account (single entry for total input VAT)
             if ($input_vat_account_id !== null) {
                 self::logAuditTrail(
                     $wcheck_id,
                     $transaction_type,
                     $check_date,
-                    $cv_no, // previous ref_no
+                    $cv_no,
+                    $location,
                     $payee_name,
                     $input_vat_account_id,
                     $total_input_vat,
@@ -859,71 +1174,75 @@ class WriteCheck
                     $created_by
                 );
             }
-    
+
             // Audit Trail Wtax Account
             self::logAuditTrail(
                 $wcheck_id,
                 $transaction_type,
                 $check_date,
-                $cv_no, // previous ref_no
+                $cv_no,
+                $location,
                 $payee_name,
                 $wtax_account_id,
                 0.00,
                 $tax_withheld_amount,
                 $created_by
             );
-    
+
             // Audit Trail Bank Account
             self::logAuditTrail(
                 $wcheck_id,
                 $transaction_type,
                 $check_date,
-                $cv_no, // previous ref_no
+                $cv_no,
+                $location,
                 $payee_name,
                 $bank_account_id,
                 0.00,
                 $total_amount_due,
                 $created_by
             );
-    
-            // Commit the transaction
+
+            // Commit the transaction after successful updates
             $connection->commit();
         } catch (PDOException $e) {
-            // Rollback the transaction if a database error occurs
+            // Rollback transaction in case of a PDO error
             $connection->rollBack();
             throw new Exception("Database error: " . $e->getMessage());
         } catch (Exception $e) {
-            // Rollback the transaction if a general error occurs
+            // Rollback transaction in case of a general error
             $connection->rollBack();
             throw new Exception("Error: " . $e->getMessage());
         }
     }
+
     
+
 
     public static function void($id)
     {
         global $connection;
-    
+
         try {
             $connection->beginTransaction();
-            
+
             // Update the status to 3 (void) in the sales_invoice table
             $stmt = $connection->prepare("UPDATE wchecks SET status = 3 WHERE id = :id");
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
             $result = $stmt->execute();
-            
+
             if ($result) {
                 // Update the state to 2 in the audit_trail table
                 $auditStmt = $connection->prepare("UPDATE audit_trail SET state = 2 WHERE transaction_id = :id");
                 $auditStmt->bindParam(':id', $id, PDO::PARAM_INT);
                 $auditResult = $auditStmt->execute();
-                
+
                 if ($auditResult) {
                     // Delete from transaction_entries
                     $deleteStmt = $connection->prepare("DELETE FROM transaction_entries WHERE transaction_id = :id");
                     $deleteStmt->bindParam(':id', $id, PDO::PARAM_INT);
                     $deleteResult = $deleteStmt->execute();
-                    
+
                     if ($deleteResult) {
                         $connection->commit();
                         return true;
@@ -942,4 +1261,5 @@ class WriteCheck
         }
     }
 
+    
 }

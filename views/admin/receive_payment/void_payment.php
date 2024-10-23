@@ -1,7 +1,12 @@
 <?php
 // Guard
+//Guard
 require_once '_guards.php';
-Guard::adminOnly();
+$currentUser = User::getAuthenticatedUser();
+if (!$currentUser) {
+    redirect('login.php');
+}
+Guard::restrictToModule('receive_payment');
 
 $accounts = ChartOfAccount::all();
 $customers = Customer::all();
@@ -22,7 +27,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
     <!-- Content Wrapper. Contains page content -->
     <main class="content">
         <div class="container-fluid p-0">
-            <h1 class="h3 mb-3"><strong>Receive </strong>Payment</h1>
+            <h1 class="h3 mb-3"><strong> Cash  </strong>Invoice</h1>
             <div class="row">
                 <div class="col-12">
                     <?php displayFlashMessage('add_payment_method') ?>
@@ -31,26 +36,19 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                     <!-- Default box -->
                     <div class="card">
                         <div class="card-body">
-                            <div class="row">
-                                <div class="col-sm-12 d-flex justify-content-between align-items-center mb-4">
-                                    <h1 class="h3 mb-3"><strong>Payment</strong></h1>
-                                    <!-- <div class="d-flex justify-content-end">
-                                        <a href="customer_payment" class="btn btn-secondary">
-                                            <i class="align-middle" data-feather="file-text"></i> Receive Payment
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <a href="receive_payment" class="btn btn-lg btn-outline-secondary me-2 mb-2">
+                                        <i class="fas fa-arrow-left fa-lg me-2"></i> Go Back
+                                    </a>
+                                    <div class="btn-group">
+                                        <a href="#" class="btn btn-lg btn-outline-success dropdown-toggle me-2 mb-2" id="apvDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="fas fa-plus fa-lg me-2"></i> Create Receive Payment
                                         </a>
-                                    </div> -->
-                                    <div class="dropdown d-inline-block">
-                                        <a href="receive_payment" class="btn btn-sm btn-secondary">
-                                            <i class="fas fa-arrow-left"></i> Go Back
-                                        </a>
-                                        <button class="btn btn-sm btn-primary dropdown-toggle" type="button"
-                                            id="apvDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                             Receive Payment
-                                        </button>
                                         <ul class="dropdown-menu" aria-labelledby="apvDropdown">
                                             <li><a class="dropdown-item" href="official_receipt">Official Receipt</a></li>
-                                            <li><a class="dropdown-item" href="customer_payment">Collection Receipt</a>
-                                            </li>   
+                                            <li><a class="dropdown-item" href="customer_payment">Collection Receipt</a></li>   
                                         </ul>
                                     </div>
                                 </div>
@@ -75,36 +73,41 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                                     <tbody>
                                         <?php foreach ($payments as $payment): ?>
                                             <?php if ($payment->status == 3): // Only include invoices with status 3 ?>
-                                            <tr>
-                                                <td style="white-space: nowrap;"><?= htmlspecialchars($payment->cr_no) ?></td>
-                                                <td style="white-space: nowrap;">
-                                                    <?= htmlspecialchars($payment->customer_name) ?></td>
-                                                <td style="white-space: nowrap;">
-                                                    <?= htmlspecialchars($payment->payment_date) ?></td>
-                                                <td style="white-space: nowrap;">
-                                                    <?= htmlspecialchars($payment->payment_method_name) ?></td>
-                                                <td style="white-space: nowrap;">
-                                                    ₱<?= htmlspecialchars($payment->summary_applied_amount) ?></td>
-                                                <td style="white-space: nowrap;"><?= htmlspecialchars($payment->ref_no) ?>
-                                                <td class="text-center">
-                                                    <?php
-                                                     switch ($payment->status) {
-                                                        case 3:
-                                                            echo '<span class="badge bg-secondary">Void</span>'; // Changed bg-warning to bg-secondary for better visibility
-                                                            break;
-                                                        default:
-                                                            echo '<span class="badge bg-secondary">Unknown</span>';
-                                                    }
-                                                    ?>
-                                                </td>
-                                                </td>
-                                                <td style="white-space: nowrap;">
-                                                    <a href="view_payment?action=view&id=<?= htmlspecialchars($payment->id) ?>"
-                                                        class="btn btn-sm btn-info">
-                                                        <i class="fas fa-eye"></i> View
-                                                    </a>
-                                                </td>
-                                            </tr>
+                                                <tr>
+                                                    <td style="white-space: nowrap;"><?= htmlspecialchars($payment->cr_no) ?>
+                                                    </td>
+                                                    <td style="white-space: nowrap;">
+                                                        <?= htmlspecialchars($payment->customer_name) ?>
+                                                    </td>
+                                                    <td style="white-space: nowrap;">
+                                                        <?= htmlspecialchars($payment->payment_date) ?>
+                                                    </td>
+                                                    <td style="white-space: nowrap;">
+                                                        <?= htmlspecialchars($payment->payment_method_name) ?>
+                                                    </td>
+                                                    <td style="white-space: nowrap;">
+                                                        <b>₱<?= number_format($payment->summary_applied_amount, 2, '.', ','); ?></b>
+                                                    </td>
+                                                    <td style="white-space: nowrap;"><?= htmlspecialchars($payment->ref_no) ?>
+                                                    <td class="text-center">
+                                                        <?php
+                                                        switch ($payment->status) {
+                                                            case 3:
+                                                                echo '<span class="badge bg-secondary">Void</span>'; // Changed bg-warning to bg-secondary for better visibility
+                                                                break;
+                                                            default:
+                                                                echo '<span class="badge bg-secondary">Unknown</span>';
+                                                        }
+                                                        ?>
+                                                    </td>
+                                                    </td>
+                                                    <td style="white-space: nowrap;">
+                                                        <a href="view_payment?action=view&id=<?= htmlspecialchars($payment->id) ?>"
+                                                            class="btn btn-sm btn-info">
+                                                            <i class="fas fa-eye"></i> View
+                                                        </a>
+                                                    </td>
+                                                </tr>
                                             <?php endif; ?>
                                         <?php endforeach; ?>
                                     </tbody>
