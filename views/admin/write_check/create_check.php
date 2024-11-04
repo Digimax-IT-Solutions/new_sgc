@@ -199,7 +199,7 @@ $newWriteCvNo = WriteCheck::getLastCheckNo();
                                             <div class="form-group">
                                                 <label for="payee_address">Address</label>
                                                 <input type="text" class="form-control form-control-sm"
-                                                    id="payee_address" name="payee_address" required>
+                                                    id="payee_address" name="payee_address">
                                             </div>
                                         </div>
                                     </div>
@@ -939,11 +939,11 @@ $newWriteCvNo = WriteCheck::getLastCheckNo();
             const items = [];
             let hasEmptyAmount = false;
             let firstEmptyAmountRow;
-            
+
 
             $('#itemTableBody tr').each(function(index) {
 
-                const amount =  parseFloat($(this).find('.amount').data('raw-value')) || parseFormattedNumber($(this).find('.amount').val());
+                const amount = parseFloat($(this).find('.amount').data('raw-value')) || parseFormattedNumber($(this).find('.amount').val());
 
                 if (!amount) {
                     hasEmptyAmount = true;
@@ -1096,18 +1096,20 @@ $newWriteCvNo = WriteCheck::getLastCheckNo();
                 },
                 success: function(response) {
                     if (response.success) {
-                        // If the status was updated successfully, proceed with printing
                         console.log('Print status updated, now printing check:', id);
 
-                        // Open a new window with the print view
-                        const printFrame = document.getElementById('printFrame');
+                        // Open a new window
+                        const printWindow = window.open('', '_blank');
                         const printContentUrl = `print_check?action=print&id=${id}`;
 
-                        printFrame.src = printContentUrl;
+                        // Load the content into the new window
+                        printWindow.location.href = printContentUrl;
 
-                        printFrame.onload = function() {
-                            printFrame.contentWindow.focus();
-                            printFrame.contentWindow.print();
+                        // Wait for the new window to load before printing
+                        printWindow.onload = function() {
+                            printWindow.focus();
+                            printWindow.print();
+                            printWindow.close(); // Optionally close the window after printing
                         };
                     } else {
                         Swal.fire({
@@ -1127,5 +1129,6 @@ $newWriteCvNo = WriteCheck::getLastCheckNo();
                 }
             });
         }
+
     });
 </script>

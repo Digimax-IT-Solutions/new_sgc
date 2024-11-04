@@ -59,7 +59,7 @@ try {
 
                 // Calculate banner position
                 $pageWidth = $pdf->GetPageWidth();
-                $bannerWidth = 80; // Adjust as needed
+                $bannerWidth = 40; // Adjust as needed
                 $bannerX = ($pageWidth - $bannerWidth) / 2;
 
                 // Add banner image
@@ -70,10 +70,10 @@ try {
 
                 // Company details centered under banner
                 $pdf->SetFont('Arial', '', 10);
-                $pdf->Cell(0, 4, '19/F Citibank Tower, 8741 Paseo De Roxas,', 0, 1, 'R');
-                $pdf->Cell(0, 4, '1Bel-Air, Makati City, Metro Manila, Philippines', 0, 1, 'R');
-                $pdf->Cell(0, 4, 'VAT Reg. TIN: 000-123-533-00000', 0, 1, 'R');
-                $pdf->Cell(0, 4, 'Tel. No: +63 (53) 553 0058', 0, 1, 'R');
+                $pdf->Cell(0, 4, 'Pilar Development Compound, Warehouse 3 (Unit 2) Rose Ave, Pilar Village,', 0, 1, 'R');
+                $pdf->Cell(0, 4, 'Barangay Almanza, Las Pinas, Philippines', 0, 1, 'R');
+                $pdf->Cell(0, 4, 'VAT Reg. TIN: ', 0, 1, 'R');
+                $pdf->Cell(0, 4, 'Tel. No: ', 0, 1, 'R');
 
                 $pdf->SetY($pdf->GetY() + 15);
                 $pdf->SetFont('Arial', 'B', 14);

@@ -1195,15 +1195,15 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                     if (response.success) {
                         // If the status was updated successfully, proceed with printing
                         console.log('Print status updated, now printing invoice:', invoiceId);
-
-                        // Open the print view in a new tab
+                        // Open a new window with the print view
+                        const printFrame = document.getElementById('printFrame');
                         const printContentUrl = `print_invoice?action=print&id=${invoiceId}`;
-                        const printWindow = window.open(printContentUrl, '_blank');
 
-                        // Wait for the new tab to fully load, then trigger the print
-                        printWindow.onload = function() {
-                            printWindow.focus();
-                            printWindow.print();
+                        printFrame.src = printContentUrl;
+
+                        printFrame.onload = function() {
+                            printFrame.contentWindow.focus();
+                            printFrame.contentWindow.print();
                         };
                     } else {
                         Swal.fire({
@@ -1223,7 +1223,6 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                 }
             });
         }
-
     });
 
     // Function to populate multiple fields based on selected option

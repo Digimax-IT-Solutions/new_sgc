@@ -13,7 +13,7 @@ class ProfitAndLoss
 
         // Output the Profit and Loss statement
         echo '<div class="profit-loss-statement">';
-        echo '<h1>LA PERLA SUGAR EXPORT CORPORATION</h1>';
+        echo '<h1>EUROSPEC AUTO SERVICE</h1>';
         echo '<h2>Profit and Loss</h2>';
         if ($fromDate && $toDate) {
             echo '<h3>' . date('F d, Y', strtotime($fromDate)) . ' to ' . date('F d, Y', strtotime($toDate)) . '</h3>';

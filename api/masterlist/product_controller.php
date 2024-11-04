@@ -68,22 +68,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
 
 
 if (get('action') === 'add') {
-    $item_name = post('item_name'); // Required, no default
-    $item_code = post('item_code'); // Can be NULL, no default needed
-    $item_type = post('item_type'); // Can be NULL, no default needed
-    $vendor_id = !empty($_POST['item_vendor_id']) ? $_POST['item_vendor_id'] : 0; // Default to 0
-    $item_uom_id = !empty(post('item_uom_id')) ? post('item_uom_id') : 0; // Default to 0
-    $item_reorder_point = !empty(post('item_reorder_point')) ? post('item_reorder_point') : 0.00; // Default to 0.00
-    $item_category_id = !empty(post('item_category_id')) ? post('item_category_id') : 0; // Default to 0
-    $item_quantity = !empty(post('item_quantity')) ? post('item_quantity') : 0; // Default to 0
-    $item_sales_description = post('item_sales_description'); // Can be NULL, no default needed
-    $item_purchase_description = post('item_purchase_description'); // Can be NULL, no default needed
-    $item_selling_price = !empty(post('item_selling_price')) ? post('item_selling_price') : 0.00; // Default to 0.00
-    $item_cost_price = !empty(post('item_cost_price')) ? post('item_cost_price') : 0.00; // Default to 0.00
-    $item_cogs_account_id = !empty(post('item_cogs_account_id')) ? post('item_cogs_account_id') : 0; // Default to 0
-    $item_income_account_id = !empty(post('item_income_account_id')) ? post('item_income_account_id') : 0; // Default to 0
-    $item_asset_account_id = !empty(post('item_asset_account_id')) ? post('item_asset_account_id') : 0; // Default to 0
-
+    $item_name = post('item_name');
+    $item_code = post('item_code');
+    $item_type = post('item_type');
+    $vendor_id = !empty($_POST['item_vendor_id']) ? $_POST['item_vendor_id'] : null;
+    $item_uom_id = post('item_uom_id') ?? 0;
+    $item_reorder_point = post('item_reorder_point') ?? 0;
+    $item_category_id = post('item_category_id') ?? 0;
+    $item_quantity = post('item_quantity') ?? 0;
+    $item_sales_description = post('item_sales_description');
+    $item_purchase_description = post('item_purchase_description');
+    $item_selling_price = post('item_selling_price') ?? 0;
+    $item_cost_price = post('item_cost_price') ?? 0;
+    $item_cogs_account_id = post('item_cogs_account_id') ?? 0;
+    $item_income_account_id = post('item_income_account_id') ?? 0;
+    $item_asset_account_id = post('item_asset_account_id') ?? 0;
 
     try {
         Product::add(
@@ -124,26 +123,31 @@ if (post('action') === 'update') {
     $product = Product::find($id);
 
     if ($product) {
-        $product->item_name = post('item_name'); // Required
-        $product->item_code = post('item_code'); // Can be NULL or provided
-        $product->item_type = post('item_type'); // Can be NULL or provided
-        $product->item_vendor_id = !empty(post('item_vendor_id')) ? (int)post('item_vendor_id') : 0; // Default to 0 if empty
-        $product->item_uom_id = !empty(post('item_uom_id')) ? (int)post('item_uom_id') : 0; // Default to 0 if empty
-        $product->item_reorder_point = !empty(post('item_reorder_point')) ? post('item_reorder_point') : 0.00; // Default to 0.00 if empty
-        $product->item_category_id = !empty(post('item_category_id')) ? (int)post('item_category_id') : 0; // Default to 0 if empty
-        $product->item_quantity = !empty(post('item_quantity')) ? (int)post('item_quantity') : 0; // Default to 0 if empty
-        $product->item_sales_description = post('item_sales_description'); // Can be NULL or provided
-        $product->item_purchase_description = post('item_purchase_description'); // Can be NULL or provided
-        $product->item_selling_price = !empty(post('item_selling_price')) ? post('item_selling_price') : 0.00; // Default to 0.00 if empty
-        $product->item_cost_price = !empty(post('item_cost_price')) ? post('item_cost_price') : 0.00; // Default to 0.00 if empty
+        $product->item_name = post('item_name');
+        $product->item_code = post('item_code');
+        $product->item_type = post('item_type');
+        $product->item_vendor_id = !empty(post('item_vendor_id')) ? post('item_vendor_id') : null;
+        $product->item_uom_id = post('item_uom_id');
+        $product->item_reorder_point = post('item_reorder_point');
+        $product->item_category_id = post('item_category_id');
+        $product->item_quantity = post('item_quantity');
+        $product->item_sales_description = post('item_sales_description');
+        $product->item_purchase_description = post('item_purchase_description');
+        $product->item_selling_price = post('item_selling_price');
+        $product->item_cost_price = post('item_cost_price');
+        // Retrieve POST data
+        $itemCogsAccountId = post('item_cogs_account_id');
+        $itemAssetAccountId = post('item_asset_account_id');
+        $itemIncomeAccountId = post('item_income_account_id');
 
-        // Convert empty strings to null for integer fields if they are not provided
-        $product->item_cogs_account_id = !empty(post('item_cogs_account_id')) ? (int)post('item_cogs_account_id') : null;
-        $product->item_asset_account_id = !empty(post('item_asset_account_id')) ? (int)post('item_asset_account_id') : null;
-        $product->item_income_account_id = !empty(post('item_income_account_id')) ? (int)post('item_income_account_id') : null;
+        // Convert empty strings to null for integer fields
+        $product->item_cogs_account_id = !empty($itemCogsAccountId) ? (int)$itemCogsAccountId : null;
+        $product->item_asset_account_id = !empty($itemAssetAccountId) ? (int)$itemAssetAccountId : null;
+        $product->item_income_account_id = !empty($itemIncomeAccountId) ? (int)$itemIncomeAccountId : null;
+
 
         try {
-            $product->update(); // Perform the update
+            $product->update();
             flashMessage('update_product', 'Product updated successfully.', FLASH_SUCCESS);
         } catch (Exception $ex) {
             flashMessage('update_product', $ex->getMessage(), FLASH_ERROR);

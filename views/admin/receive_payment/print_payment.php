@@ -4,20 +4,45 @@ require_once '_init.php';
 // Include FPDF library
 require_once 'plugins/fpdf186/fpdf.php';
 
-function numberToWords($number) {
+function numberToWords($number)
+{
     $ones = array(
-        1 => "One", 2 => "Two", 3 => "Three", 4 => "Four", 5 => "Five", 
-        6 => "Six", 7 => "Seven", 8 => "Eight", 9 => "Nine", 10 => "Ten", 
-        11 => "Eleven", 12 => "Twelve", 13 => "Thirteen", 14 => "Fourteen", 
-        15 => "Fifteen", 16 => "Sixteen", 17 => "Seventeen", 18 => "Eighteen", 
+        1 => "One",
+        2 => "Two",
+        3 => "Three",
+        4 => "Four",
+        5 => "Five",
+        6 => "Six",
+        7 => "Seven",
+        8 => "Eight",
+        9 => "Nine",
+        10 => "Ten",
+        11 => "Eleven",
+        12 => "Twelve",
+        13 => "Thirteen",
+        14 => "Fourteen",
+        15 => "Fifteen",
+        16 => "Sixteen",
+        17 => "Seventeen",
+        18 => "Eighteen",
         19 => "Nineteen"
     );
     $tens = array(
-        2 => "Twenty", 3 => "Thirty", 4 => "Forty", 5 => "Fifty", 
-        6 => "Sixty", 7 => "Seventy", 8 => "Eighty", 9 => "Ninety"
+        2 => "Twenty",
+        3 => "Thirty",
+        4 => "Forty",
+        5 => "Fifty",
+        6 => "Sixty",
+        7 => "Seventy",
+        8 => "Eighty",
+        9 => "Ninety"
     );
     $scales = array(
-        "", "Thousand", "Million", "Billion", "Trillion"
+        "",
+        "Thousand",
+        "Million",
+        "Billion",
+        "Trillion"
     );
 
     if ($number == 0) {
@@ -78,16 +103,16 @@ try {
                 $pdf = new FPDF();
                 $pdf->AddPage();
 
-            // Add a watermark based on the invoice status
-            if ($payment->status == 3) {
-                // If invoice status is 3, add a "VOID" watermark
-                $pdf->SetFont('Arial', 'B', 190);
-                $pdf->RotatedText(55, 190, 'VOID', 45, array(192, 192, 192)); // Light gray color
-            } elseif ($payment->status == 4) {
-                // If invoice status is 4, add a "DRAFT" watermark
-                $pdf->SetFont('Arial', 'B', 175);
-                $pdf->RotatedText(55, 190, 'DRAFT', 45, array(192, 192, 192)); // Light gray color
-            }
+                // Add a watermark based on the invoice status
+                if ($payment->status == 3) {
+                    // If invoice status is 3, add a "VOID" watermark
+                    $pdf->SetFont('Arial', 'B', 190);
+                    $pdf->RotatedText(55, 190, 'VOID', 45, array(192, 192, 192)); // Light gray color
+                } elseif ($payment->status == 4) {
+                    // If invoice status is 4, add a "DRAFT" watermark
+                    $pdf->SetFont('Arial', 'B', 175);
+                    $pdf->RotatedText(55, 190, 'DRAFT', 45, array(192, 192, 192)); // Light gray color
+                }
 
 
                 // Set margins
@@ -110,21 +135,29 @@ try {
 
                 // Calculate banner position
                 $pageWidth = $pdf->GetPageWidth();
-                $bannerWidth = 80; // Adjust as needed
+                $bannerWidth = 40; // Adjust as needed
                 $bannerX = ($pageWidth - $bannerWidth) / 2;
 
                 // Add banner image
-                $pdf->Image('photos/banner.png', 2, 15, $bannerWidth, 0, 'PNG');
+                $pdf->Image('photos/banner.png', 10, 15, $bannerWidth, 0, 'PNG');
 
                 // Move below banner
                 $pdf->SetY($pdf->GetY() + 8);
 
                 // Company details centered under banner
                 $pdf->SetFont('Arial', '', 10);
-                $pdf->Cell(0, 4, 'Montebello, Kanaga, Leyte, 6531', 0, 1, 'R');
-                $pdf->Cell(0, 4, 'VAT Reg. TIN: 000-123-533-00000', 0, 1, 'R');
-                $pdf->Cell(0, 4, 'Tel. No: +63 (53) 553 0058', 0, 1, 'R');
-            
+                $pdf->Cell(
+                    0,
+                    4,
+                    'Pilar Development Compound, Warehouse 3 (Unit 2) Rose Ave, Pilar Village,',
+                    0,
+                    1,
+                    'R'
+                );
+                $pdf->Cell(0, 4, 'Barangay Almanza, Las Pinas, Philippines', 0, 1, 'R');
+                $pdf->Cell(0, 4, 'VAT Reg. TIN: ', 0, 1, 'R');
+                $pdf->Cell(0, 4, 'Tel. No: ', 0, 1, 'R');
+
 
                 $pdf->SetY($pdf->GetY() + 15);
                 $pdf->SetFont('Arial', 'B', 14);
@@ -162,7 +195,7 @@ try {
                 // Adjust the PDF Cell method
                 // $pdf->Cell(100, $lineHeight, 'Amount in Words: ' . $amountInWords, 0, 0, 'L');
                 $pdf->SetX($rightColumnX);
-                $pdf->Cell(0, $lineHeight, 'Bank: ' . $payment->account_description, 0, 1, 'L');
+                $pdf->Cell(0, $lineHeight, '', 0, 1, 'L');
 
 
                 // Format the amount without a thousands separator
@@ -193,49 +226,49 @@ try {
                 $pdf->SetFont('Arial', 'B', 9);
                 $pdf->Cell(0, 10, 'PAYMENT DETAILS', 0, 1, 'C');
                 $pdf->SetFont('Arial', '', 9);
-    
+
                 // Define the column widths
                 $columnWidths = array(
                     'Date' => 19,
                     'SI No.' => 19,
                     'Orig Amt' => 23,
-                    'Discount' => 21,
+                    'Discount/Credit' => 21,
                     'Net Amt' => 23,
                     'WTax (2307)' => 21,
                     'Amount Due' => 23,
                     'Payment Applied' => 23,
                     'Balance' => 21
                 );
-    
+
                 // Set column headers
                 foreach ($columnWidths as $header => $width) {
-                    $pdf->Cell($width, 6, $header, 'T', 0, 'C'); // 'T' for top border
+                    $pdf->Cell($width, 6, $header, 'T', 0, 'C'); // Headers remain center-aligned
                 }
                 $pdf->Ln();
-    
+
                 // Initialize totals
                 $totalOrigAmt = $totalDiscount = $totalNetAmt = $totalWTax = $totalAmountDue = $totalPaymentApplied = $totalBalance = 0;
-    
-               // Table data with only horizontal borders
+
+                // Table data with only horizontal borders
                 foreach ($payment->details as $detail) {
-                    $netAmount = $detail['total_amount_due'] - $detail['discount_amount'];
-                    $amountDue = $netAmount - $detail['discount_amount']; // Assuming WTax is same as discount for this example
+                    $discount_credit = $detail['discount_amount'] + $detail['credit_amount'];
+                    $netAmount = $detail['total_amount_due'] - $discount_credit;
+                    $amountDue = $netAmount;
 
                     $pdf->Cell($columnWidths['Date'], 6, date('m/d/Y', strtotime($detail['invoice_date'])), 'T', 0, 'C');
                     $pdf->Cell($columnWidths['SI No.'], 6, $detail['invoice_number'], 'T', 0, 'C');
                     $pdf->Cell($columnWidths['Orig Amt'], 6, number_format($detail['total_amount_due'], 2), 'T', 0, 'R');
-                    $pdf->Cell($columnWidths['Discount'], 6, number_format($detail['discount_amount'], 2), 'T', 0, 'R');
+                    $pdf->Cell($columnWidths['Discount/Credit'], 6, number_format($discount_credit, 2), 'T', 0, 'R');
                     $pdf->Cell($columnWidths['Net Amt'], 6, number_format($netAmount, 2), 'T', 0, 'R');
-                    $pdf->Cell($columnWidths['WTax (2307)'], 6, number_format($detail['discount_amount'], 2), 'T', 0, 'R');
+                    $pdf->Cell($columnWidths['WTax (2307)'], 6, '', 'T', 0, 'R');
                     $pdf->Cell($columnWidths['Amount Due'], 6, number_format($amountDue, 2), 'T', 0, 'R');
                     $pdf->Cell($columnWidths['Payment Applied'], 6, number_format($detail['amount_applied'], 2), 'T', 0, 'R');
                     $pdf->Cell($columnWidths['Balance'], 6, number_format($detail['balance_due'], 2), 'T', 1, 'R');
 
                     // Update totals
                     $totalOrigAmt += $detail['total_amount_due'];
-                    $totalDiscount += $detail['discount_amount'];
+                    $totalDiscount += $discount_credit;
                     $totalNetAmt += $netAmount;
-                    $totalWTax += $detail['discount_amount'];
                     $totalAmountDue += $amountDue;
                     $totalPaymentApplied += $detail['amount_applied'];
                     $totalBalance += $detail['balance_due'];
@@ -245,13 +278,12 @@ try {
                 $pdf->SetFont('Arial', 'B', 9);
                 $pdf->Cell($columnWidths['Date'] + $columnWidths['SI No.'], 6, 'TOTAL', 'T', 0, 'C');
                 $pdf->Cell($columnWidths['Orig Amt'], 6, number_format($totalOrigAmt, 2), 'T', 0, 'R');
-                $pdf->Cell($columnWidths['Discount'], 6, number_format($totalDiscount, 2), 'T', 0, 'R');
+                $pdf->Cell($columnWidths['Discount/Credit'], 6, number_format($totalDiscount, 2), 'T', 0, 'R');
                 $pdf->Cell($columnWidths['Net Amt'], 6, number_format($totalNetAmt, 2), 'T', 0, 'R');
-                $pdf->Cell($columnWidths['WTax (2307)'], 6, number_format($totalWTax, 2), 'T', 0, 'R');
+                $pdf->Cell($columnWidths['WTax (2307)'], 6, '', 'T', 0, 'R');
                 $pdf->Cell($columnWidths['Amount Due'], 6, number_format($totalAmountDue, 2), 'T', 0, 'R');
                 $pdf->Cell($columnWidths['Payment Applied'], 6, number_format($totalPaymentApplied, 2), 'T', 0, 'R');
                 $pdf->Cell($columnWidths['Balance'], 6, number_format($totalBalance, 2), 'T', 1, 'R');
-    
 
                 $pdf->Ln(2);
 
@@ -292,8 +324,6 @@ try {
 
                 // Output the PDF
                 $pdf->Output();
-
-
             } else {
                 // Handle the case where the check is not found
                 echo "Invoice not found.";

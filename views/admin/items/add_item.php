@@ -67,7 +67,7 @@ sort($itemTypes);
                                     <label for="item_type" class="col-sm-2 col-form-label">Item Type</label>
                                     <div class="col-sm-4">
                                         <select class="form-control" id="item_type" name="item_type">
-                                            <option value="">Select Item Type</option>
+                                            <option value="0">Select Item Type</option>
                                             <?php foreach ($itemTypes as $type): ?>
                                                 <option value="<?php echo $type; ?>"><?php echo $type; ?></option>
                                             <?php endforeach; ?>
@@ -77,7 +77,7 @@ sort($itemTypes);
                                         Vendor</label>
                                     <div class="col-sm-4">
                                         <select id="item_vendor_id" class="form-control" name="item_vendor_id">
-                                            <option value="">Select Vendor</option>
+                                            <option value="0">Select Vendor</option>
                                             <?php foreach ($vendors as $vendor): ?>
                                                 <option value="<?= $vendor->id ?>"><?= $vendor->vendor_name ?></option>
                                             <?php endforeach; ?>
@@ -89,7 +89,7 @@ sort($itemTypes);
                                     <label for="item_uom_id" class="col-sm-2 col-form-label">Unit of Measurement</label>
                                     <div class="col-sm-4">
                                         <select id="item_uom_id" class="form-control" name="item_uom_id">
-                                            <option value="">Select Uom</option>
+                                            <option value="0">Select Uom</option>
                                             <?php foreach ($uoms as $uom): ?>
                                                 <option value="<?= $uom->id ?>"><?= $uom->name ?></option>
                                             <?php endforeach; ?>
@@ -107,6 +107,7 @@ sort($itemTypes);
                                     <label for="item_category_id" class="col-sm-2 col-form-label">Category</label>
                                     <div class="col-sm-4">
                                         <select id="item_category_id" class="form-control" name="item_category_id">
+                                            <option value="0">Select Category</option>
                                             <?php foreach ($categories as $category): ?>
                                                 <option value="<?= $category->id ?>"><?= $category->name ?></option>
                                             <?php endforeach; ?>
@@ -135,20 +136,17 @@ sort($itemTypes);
                                     </div>
                                 </div>
 
-
                                 <div class="row mb-3">
-                                    <label for="item_selling_price" class="col-sm-2 col-form-label">Selling
-                                        Price</label>
+                                    <label for="item_selling_price" class="col-sm-2 col-form-label">Selling Price</label>
                                     <div class="col-sm-4">
-                                        <input type="number" class="form-control" id="item_selling_price"
-                                            name="item_selling_price" step=".25">
+                                        <input type="number" class="form-control" id="item_selling_price" name="item_selling_price" value="0" min="0" step=".01">
                                     </div>
                                     <label for="item_cost_price" class="col-sm-2 col-form-label">Cost Price</label>
                                     <div class="col-sm-4">
-                                        <input type="number" class="form-control" id="item_cost_price"
-                                            name="item_cost_price" step=".25">
+                                        <input type="number" class="form-control" id="item_cost_price" name="item_cost_price" value="0" min="0" step=".01">
                                     </div>
                                 </div>
+
 
 
                                 <!-- --- -->
@@ -232,7 +230,7 @@ sort($itemTypes);
 <script>
     $(document).ready(function() {
 
-        $('#item_cogs_account_id', '#item_income_account_id', '#item_asset_account_id').select2({
+        $('.select2').select2({
             theme: 'classic',
             width: '100%',
             placeholder: 'Select Account',

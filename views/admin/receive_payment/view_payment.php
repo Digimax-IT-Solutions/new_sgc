@@ -31,6 +31,7 @@ $newCrNo = Payment::getLastCrNo();
             top: 100%;
             left: 0;
         }
+
         .form-label {
             font-size: 0.675rem;
             margin-bottom: 0.25rem;
@@ -118,76 +119,76 @@ $newCrNo = Payment::getLastCrNo();
                 $id = $_GET['id'];
                 $payments = Payment::find($id);
                 if ($payments) { ?>
-            <form id="paymentForm" action="api/receive_payment_controller.php?action=add" method="POST">
-                <input type="hidden" name="action" id="modalAction" value="add" />
-                <div class="row">
-                    <div class="col-12 col-lg-8">
-                        <div class="card h-100">
-                            <div class="card-header">
-                                <h5 class="card-title mb-0">Receive From</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="row g-2">
-                                    <!-- Receive From Section -->
-                                    <div class="col-md-4 customer-details">
-                                        <label for="customer_name" class="form-label">Customer</label>
-                                        <select class="form-select form-select-sm select2" id="customer_name" name="customer_name" disabled>
-                                            <option value="">Select Customer</option>
-                                            <?php
-                                                // Array to prevent duplicates
-                                                $used_customers = [];
-                                                $selected_customer_id = $payments->customer_id ?? ''; // Assuming this holds the selected customer ID
+                    <form id="paymentForm" action="api/receive_payment_controller.php?action=add" method="POST">
+                        <input type="hidden" name="action" id="modalAction" value="add" />
+                        <div class="row">
+                            <div class="col-12 col-lg-8">
+                                <div class="card h-100">
+                                    <div class="card-header">
+                                        <h5 class="card-title mb-0">Receive From</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row g-2">
+                                            <!-- Receive From Section -->
+                                            <div class="col-md-4 customer-details">
+                                                <label for="customer_name" class="form-label">Customer</label>
+                                                <select class="form-select form-select-sm select2" id="customer_name" name="customer_name" disabled>
+                                                    <option value="">Select Customer</option>
+                                                    <?php
+                                                    // Array to prevent duplicates
+                                                    $used_customers = [];
+                                                    $selected_customer_id = $payments->customer_id ?? ''; // Assuming this holds the selected customer ID
 
-                                                foreach ($customers as $customer):
-                                                    if (!in_array($customer->id, $used_customers)):
-                                                        $used_customers[] = $customer->id; // Track used customer IDs
-                                            ?>
-                                                        <option value="<?= htmlspecialchars($customer->id) ?>" 
+                                                    foreach ($customers as $customer):
+                                                        if (!in_array($customer->id, $used_customers)):
+                                                            $used_customers[] = $customer->id; // Track used customer IDs
+                                                    ?>
+                                                            <option value="<?= htmlspecialchars($customer->id) ?>"
                                                                 <?= $customer->id == $selected_customer_id ? 'selected' : '' ?>>
-                                                            <?= htmlspecialchars($customer->customer_name) ?>
-                                                        </option>
-                                            <?php
-                                                    endif;
-                                                endforeach;
-                                            ?>
-                                        </select>
-                                    </div>
-
-
-
-                                    <div class="col-md-4 customer-details">
-                                        <label for="credit_balance" class="form-label">Balance</label>
-                                        <input type="text" class="form-control form-control-sm" id="credit_balance"
-                                            name="credit_balance" 
-                                            value="<?= number_format($payments->credit_balance, 2, '.', ',') ?>" readonly>
-                                    </div>
-
-                                    <!-- Payment Details Section -->
-                                    <div class="row g-3">
-                                        <div class="col-12 mt-4 mb-3">
-                                            <h6 class="border-bottom pb-2"></h6>
-                                        </div>
-                                            <!-- First Row -->
-                                            <div class="col-md-3 invoice-details">
-                                                <label for="account_id" class="form-label">Account</label>
-                                                <select class="form-select" id="account_id" name="account_id" disabled>
-                                                    <?php foreach ($accounts as $account): ?>
-                                                        <?php if ($account->account_description == 'Undeposited Funds'): ?>
-                                                            <option value="<?= $account->id ?>" 
-                                                                <?= ($account->id == $payments->account_id) ? 'selected' : '' ?>>
-                                                                <?= $account->id ?> - <?= $account->account_description ?>
+                                                                <?= htmlspecialchars($customer->customer_name) ?>
                                                             </option>
-                                                        <?php endif; ?>
-                                                    <?php endforeach; ?>
+                                                    <?php
+                                                        endif;
+                                                    endforeach;
+                                                    ?>
                                                 </select>
                                             </div>
 
-                                            
-                                            <div class="col-md-3 invoice-details">
-                                                <label for="payment_method" class="form-label">Payment Method</label>
-                                                <select class="form-select" id="payment_method" name="payment_method" disabled>
-                                                    <option value="">Select Payment</option>
-                                                    <?php
+
+
+                                            <div class="col-md-4 customer-details">
+                                                <label for="credit_balance" class="form-label">Balance</label>
+                                                <input type="text" class="form-control form-control-sm" id="credit_balance"
+                                                    name="credit_balance"
+                                                    value="<?= number_format($payments->credit_balance, 2, '.', ',') ?>" readonly>
+                                            </div>
+
+                                            <!-- Payment Details Section -->
+                                            <div class="row g-3">
+                                                <div class="col-12 mt-4 mb-3">
+                                                    <h6 class="border-bottom pb-2"></h6>
+                                                </div>
+                                                <!-- First Row -->
+                                                <div class="col-md-3 invoice-details">
+                                                    <label for="account_id" class="form-label">Account</label>
+                                                    <select class="form-select" id="account_id" name="account_id" disabled>
+                                                        <?php foreach ($accounts as $account): ?>
+                                                            <?php if ($account->account_description == 'Undeposited Funds'): ?>
+                                                                <option value="<?= $account->id ?>"
+                                                                    <?= ($account->id == $payments->account_id) ? 'selected' : '' ?>>
+                                                                    <?= $account->id ?> - <?= $account->account_description ?>
+                                                                </option>
+                                                            <?php endif; ?>
+                                                        <?php endforeach; ?>
+                                                    </select>
+                                                </div>
+
+
+                                                <div class="col-md-3 invoice-details">
+                                                    <label for="payment_method" class="form-label">Payment Method</label>
+                                                    <select class="form-select" id="payment_method" name="payment_method" disabled>
+                                                        <option value="">Select Payment</option>
+                                                        <?php
                                                         // Array to prevent duplicates
                                                         $used_payment_methods = [];
                                                         $selected_payment_method = $payments->payment_method ?? ''; // Assuming this holds the selected payment method
@@ -196,184 +197,184 @@ $newCrNo = Payment::getLastCrNo();
                                                         foreach ($payment_methods as $payment_method):
                                                             if (!in_array($payment_method->payment_method_name, $used_payment_methods)):
                                                                 $used_payment_methods[] = $payment_method->payment_method_name; // Track used payment methods
-                                                    ?>
-                                                                <option value="<?= htmlspecialchars($payment_method->payment_method_name) ?>" 
-                                                                        <?= $payment_method->payment_method_name == $selected_payment_method ? 'selected' : '' ?>>
+                                                        ?>
+                                                                <option value="<?= htmlspecialchars($payment_method->payment_method_name) ?>"
+                                                                    <?= $payment_method->payment_method_name == $selected_payment_method ? 'selected' : '' ?>>
                                                                     <?= htmlspecialchars($payment_method->payment_method_name) ?>
                                                                 </option>
-                                                    <?php
+                                                        <?php
                                                             endif;
                                                         endforeach;
-                                                    ?>
-                                                </select>
+                                                        ?>
+                                                    </select>
+                                                </div>
+
+
+
+                                                <!-- Second Row -->
+                                                <div class="row">
+                                                    <div class="col-md-3 invoice-details">
+                                                        <label for="cr_no" class="form-label">CR No.</label>
+                                                        <input type="text" class="form-control" id="cr_no" name="cr_no"
+                                                            <?php if ($payments->status == 4): ?>
+                                                            value="<?php echo htmlspecialchars($newCrNo); ?>" readonly>
+                                                    <?php else: ?>
+                                                        value="<?php echo htmlspecialchars($payments->cr_no); ?>" disabled>
+                                                    <?php endif; ?>
+                                                    </div>
+                                                    <div class="col-md-3 invoice-details">
+                                                        <label for="reference_no" class="form-label">Reference / Check #</label>
+                                                        <input type="text" class="form-control" id="reference_no" name="reference_no" value="<?= htmlspecialchars($payments->ref_no) ?>" readonly>
+                                                    </div>
+                                                    <div class="col-md-3 invoice-details">
+                                                        <label for="payment_date" class="form-label">Payment Date</label>
+                                                        <input type="date" class="form-control" id="payment_date" name="payment_date" value="<?= htmlspecialchars($payments->payment_date) ?>" readonly>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Memo Field (Full Width) -->
+                                                <div class="col-12 invoice-details">
+                                                    <label for="memo" class="form-label">Memo</label>
+                                                    <input type="text" class="form-control" id="memo" name="memo" value="<?= htmlspecialchars($payments->memo) ?>" readonly>
+                                                </div>
                                             </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-lg-4">
+                                <div class="card h-100">
+                                    <div class="card-header">
+                                        <h5 class="card-title">Amounts For Selected Invoices</h5>
+                                        <?php if ($payments->status == 0): ?>
+                                            <span class="badge bg-danger">Unpaid</span>
+                                        <?php elseif ($payments->status == 1): ?>
+                                            <span class="badge bg-success">Paid</span>
+                                        <?php elseif ($payments->status == 2): ?>
+                                            <span class="badge bg-warning">Partially Paid</span>
+                                        <?php elseif ($payments->status == 3): ?>
+                                            <span class="badge bg-secondary">Void</span>
+                                        <?php elseif ($payments->status == 4): ?>
+                                            <span class="badge bg-info text-dark">Draft</span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="card-body">
 
-                                     
-
-                                        <!-- Second Row -->
                                         <div class="row">
-                                            <div class="col-md-3 invoice-details">
-                                                <label for="cr_no" class="form-label">CR No.</label>
-                                                <input type="text" class="form-control" id="cr_no" name="cr_no" 
-                                                <?php if ($payments->status == 4): ?>
-                                                    value="<?php echo htmlspecialchars($newCrNo); ?>" readonly>
-                                                <?php else: ?>
-                                                    value="<?php echo htmlspecialchars($payments->cr_no); ?>" disabled>
-                                                <?php endif; ?>
-                                            </div>
-                                            <div class="col-md-3 invoice-details">
-                                                <label for="reference_no" class="form-label">Reference / Check #</label>
-                                                <input type="text" class="form-control" id="reference_no" name="reference_no" value="<?= htmlspecialchars($payments->ref_no) ?>" readonly>
-                                            </div>
-                                            <div class="col-md-3 invoice-details">
-                                                <label for="payment_date" class="form-label">Payment Date</label>
-                                                <input type="date" class="form-control" id="payment_date" name="payment_date" value="<?= htmlspecialchars($payments->payment_date) ?>" readonly>
+                                            <label class="col-sm-6 col-form-label">Open Balance:</label>
+                                            <div class="col-sm-6">
+                                                <input type="text" class="form-control-plaintext text-end"
+                                                    id="summary_amount_due" name="summary_amount_due"
+                                                    value="<?= number_format($payments->summary_amount_due, 2, '.', ',') ?>" readonly>
                                             </div>
                                         </div>
 
-                                        <!-- Memo Field (Full Width) -->
-                                        <div class="col-12 invoice-details">
-                                            <label for="memo" class="form-label">Memo</label>
-                                            <input type="text" class="form-control" id="memo" name="memo" value="<?= htmlspecialchars($payments->memo) ?>" readonly>
+                                        <div class="row">
+                                            <label class="col-sm-6 col-form-label fw-bold">Applied Payment:</label>
+                                            <div class="col-sm-6">
+                                                <input type="text" class="form-control-plaintext text-end fw-bold"
+                                                    id="summary_applied_amount" name="summary_applied_amount" value="<?= number_format($payments->summary_applied_amount, 2, '.', ',') ?>" readonly>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <label class="col-sm-6 col-form-label">Discount & Credits Applied:</label>
+                                            <div class="col-sm-6">
+                                                <input type="text" class="form-control-plaintext text-end"
+                                                    id="applied_credits_discount" name="applied_credits_discount" value="<?= number_format($payments->applied_credits_discount, 2, '.', ',') ?>" readonly>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <label class="col-sm-6 col-form-label fw-bold">Remaining Balance:</label>
+                                            <div class="col-sm-6">
+                                                <input type="text" class="form-control-plaintext text-end fw-bold"
+                                                    id="total_amount_due" name="total_amount_due" value="<?= number_format($payments->credit_balance, 2, '.', ',') ?>" readonly>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-lg-4">
-                        <div class="card h-100">
-                            <div class="card-header">
-                                <h5 class="card-title">Ammounts For Selected Invoices</h5>
-                                <?php if ($payments->status == 0): ?>
-                                    <span class="badge bg-danger">Unpaid</span>
-                                <?php elseif ($payments->status == 1): ?>
-                                    <span class="badge bg-success">Paid</span>
-                                <?php elseif ($payments->status == 2): ?>
-                                    <span class="badge bg-warning">Partially Paid</span>
-                                <?php elseif ($payments->status == 3): ?>
-                                <span class="badge bg-secondary">Void</span>
-                                <?php elseif ($payments->status == 4): ?>
-                                    <span class="badge bg-info text-dark">Draft</span>
-                                <?php endif; ?>
-                            </div>
-                            <div class="card-body">
-
-                            <div class="row">
-                                    <label class="col-sm-6 col-form-label">Open Balance:</label>
-                                    <div class="col-sm-6">
-                                        <input type="text" class="form-control-plaintext text-end"
-                                            id="summary_amount_due" name="summary_amount_due" 
-                                            value="<?= number_format($payments->summary_amount_due, 2, '.', ',') ?>" readonly>
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <label class="col-sm-6 col-form-label fw-bold">Applied Payment:</label>
-                                    <div class="col-sm-6">
-                                        <input type="text" class="form-control-plaintext text-end fw-bold"
-                                            id="summary_applied_amount" name="summary_applied_amount"  value="<?= number_format($payments->summary_applied_amount, 2, '.', ',') ?>" readonly>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <label class="col-sm-6 col-form-label">Discount & Credits Applied:</label>
-                                    <div class="col-sm-6">
-                                        <input type="text" class="form-control-plaintext text-end"
-                                            id="applied_credits_discount" name="applied_credits_discount"  value="<?= number_format($payments->applied_credits_discount, 2, '.', ',') ?>" readonly>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <label class="col-sm-6 col-form-label fw-bold">Remaining Balance:</label>
-                                    <div class="col-sm-6">
-                                        <input type="text" class="form-control-plaintext text-end fw-bold"
-                                            id="total_amount_due" name="total_amount_due" value="<?= number_format($payments->credit_balance, 2, '.', ',') ?>" readonly>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="card-footer d-flex justify-content-center">
-                                <?php if ($payments->status == 4): ?>
-                                    <button type="button" id="saveDraftBtn" class="btn btn-secondary me-2">Update Draft</button>
+                                    <div class="card-footer d-flex justify-content-center">
+                                        <?php if ($payments->status == 4): ?>
+                                            <button type="button" id="saveDraftBtn" class="btn btn-secondary me-2">Update Draft</button>
                                             <button type="submit" class="btn btn-info me-2">Save as Final</button>
-                                <?php elseif ($payments->status == 3): ?>
-                                    <!-- Button to show when invoice_status is 3 -->
-                                    <a class="btn btn-primary" href="#" id="reprintButton">
-                                        <i class="fas fa-print"></i> Reprint
-                                    </a>
-                                <?php else: ?>
-                                    <!-- Buttons to show when invoice_status is neither 3 nor 4 -->
-                                    <button type="button" class="btn btn-secondary me-2" id="voidButton">Void</button>
-                                    <a class="btn btn-primary" href="#" id="reprintButton">
-                                        <i class="fas fa-print"></i> Reprint
-                                    </a>
-                                <?php endif; ?>
+                                        <?php elseif ($payments->status == 3): ?>
+                                            <!-- Button to show when invoice_status is 3 -->
+                                            <a class="btn btn-primary" href="#" id="reprintButton">
+                                                <i class="fas fa-print"></i> Reprint
+                                            </a>
+                                        <?php else: ?>
+                                            <!-- Buttons to show when invoice_status is neither 3 nor 4 -->
+                                            <button type="button" class="btn btn-secondary me-2" id="voidButton">Void</button>
+                                            <a class="btn btn-primary" href="#" id="reprintButton">
+                                                <i class="fas fa-print"></i> Reprint
+                                            </a>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-                <div class="row mt-4">
-                    <div class="col-12">
-                        <div class="card">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5 class="card-title mb-0">Customers Invoice</h5>
-                                <!-- <button type="button" class="btn btn-primary btn-sm" id="selectAll">
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="card-title mb-0">Customers Invoice</h5>
+                                        <!-- <button type="button" class="btn btn-primary btn-sm" id="selectAll">
                                     Select All
                                 </button> -->
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-sm table-hover" id="itemTable">
-                                        <thead>
-                                            <tr>
-                                                <th><input type="checkbox" id="selectAll" /></th>
-                                                <th hidden>Invoice Account ID</th>
-                                                <th>Invoice #</th>
-                                                <th>Date</th>
-                                                <th>Customer</th>
-                                                <th>Original Amount</th>
-                                                <th>Discount & Credit</th>
-                                                <th>Amount Due</th>
-                                                <th>Payment Amount</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="itemTableBody" style="font-size: 16px;">
-                                            <?php
-                                            if ($payments) {
-                                                foreach ($payments->details as $detail) {
-                                                    $checked = ($detail['balance_due'] <= 0) ? 'checked' : '';
-                                                    ?>
-                                                    <tr data-invoice-id="<?= $detail['id'] ?>">
-                                                        <td>
-                                                            <input type="checkbox" class="invoice-select" data-invoice-id="<?= $detail['id'] ?>" <?= $checked ?> />
-                                                        </td>
-                                                        <td hidden><?= $detail['invoice_account_id'] ?></td>
-                                                        <td><?= $detail['invoice_number'] ?></td>
-                                                        <td><?= $detail['invoice_date'] ?></td>
-                                                        <td><?= $detail['customer_name'] ?></td>
-                                                        <td><?= number_format($detail['total_amount_due'], 2, '.', ',') ?></td>
-                                                        <td>
-                                                            <button type="button" class="btn btn-sm btn-primary add-discount-credit" data-invoice-id="<?= $detail['id'] ?>">Add Discount/Credit</button>
-                                                        </td>
-                                                        <td class="amount-due"><?= number_format($detail['balance_due'], 2, '.', ',') ?></td>
-                                                        <td>
-                                                            <input type="text" name="payments[<?= $detail['id'] ?>]" 
-                                                                class="form-control payment-input" 
-                                                                data-invoice-id="<?= $detail['id'] ?>" 
-                                                                value="<?= number_format($detail['amount_applied'], 2, '.', ',') ?>" 
-                                                                readonly>
-                                                        </td>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-hover" id="itemTable">
+                                                <thead>
+                                                    <tr>
+                                                        <th><input type="checkbox" id="selectAll" /></th>
+                                                        <th hidden>Invoice Account ID</th>
+                                                        <th>Invoice #</th>
+                                                        <th>Date</th>
+                                                        <th>Customer</th>
+                                                        <th>Original Amount</th>
+                                                        <th>Discount & Credit</th>
+                                                        <th>Amount Due</th>
+                                                        <th>Payment Amount</th>
                                                     </tr>
+                                                </thead>
+                                                <tbody id="itemTableBody" style="font-size: 16px;">
                                                     <?php
-                                                }
-                                            }
-                                            ?>
-                                        </tbody>
-                                    </table>
+                                                    if ($payments) {
+                                                        foreach ($payments->details as $detail) {
+                                                            $checked = ($detail['balance_due'] <= 0) ? 'checked' : '';
+                                                    ?>
+                                                            <tr data-invoice-id="<?= $detail['id'] ?>">
+                                                                <td>
+                                                                    <input type="checkbox" class="invoice-select" data-invoice-id="<?= $detail['id'] ?>" <?= $checked ?> />
+                                                                </td>
+                                                                <td hidden><?= $detail['invoice_account_id'] ?></td>
+                                                                <td><?= $detail['invoice_number'] ?></td>
+                                                                <td><?= $detail['invoice_date'] ?></td>
+                                                                <td><?= $detail['customer_name'] ?></td>
+                                                                <td><?= number_format($detail['total_amount_due'], 2, '.', ',') ?></td>
+                                                                <td>
+                                                                    <button type="button" class="btn btn-sm btn-primary add-discount-credit" data-invoice-id="<?= $detail['id'] ?>">Add Discount/Credit</button>
+                                                                </td>
+                                                                <td class="amount-due"><?= number_format($detail['balance_due'], 2, '.', ',') ?></td>
+                                                                <td>
+                                                                    <input type="text" name="payments[<?= $detail['id'] ?>]"
+                                                                        class="form-control payment-input"
+                                                                        data-invoice-id="<?= $detail['id'] ?>"
+                                                                        value="<?= number_format($detail['amount_applied'], 2, '.', ',') ?>"
+                                                                        readonly>
+                                                                </td>
+                                                            </tr>
+                                                    <?php
+                                                        }
+                                                    }
+                                                    ?>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </form>
+                    </form>
             <?php
                     // Receive found, you can now display the details
                 } else {
@@ -400,8 +401,8 @@ $newCrNo = Payment::getLastCrNo();
 <iframe id="printFrame" style="display:none;"></iframe>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        document.getElementById('reprintButton').addEventListener('click', function (e) {
+    document.addEventListener("DOMContentLoaded", function() {
+        document.getElementById('reprintButton').addEventListener('click', function(e) {
             e.preventDefault();
             Swal.fire({
                 title: 'Reprint Payment?',
@@ -413,13 +414,13 @@ $newCrNo = Payment::getLastCrNo();
                 confirmButtonText: 'Yes, reprint it!'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    printMethod(<?= $payments->id ?>, 2);  // Pass 2 for reprint
+                    printMethod(<?= $payments->id ?>, 2); // Pass 2 for reprint
                 }
             });
         });
 
         // Attach event listener for the void button
-        document.getElementById('voidButton').addEventListener('click', function (e) {
+        document.getElementById('voidButton').addEventListener('click', function(e) {
             e.preventDefault();
             Swal.fire({
                 title: 'Void Payment?',
@@ -454,19 +455,20 @@ $newCrNo = Payment::getLastCrNo();
             dataType: 'json',
             data: {
                 action: 'update_print_status',
-                id: id,  // Changed from payment_id to id
+                id: id,
                 print_status: printStatus
             },
-            success: function (response) {
+            success: function(response) {
                 if (response.success) {
-                    const printFrame = document.getElementById('printFrame');
                     const printContentUrl = `print_payment?action=print&id=${id}`;
 
-                    printFrame.src = printContentUrl;
+                    // Open the URL in a new tab and trigger print
+                    const printWindow = window.open(printContentUrl, '_blank');
 
-                    printFrame.onload = function () {
-                        printFrame.contentWindow.focus();
-                        printFrame.contentWindow.print();
+                    // Wait for the content to load before triggering print and hiding overlay
+                    printWindow.onload = function() {
+                        printWindow.focus();
+                        printWindow.print();
                         hideLoadingOverlay();
                     };
                 } else {
@@ -478,7 +480,7 @@ $newCrNo = Payment::getLastCrNo();
                     });
                 }
             },
-            error: function (jqXHR, textStatus, errorThrown) {
+            error: function(jqXHR, textStatus, errorThrown) {
                 hideLoadingOverlay();
                 console.error('AJAX error:', textStatus, errorThrown);
                 Swal.fire({
@@ -501,7 +503,7 @@ $newCrNo = Payment::getLastCrNo();
                 action: 'void_check',
                 id: id
             },
-            success: function (response) {
+            success: function(response) {
                 hideLoadingOverlay(); // Hide the loading overlay on success
                 if (response.success) {
                     Swal.fire({
@@ -519,7 +521,7 @@ $newCrNo = Payment::getLastCrNo();
                     });
                 }
             },
-            error: function (jqXHR, textStatus, errorThrown) {
+            error: function(jqXHR, textStatus, errorThrown) {
                 hideLoadingOverlay(); // Hide the loading overlay on error
                 console.error('AJAX error:', textStatus, errorThrown);
                 Swal.fire({
@@ -533,17 +535,16 @@ $newCrNo = Payment::getLastCrNo();
 </script>
 
 <script>
-
-    $(document).ready(function () {
+    $(document).ready(function() {
         initializeSelect2();
         setupEventListeners();
 
-      
+
     });
     // Update the submit event handler
-    $('#paymentForm').submit(function (event) {
+    $('#paymentForm').submit(function(event) {
         event.preventDefault();
-        
+
         // Check if there are any selected invoices
         if ($('#itemTableBody .invoice-select:checked').length === 0) {
             Swal.fire({
@@ -579,7 +580,7 @@ $newCrNo = Payment::getLastCrNo();
                 applied_credits_discount: $('#applied_credits_discount').val(),
                 selected_invoices: JSON.stringify(selectedInvoices)
             },
-            success: function (response) {
+            success: function(response) {
                 document.getElementById('loadingOverlay').style.display = 'none';
                 if (response.success) {
                     Swal.fire({
@@ -604,7 +605,7 @@ $newCrNo = Payment::getLastCrNo();
                     });
                 }
             },
-            error: function (jqXHR, textStatus, errorThrown) {
+            error: function(jqXHR, textStatus, errorThrown) {
                 document.getElementById('loadingOverlay').style.display = 'none';
                 console.error('AJAX error:', textStatus, errorThrown);
                 console.log('Response Text:', jqXHR.responseText);
@@ -625,6 +626,7 @@ $newCrNo = Payment::getLastCrNo();
             }
         });
     });
+
     function gatherSelectedInvoices() {
         const selectedInvoices = [];
         document.querySelectorAll('#itemTable tbody tr').forEach(row => {
@@ -771,7 +773,7 @@ $newCrNo = Payment::getLastCrNo();
             checkbox.addEventListener('change', updatePaymentSummary);
         });
 
-        document.getElementById('selectAll').addEventListener('change', function () {
+        document.getElementById('selectAll').addEventListener('change', function() {
             const isChecked = this.checked;
             document.querySelectorAll('.invoice-select').forEach(checkbox => {
                 checkbox.checked = isChecked;
@@ -835,7 +837,7 @@ $newCrNo = Payment::getLastCrNo();
 
 
     function setupEventListeners() {
-        $('#customer_name').on('change', function () {
+        $('#customer_name').on('change', function() {
             fetchAndDisplayInvoices(this.value);
         });
         $('#payment_amount').on('input', updatePaymentSummary);
@@ -866,33 +868,33 @@ $newCrNo = Payment::getLastCrNo();
 
         // Gather selected invoices and their details
         function gatherSelectedInvoices() {
-        const selectedInvoices = [];
-        document.querySelectorAll('#itemTable tbody tr').forEach(row => {
-            const checkbox = row.querySelector('.invoice-select');
-            if (checkbox && checkbox.checked) {
-                const creditInputs = row.querySelectorAll('.credit-input');
-                const creditNoInputs = row.querySelectorAll('.credit-no-input');
-                const credits = Array.from(creditInputs).map((input, index) => ({
-                    amount: parseFloat(input.value) || 0,
-                    credit_no: creditNoInputs[index].value
-                }));
+            const selectedInvoices = [];
+            document.querySelectorAll('#itemTable tbody tr').forEach(row => {
+                const checkbox = row.querySelector('.invoice-select');
+                if (checkbox && checkbox.checked) {
+                    const creditInputs = row.querySelectorAll('.credit-input');
+                    const creditNoInputs = row.querySelectorAll('.credit-no-input');
+                    const credits = Array.from(creditInputs).map((input, index) => ({
+                        amount: parseFloat(input.value) || 0,
+                        credit_no: creditNoInputs[index].value
+                    }));
 
-                const discountAccountInput = row.querySelector('.discount-account-input');
-                const discountAmountInput = row.querySelector('.discount-amount-input');
+                    const discountAccountInput = row.querySelector('.discount-account-input');
+                    const discountAmountInput = row.querySelector('.discount-amount-input');
 
-                const invoice = {
-                    invoice_id: checkbox.dataset.invoiceId,
-                    invoice_account_id: row.querySelector('td:nth-child(2)').textContent,
-                    amount_applied: row.querySelector('.payment-input').value || '0',
-                    credits: credits,
-                    discount_account_id: discountAccountInput ? discountAccountInput.value : null,
-                    discount_amount: discountAmountInput ? parseFloat(discountAmountInput.value) || 0 : 0
-                };
-                selectedInvoices.push(invoice);
-            }
-        });
-        return selectedInvoices;
-    }
+                    const invoice = {
+                        invoice_id: checkbox.dataset.invoiceId,
+                        invoice_account_id: row.querySelector('td:nth-child(2)').textContent,
+                        amount_applied: row.querySelector('.payment-input').value || '0',
+                        credits: credits,
+                        discount_account_id: discountAccountInput ? discountAccountInput.value : null,
+                        discount_amount: discountAmountInput ? parseFloat(discountAmountInput.value) || 0 : 0
+                    };
+                    selectedInvoices.push(invoice);
+                }
+            });
+            return selectedInvoices;
+        }
 
         const selectedInvoices = gatherSelectedInvoices();
 
@@ -914,10 +916,8 @@ $newCrNo = Payment::getLastCrNo();
 
 
         // Submit the form after a short delay to allow the audio to start playing
-        setTimeout(() => {
-        }, 800);
+        setTimeout(() => {}, 800);
     }
 
     // Attach the submitPayment function to the form submission
-
 </script>

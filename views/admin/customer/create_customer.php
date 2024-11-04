@@ -7,7 +7,15 @@ if (!$currentUser) {
     redirect('login.php');
 }
 Guard::restrictToModule('customer');
+$customers = Customer::all();
 $terms = Term::all();
+
+$customer = null;
+if (get('action') === 'update') {
+    $customer = Customer::find(get('id'));
+}
+
+$page = 'customer_list';
 ?>
 
 <?php require 'views/templates/header.php'; ?>

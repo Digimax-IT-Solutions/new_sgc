@@ -6,7 +6,7 @@ class Database
 
     public function __construct()
     {
-        $this->pdo = new PDO("mysql:host=localhost;dbname=new_sgc", "root", "digimax2023");
+        $this->pdo = new PDO("mysql:host=localhost;dbname=sgc_db", "root", "digimax2023");
         $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     }
     public function getTables()

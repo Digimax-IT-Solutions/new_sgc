@@ -33,28 +33,7 @@ foreach ($items as $item) {
 <?php require 'views/templates/header.php' ?>
 <?php require 'views/templates/sidebar.php' ?>
 <div class="main">
-    <style>
-        /* CSS styles specific to your page */
-        .table-sm .form-control {
-            border: none;
-            padding: 0;
-            background-color: transparent;
-            box-shadow: none;
-            height: auto;
-            line-height: inherit;
-            font-size: inherit;
-        }
 
-        .select2-no-border .select2-selection {
-            border: none !important;
-            padding: 0 !important;
-            box-shadow: none !important;
-        }
-
-        .select2-no-border .select2-selection__rendered {
-            padding: 0 !important;
-        }
-    </style>
     <?php require 'views/templates/navbar.php' ?>
     <main class="content">
         <div class="container-fluid p-0">

@@ -28,7 +28,6 @@ if (post('action') === 'add') {
     redirect('../../chart_of_accounts'); // You may need to adjust the redirect URL
 }
 
-
 //Update account
 // Update account
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] === 'update') {

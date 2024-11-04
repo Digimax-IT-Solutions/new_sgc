@@ -67,20 +67,20 @@ sort($itemTypes);
                                             <div class="col-sm-4">
                                                 <input type="text" class="form-control" id="item_name" name="item_name"
                                                     placeholder="Enter Item Name"
-                                                    value="<?= $item ? htmlspecialchars($item->item_name) : '' ?>">
+                                                    value="<?= $item ? htmlspecialchars($item->item_name) : '' ?>" required>
                                             </div>
                                             <label for="item_code" class="col-sm-2 col-form-label">Item Code</label>
                                             <div class="col-sm-4">
                                                 <input type="text" class="form-control" id="item_code" name="item_code"
                                                     placeholder="Enter Item Code"
-                                                    value="<?= $item ? htmlspecialchars($item->item_code) : '' ?>">
+                                                    value="<?= $item ? htmlspecialchars($item->item_code) : '' ?>" required>
                                             </div>
                                         </div>
 
                                         <div class="row mb-3">
                                             <label for="item_type" class="col-sm-2 col-form-label">Item Type</label>
                                             <div class="col-sm-4">
-                                                <select class="form-control" id="item_type" name="item_type">
+                                                <select class="form-control" id="item_type" name="item_type" required>
                                                     <option value="">Select Item Type</option>
                                                     <?php foreach ($itemTypes as $item_type): ?>
                                                         <option value="<?= $item_type ?>" <?= ($item && $item->item_type == $item_type) ? 'selected' : '' ?>>
@@ -105,7 +105,7 @@ sort($itemTypes);
                                         <div class="row mb-3">
                                             <label for="item_uom_id" class="col-sm-2 col-form-label">Unit of Measurement</label>
                                             <div class="col-sm-4">
-                                                <select id="item_uom_id" class="form-control" name="item_uom_id">
+                                                <select id="item_uom_id" class="form-control" name="item_uom_id" required>
                                                     <option value="">Select Uom</option>
                                                     <?php foreach ($uoms as $uom): ?>
                                                         <option value="<?= $uom->id ?>" <?= ($item && $item->item_uom_id == $uom->id) ? 'selected' : '' ?>>
@@ -126,7 +126,8 @@ sort($itemTypes);
                                         <div class="row mb-3">
                                             <label for="item_category_id" class="col-sm-2 col-form-label">Category</label>
                                             <div class="col-sm-4">
-                                                <select id="item_category_id" class="form-control" name="item_category_id">
+                                                <select id="item_category_id" class="form-control" name="item_category_id"
+                                                    required>
                                                     <option value="">Select Category</option>
                                                     <?php foreach ($categories as $category): ?>
                                                         <option value="<?= $category->id ?>" <?= ($item && $item->item_category_id == $category->id) ? 'selected' : '' ?>>
@@ -138,7 +139,7 @@ sort($itemTypes);
                                             <label for="item_quantity" class="col-sm-2 col-form-label">Initial Quantity</label>
                                             <div class="col-sm-4">
                                                 <input type="number" class="form-control" id="item_quantity"
-                                                    name="item_quantity" min="0"
+                                                    name="item_quantity" required min="0"
                                                     value="<?= $item ? $item->item_quantity : '1' ?>">
                                             </div>
                                         </div>

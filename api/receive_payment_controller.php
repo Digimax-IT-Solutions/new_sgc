@@ -222,7 +222,7 @@ if (post('action') === 'update_draft') {
 
         $selected_invoices_json = post('selected_invoices');
         $selected_invoices = json_decode($selected_invoices_json, true);
-        
+
         // Check if JSON decoding failed
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new Exception("Error decoding selected invoices data: " . json_last_error_msg());
@@ -293,9 +293,9 @@ if (post('action') === 'void_check') {
         if (!$id) {
             throw new Exception("Payment ID is required.");
         }
-        
+
         $result = Payment::void($id);
-        
+
         if ($result) {
             $response = ['success' => true];
         } else {

@@ -73,7 +73,7 @@ $page = 'sales_purchase-order'; // Set the variable corresponding to the current
                                         <label for="vendor_name" class="form-label">Vendor</label>
                                         <select class="form-select form-select-sm select2" id="vendor_name"
                                             name="vendor_name" required>
-                                            <option value="">Select Customer</option>
+                                            <option value="">Select Vendor</option>
                                             <?php foreach ($vendors as $vendor): ?>
                                                 <option value="<?= $vendor->id ?>"><?= $vendor->vendor_name ?>
                                                 </option>

@@ -1,13 +1,13 @@
 <?php
 
 // Define Discord Webhook URL
-define('DISCORD_WEBHOOK_URL', 'https://discord.com/api/webhooks/1296733322386473000/wBiaFSgnkipPGn68pg3QLlARltv2gqVe_3OXeFmibvnbUvBx1rpIvLxXr6EDDxWnDVns');
+define('DISCORD_WEBHOOK_URL', 'https://discord.com/api/webhooks/1290554670485606451/Mw2XziF57b470wtZSnnNhcWpUdP2MWzfhPFD0-k97-yhT4P22AvXur-Fn-KnXVitgfRb');
 
 
 define('DB_HOST', 'localhost');
 define('DB_USERNAME', 'root');
 define('DB_PASSWORD', 'digimax2023');
-define('DB_DATABASE', 'new_sgc');
+define('DB_DATABASE', 'sgc_db');
 
 define('ROLE_CASHIER', 'CASHIER');
 define('ROLE_SUPERADMIN', 'SUPERADMIN');

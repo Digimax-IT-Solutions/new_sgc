@@ -1,32 +1,127 @@
 <style>
-    /* Active Sidebar Item Background */
-    .sidebar-item.active {
-        background: #7D102E;
-
+    /* Compact Sidebar Styling - MS Word-like compactness */
+    .sidebar-item {
+        padding: 5px 5px;
+        margin: 0;
+        font-size: 0.85rem;
+        transition: background-color 0.2s, color 0.2s;
+        position: relative;
     }
 
-    /* Sidebar CSS */
-    .sidebar-link.collapsed .arrow-icon {
-        transform: rotate(0deg);
-        transition: transform 0.3s ease;
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        /* Aligns icon and text vertically */
+        padding: 5px 8px;
+        color: #FFFFFF;
+        font-weight: 500;
+        transition: color 0.2s ease;
+        text-decoration: none;
     }
 
-    .sidebar-link:not(.collapsed) .arrow-icon {
+    .sidebar-link:hover {
+        color: #f0f0f0;
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .sidebar-link i {
+        margin-right: 6px;
+        font-size: 1rem;
+        min-width: 20px;
+        /* Ensures all icons take up the same horizontal space */
+        text-align: center;
+        /* Centers the icon in the allocated space */
+    }
+
+    .sidebar-item.active .sidebar-link {
+        background-color: #7D102E;
+        color: #FFFFFF;
+    }
+
+    .sidebar-item .arrow-icon {
+        font-size: 0.75rem;
+    }
+
+    .sidebar-item.active .arrow-icon {
         transform: rotate(90deg);
-        transition: transform 0.3s ease;
     }
 
-    /* Indent dropdown list */
-    /* Indent only the submenu items */
-    .sidebar-dropdown .sidebar-item {
+    /* Sidebar Dropdown with Tree View Lines */
+    .sidebar-dropdown {
         padding-left: 20px;
-        /* Adjust this value to control the indentation */
+        position: relative;
     }
 
-    /* Keep the top-level sidebar items unchanged */
+    .sidebar-dropdown .sidebar-item {
+        padding-left: 25px;
+        position: relative;
+    }
+
+    /* Tree Lines (For submenu items only) */
+    .sidebar-dropdown .sidebar-item::before {
+        content: '';
+        position: absolute;
+        left: 10px;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background-color: rgba(255, 255, 255, 0.2);
+        /* Vertical line for sub-items */
+    }
+
+    .sidebar-dropdown .sidebar-item:last-child::before {
+        height: 55%;
+        bottom: auto;
+    }
+
+    .sidebar-dropdown .sidebar-item::after {
+        content: '';
+        position: absolute;
+        left: 10px;
+        top: 20px;
+        width: 10px;
+        height: 1px;
+        background-color: rgba(255, 255, 255, 0.2);
+        /* Horizontal line */
+    }
+
+    /* No line under the main items */
+    .sidebar-nav>.sidebar-item::before {
+        content: none;
+    }
+
+    .sidebar-nav>.sidebar-item>.sidebar-link::after {
+        content: none;
+    }
+
+    /* Scrollbar Styling */
+    .js-simplebar {
+        scrollbar-width: thin;
+        scrollbar-color: #444 #1b1b1b;
+    }
+
+    .js-simplebar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .js-simplebar::-webkit-scrollbar-thumb {
+        background-color: #444;
+        border-radius: 4px;
+    }
+
+    /* Remove all unnecessary margin or padding from top-level nav */
+    .sidebar-nav {
+        padding: 0;
+        margin: 0;
+    }
+
     .sidebar-nav>.sidebar-item {
-        padding-left: 0;
-        /* Ensure no indentation for top-level items */
+        padding-left: 7px;
+        margin: 0;
+    }
+
+    .sidebar-nav .sidebar-item .sidebar-link {
+        padding: 4px 8px;
     }
 </style>
 

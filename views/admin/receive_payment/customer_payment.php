@@ -292,8 +292,8 @@ $newCrNo = Payment::getLastCrNo();
 
 
 <script>
-    $(document).ready(function () {
-        $('#invoiceForm').submit(function (event) {
+    $(document).ready(function() {
+        $('#invoiceForm').submit(function(event) {
             event.preventDefault();
             const selectedInvoices = gatherSelectedInvoices();
 
@@ -323,7 +323,7 @@ $newCrNo = Payment::getLastCrNo();
                 data: formData,
                 processData: false,
                 contentType: false,
-                success: function (response) {
+                success: function(response) {
                     document.getElementById('loadingOverlay').style.display = 'none';
 
                     if (response.success) {
@@ -349,7 +349,7 @@ $newCrNo = Payment::getLastCrNo();
                         });
                     }
                 },
-                error: function (jqXHR, textStatus, errorThrown) {
+                error: function(jqXHR, textStatus, errorThrown) {
                     document.getElementById('loadingOverlay').style.display = 'none';
                     console.error('AJAX error:', textStatus, errorThrown);
                     console.log('Response Text:', jqXHR.responseText);
@@ -374,17 +374,18 @@ $newCrNo = Payment::getLastCrNo();
                 id: id,
                 print_status: printStatus
             },
-            success: function (response) {
+            success: function(response) {
                 if (response.success) {
-                    console.log('Print status updated, now printing payment:', id);
-                    const printFrame = document.getElementById('printFrame');
+                    console.log('Print status updated, now opening payment in new tab:', id);
                     const printContentUrl = `print_payment?action=print&id=${id}`;
 
-                    printFrame.src = printContentUrl;
+                    // Open the URL in a new tab and trigger print
+                    const printWindow = window.open(printContentUrl, '_blank');
 
-                    printFrame.onload = function () {
-                        printFrame.contentWindow.focus();
-                        printFrame.contentWindow.print();
+                    // Wait for the content to load before triggering print
+                    printWindow.onload = function() {
+                        printWindow.focus();
+                        printWindow.print();
                     };
                 } else {
                     Swal.fire({
@@ -394,7 +395,7 @@ $newCrNo = Payment::getLastCrNo();
                     });
                 }
             },
-            error: function (jqXHR, textStatus, errorThrown) {
+            error: function(jqXHR, textStatus, errorThrown) {
                 console.error('AJAX error:', textStatus, errorThrown);
                 Swal.fire({
                     icon: 'error',
@@ -408,19 +409,18 @@ $newCrNo = Payment::getLastCrNo();
 
 
 <script>
-
-    $(document).ready(function () {
+    $(document).ready(function() {
         initializeSelect2();
         setupEventListeners();
 
-        $('button[type="reset"]').on('click', function (e) {
+        $('button[type="reset"]').on('click', function(e) {
             e.preventDefault(); // Prevent default reset behavior
 
             // Clear all input fields except #cr_no
             $('input').not('#cr_no').val('');
 
             // Reset all select elements to their default option
-            $('select').each(function () {
+            $('select').each(function() {
                 $(this).val($(this).find("option:first").val()).trigger('change');
             });
 
@@ -449,7 +449,7 @@ $newCrNo = Payment::getLastCrNo();
             });
         });
 
-        $('#saveDraftBtn').click(function (e) {
+        $('#saveDraftBtn').click(function(e) {
             e.preventDefault();
             saveDraft();
         });
@@ -486,7 +486,7 @@ $newCrNo = Payment::getLastCrNo();
             data: formData,
             processData: false,
             contentType: false,
-            success: function (response) {
+            success: function(response) {
                 document.getElementById('loadingOverlay').style.display = 'none';
 
                 if (response.success) {
@@ -508,7 +508,7 @@ $newCrNo = Payment::getLastCrNo();
                     });
                 }
             },
-            error: function (jqXHR, textStatus, errorThrown) {
+            error: function(jqXHR, textStatus, errorThrown) {
                 document.getElementById('loadingOverlay').style.display = 'none';
                 console.error('AJAX error:', textStatus, errorThrown);
                 console.log('Response Text:', jqXHR.responseText);
@@ -641,7 +641,7 @@ $newCrNo = Payment::getLastCrNo();
                         <td>${invoice.invoice_number}</td>
                         <td>${invoice.invoice_date}</td>
                         <td>${invoice.customer_name}</td>
-                        <td>${parseFloat(invoice.balance_due).toFixed(2)}</td>
+                        <td>${invoice.balance_due}</td>
                         <td>
                         <button type="button" class="btn btn-sm btn-primary add-discount-credit" data-invoice-id="${invoice.id}">Add Discount/Credit</button>
                         </td>
@@ -670,7 +670,7 @@ $newCrNo = Payment::getLastCrNo();
             checkbox.addEventListener('change', updatePaymentSummary);
         });
 
-        document.getElementById('selectAll').addEventListener('change', function () {
+        document.getElementById('selectAll').addEventListener('change', function() {
             const isChecked = this.checked;
             document.querySelectorAll('.invoice-select').forEach(checkbox => {
                 checkbox.checked = isChecked;
@@ -687,8 +687,15 @@ $newCrNo = Payment::getLastCrNo();
         const amountDueCell = row.querySelector('.amount-due');
         const balanceDue = parseFloat(row.cells[5].textContent); // Original amount (balance_due)
         const paymentAmount = parseFloat(paymentInput.value) || 0;
+        const discountInput = row.querySelector('.discount-amount-input');
+        const creditInput = row.querySelector('.credit-input');
 
-        const newAmountDue = Math.max(balanceDue - paymentAmount, 0);
+        // Get discount and credit amounts
+        const discountAmount = discountInput ? parseFloat(discountInput.value) || 0 : 0;
+        const creditAmount = creditInput ? parseFloat(creditInput.value) || 0 : 0;
+
+        // Calculate new amount due considering payment, discount, and credit
+        const newAmountDue = Math.max(balanceDue - paymentAmount - discountAmount - creditAmount, 0);
         amountDueCell.textContent = newAmountDue.toFixed(2);
 
         // Update the max value of the payment input
@@ -699,47 +706,64 @@ $newCrNo = Payment::getLastCrNo();
     }
 
     function updatePaymentSummary() {
-        let totalAmountDue = parseFloat(document.getElementById('credit_balance').value) || 0;
+        let totalAmountDue = 0;
         let totalAppliedAmount = 0;
         let totalDiscountCredit = 0;
 
         document.querySelectorAll('#itemTable tbody tr').forEach(row => {
             const checkbox = row.querySelector('.invoice-select');
-            if (checkbox && checkbox.checked) {
+            if (checkbox && checkbox.checked) { // Only process selected rows
+                const balanceDueCell = row.cells[5]; // Access the original balance_due cell
+
+                if (balanceDueCell) {
+                    const balanceDue = parseFloat(balanceDueCell.textContent) || 0;
+                    totalAmountDue += balanceDue; // Sum the original balance_due for selected rows
+                }
+
                 const paymentInput = row.querySelector('.payment-input');
-                const creditInputs = row.querySelectorAll('.credit-input');
-                const discountAmountInput = row.querySelector('.discount-amount-input');
+                const discountInput = row.querySelector('.discount-amount-input');
+                const creditInput = row.querySelector('.credit-input');
 
                 if (paymentInput) {
                     const paymentAmount = parseFloat(paymentInput.value) || 0;
                     totalAppliedAmount += paymentAmount;
                 }
 
-                creditInputs.forEach(input => {
-                    const discountCreditAmount = parseFloat(input.value) || 0;
-                    totalDiscountCredit += discountCreditAmount;
-                });
-
-                if (discountAmountInput) {
-                    const discountAmount = parseFloat(discountAmountInput.value) || 0;
+                if (discountInput) {
+                    const discountAmount = parseFloat(discountInput.value) || 0;
                     totalDiscountCredit += discountAmount;
+                }
+
+                if (creditInput) {
+                    const creditAmount = parseFloat(creditInput.value) || 0;
+                    totalDiscountCredit += creditAmount;
                 }
             }
         });
 
+        // Update the relevant summary fields
         const summaryAmountDue = document.getElementById('summary_amount_due');
         const summaryAppliedAmount = document.getElementById('summary_applied_amount');
         const summaryDiscountCredits = document.getElementById('applied_credits_discount');
         const totalAmountDueElement = document.getElementById('total_amount_due');
 
+        // Set summaryAmountDue to reflect only the sum of the original balance_due values
         if (summaryAmountDue) summaryAmountDue.value = totalAmountDue.toFixed(2);
         if (summaryAppliedAmount) summaryAppliedAmount.value = totalAppliedAmount.toFixed(2);
         if (summaryDiscountCredits) summaryDiscountCredits.value = totalDiscountCredit.toFixed(2);
-        if (totalAmountDueElement) totalAmountDueElement.value = (totalAmountDue - totalAppliedAmount - totalDiscountCredit).toFixed(2);
+
+        // Calculate total amount due as per the new formula
+        const calculatedTotalAmountDue = totalAmountDue - (totalAppliedAmount + totalDiscountCredit);
+        if (totalAmountDueElement) {
+            totalAmountDueElement.value = calculatedTotalAmountDue.toFixed(2);
+        }
     }
 
+
+
+
     function setupEventListeners() {
-        $('#customer_name').on('change', function () {
+        $('#customer_name').on('change', function() {
             fetchAndDisplayInvoices(this.value);
         });
         $('#payment_amount').on('input', updatePaymentSummary);
@@ -753,228 +777,171 @@ $newCrNo = Payment::getLastCrNo();
         displayCreditMemos(creditMemos, invoiceId);
     }
 
+
     function displayCreditMemos(creditMemos, invoiceId) {
+        if (!Array.isArray(creditMemos)) {
+            console.error("creditMemos is not an array", creditMemos);
+            return;
+        }
 
-        // Populate dropdowns with accounts from PHP
         const accounts = <?php echo json_encode($accounts); ?>;
-        let accountDropdownOptions = '';
-        $.each(accounts, function (index, account) {
-            accountDropdownOptions += `<option value="${account.id}">${account.account_description}</option>`;
-        });
-        
         const wtaxes = <?php echo json_encode($wtaxes); ?>;
-        let wtaxDropdownOptions = '';
-        $.each(wtaxes, function (index, wtax) {
-            wtaxDropdownOptions += `<option value="${wtax.id}">${wtax.wtax_description}</option>`;
-        });
 
+        const createOptions = (data) => data.map(item => `<option value="${item.id}">${item.description || item.account_description || item.wtax_description}</option>`).join('');
 
-        // Create modal HTML with Font Awesome icons and a Discount tab
+        const accountDropdownOptions = createOptions(accounts);
+        const wtaxDropdownOptions = createOptions(wtaxes);
+
         const modalHtml = `
-            <div class="modal fade" id="creditMemoModal" tabindex="-1" role="dialog" aria-labelledby="creditMemoModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-lg" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="creditMemoModalLabel"><i class="fas fa-file-invoice-dollar"></i> Available Credit Memos</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
+    <div class="modal fade" id="creditMemoModal" tabindex="-1" role="dialog" aria-labelledby="creditMemoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="creditMemoModalLabel"><i class="fas fa-file-invoice-dollar"></i> Discounts and Credit</h5>
+            
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs" id="creditMemoTabs" role="tablist">
+                        ${['Credit Memos', 'Discount', 'Tax Withheld'].map((title, index) => `
+                            <li class="nav-item">
+                                <a class="nav-link${index === 0 ? ' active' : ''}" id="${title.toLowerCase().replace(' ', '-')}-tab" data-toggle="tab" href="#${title.toLowerCase().replace(' ', '-')}" role="tab" aria-controls="${title.toLowerCase().replace(' ', '-')}" aria-selected="${index === 0}">
+                                    <i class="fas fa-${index === 0 ? 'file-invoice-dollar' : index === 1 ? 'tags' : 'percent'}"></i> ${title}
+                                </a>
+                            </li>`).join('')}
+                    </ul>
+                    <div class="tab-content" id="creditMemoTabsContent">
+                        <div class="tab-pane fade show active" id="credit-memos" role="tabpanel" aria-labelledby="credit-memos-tab">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th><input type="checkbox" id="selectAll"></th>
+                                        <th><i class="fas fa-receipt"></i> Credit Memo #</th>
+                                        <th><i class="fas fa-calendar-alt"></i> Date</th>
+                                        <th><i class="fas fa-money-bill-wave"></i> Amount (₱)</th>
+                                        <th><i class="fas fa-hand-holding-usd"></i> Apply Amount</th>
+                                      
+                                    </tr>
+                                </thead>
+                                <tbody id="creditMemoTableBody">
+                                    ${creditMemos.map(memo => `
+                                        <tr>
+                                            <td>
+                                                <input type="checkbox" class="credit-memo-checkbox" data-credit-id="${memo.id}" data-credit-no="${memo.credit_no}">
+                                                <input type="hidden" name="credit_no" value="">
+                                            </td>
+                                            <td>${memo.credit_no}</td>
+                                            <td>${memo.credit_date}</td>
+                                            <td>₱${parseFloat(memo.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                            <td>
+                                                <input type="number" class="form-control apply-amount" min="1" max="${parseFloat(memo.amount).toFixed(2)}" step="0.01" value="1" disabled>
+                                                <small class="form-text text-muted"><i class="fas fa-info-circle"></i> Enter an amount between 1 and ₱${parseFloat(memo.amount).toFixed(2)}</small>
+                                            </td>
+                                          
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="modal-body">
-                            <!-- Tabs navigation -->
-                            <ul class="nav nav-tabs" id="creditMemoTabs" role="tablist">
-                                <li class="nav-item">
-                                    <a class="nav-link active" id="memos-tab" data-toggle="tab" href="#memos" role="tab" aria-controls="memos" aria-selected="true">
-                                        <i class="fas fa-file-invoice-dollar"></i> Credit Memos
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" id="discount-tab" data-toggle="tab" href="#discount" role="tab" aria-controls="discount" aria-selected="false">
-                                        <i class="fas fa-tags"></i> Discount
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" id="withheld-tab" data-toggle="tab" href="#withheld" role="tab" aria-controls="withheld" aria-selected="false">
-                                        <i class="fas fa-percent"></i> Tax Withheld
-                                    </a>
-                                </li>
-                            </ul>
-                            <div class="tab-content" id="creditMemoTabsContent">
-                                <!-- Credit Memos Tab Content -->
-                                <div class="tab-pane fade show active" id="memos" role="tabpanel" aria-labelledby="memos-tab">
-                                    <table class="table table-striped">
-                                        <thead>
-                                            <tr>
-                                                <th><input type="checkbox" id="selectAll"></th>
-                                                <th><i class="fas fa-receipt"></i> Credit Memo #</th>
-                                                <th><i class="fas fa-calendar-alt"></i> Date</th>
-                                                <th><i class="fas fa-money-bill-wave"></i> Amount (₱)</th>
-                                                <th><i class="fas fa-hand-holding-usd"></i> Apply Amount</th>
-                                                <th><i class="fas fa-cogs"></i> Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="creditMemoTableBody">
-                                            ${creditMemos.map(memo => `
-                                                <tr>
-                                                    <td>
-                                                        <input type="checkbox" class="credit-memo-checkbox" data-credit-id="${memo.id}" data-credit-no="${memo.credit_no}">
-                                                        <input type="hidden" name="credit_no" id="credit_no" value="">
-                                                    </td>
-                                                    <td>${memo.credit_no}</td>
-                                                    <td>${memo.credit_date}</td>
-                                                    <td>₱${parseFloat(memo.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                                    <td>
-                                                        <input type="number" class="form-control apply-amount" min="1" max="${parseFloat(memo.amount).toFixed(2)}" step="0.01" value="1" disabled>
-                                                        <small class="form-text text-muted"><i class="fas fa-info-circle"></i> Enter an amount between 1 and ₱${parseFloat(memo.amount).toFixed(2)}</small>
-                                                    </td>
-                                                    <td>
-                                                        <button class="btn btn-sm btn-primary apply-credit" data-credit-id="${memo.id}" data-amount="${parseFloat(memo.amount).toFixed(2)}" data-invoice-id="${invoiceId}" disabled>
-                                                            <i class="fas fa-check-circle"></i> Apply
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            `).join('')}
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <!-- Discount Tab Content -->
-                                <div class="tab-pane fade" id="discount" role="tabpanel" aria-labelledby="discount-tab">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="discountAccount"><i class="fas fa-university"></i> Account</label>
-                                                <select class="form-control form-control-sm account-dropdown" id="discountAccount" name="discount_account_id[]">${accountDropdownOptions}</select>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="discountAmount"><i class="fas fa-money-bill"></i> Amount (₱)</label>
-                                                <input type="number" class="form-control form-control-sm" id="discountAmount" name="discount_amount" min="0" step="0.01" placeholder="Enter discount amount">
-                                            </div>
+                        ${['Discount', 'Tax Withheld'].map((title, index) => `
+                            <div class="tab-pane fade" id="${title.toLowerCase().replace(' ', '-')}" role="tabpanel" aria-labelledby="${title.toLowerCase().replace(' ', '-')}-tab">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="${title.toLowerCase().replace(' ', '')}Account"><i class="fas fa-university"></i> Account</label>
+                                            <select class="form-control form-control-sm account-dropdown" id="${title.toLowerCase().replace(' ', '')}Account" name="${title.toLowerCase().replace(' ', '')}_account_id[]">${index === 0 ? accountDropdownOptions : wtaxDropdownOptions}</select>
                                         </div>
                                     </div>
-                                </div>
-                                <!-- Tax Withheld Tab Content -->
-                                <div class="tab-pane fade" id="withheld" role="tabpanel" aria-labelledby="withheld-tab">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="withheldAccount"><i class="fas fa-university"></i> Account</label>
-                                                <select class="form-control form-control-sm account-dropdown" id="withheldAccount" name="withheld_account_id[]">${wtaxDropdownOptions}</select>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="withheldAmount"><i class="fas fa-percent"></i> Amount (₱)</label>
-                                                <input type="number" class="form-control form-control-sm" id="withheldAmount" name="withheld_amount" min="0" step="0.01" placeholder="Enter withheld amount">
-                                            </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="${title.toLowerCase().replace(' ', '')}Amount"><i class="fas fa-money-bill"></i> Amount (₱)</label>
+                                            <input type="number" class="form-control form-control-sm" id="${title.toLowerCase().replace(' ', '')}Amount" name="${title.toLowerCase().replace(' ', '')}_amount" min="0" step="0.01" placeholder="Enter ${title.toLowerCase()} amount">
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times"></i> Close</button>
-                            <button type="button" class="btn btn-primary d-none" id="applySelectedMemos"><i class="fas fa-check-circle"></i> Apply Selected</button>
-                            <button type="button" class="btn btn-success d-none" id="applyDiscount"><i class="fas fa-tag"></i> Apply Discount</button>
-                        </div>
+                        `).join('')}
                     </div>
                 </div>
+                <div class="modal-footer">
+                    <div>
+                        <strong>Total Credit Memos:</strong> <span id="totalCreditMemos">₱0.00</span>
+                    </div>
+                    <div>
+                        <strong>Total Discount Applied:</strong> <span id="totalDiscountApplied">₱0.00</span>
+                    </div>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times"></i> Close</button>
+                    <button type="button" class="btn btn-primary d-none" id="applySelectedMemos"><i class="fas fa-check-circle"></i> Apply Selected</button>
+                    <button type="button" class="btn btn-success d-none" id="applyDiscount"><i class="fas fa-tag"></i> Apply Discount</button>
+                </div>
             </div>
-        `;
+        </div>
+    </div>
+    `;
 
-        // Append modal to body
         document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-        // Show the modal
         const modal = new bootstrap.Modal(document.getElementById('creditMemoModal'));
         modal.show();
 
-        // Initialize Select2 for the dropdown in the Discount tab
-        $('#discountAccount').select2({
-            theme: 'bootstrap-5',
+        // Function to update totals
+        const updateTotals = () => {
+            const totalCreditMemos = Array.from(document.querySelectorAll('.credit-memo-checkbox:checked')).reduce((total, checkbox) => {
+                const row = checkbox.closest('tr');
+                const amount = parseFloat(row.querySelector('.apply-amount').value);
+                return total + amount;
+            }, 0);
+
+            const discountAmount = parseFloat(document.getElementById('discountAmount').value) || 0;
+
+            document.getElementById('totalCreditMemos').textContent = `₱${totalCreditMemos.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            document.getElementById('totalDiscountApplied').textContent = `₱${discountAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        };
+
+        // Initialize Select2 for dropdowns
+        $('#discountAccount, #withheldAccount').select2({
+            theme: 'classic',
             width: '100%',
             placeholder: 'Select Account',
             allowClear: false,
             dropdownParent: $('#creditMemoModal'),
             language: {
-                noResults: function() {
-                    return "No matching accounts found";
-                }
+                noResults: () => "No matching accounts found"
             }
         });
-
-        // Replace accountDropdownOptions in the withheld tab with wtaxDropdownOptions
-        document.getElementById('withheldAccount').innerHTML = wtaxDropdownOptions;
-
-        // Initialize Select2 for the dropdown in the Withheld tab
-        $('#withheldAccount').select2({
-            theme: 'bootstrap-5',
-            width: '100%',
-            placeholder: 'Select Withholding Tax',
-            allowClear: false,
-            dropdownParent: $('#creditMemoModal'),
-            language: {
-                noResults: function() {
-                    return "No matching withholding taxes found";
-                }
-            }
-        });
-
-
 
         // Initialize tabs
-        const tabElements = document.querySelectorAll('#creditMemoTabs a[data-toggle="tab"]');
-        tabElements.forEach(tab => {
-            tab.addEventListener('click', function (event) {
+        document.querySelectorAll('#creditMemoTabs a[data-toggle="tab"]').forEach(tab => {
+            tab.addEventListener('click', (event) => {
                 event.preventDefault();
-                const targetTab = new bootstrap.Tab(event.target);
-                targetTab.show();
+                new bootstrap.Tab(event.target).show();
             });
         });
 
-        // Toggle button visibility based on the active tab
-        function updateButtonVisibility() {
+        // Update button visibility based on the active tab
+        const updateButtonVisibility = () => {
             const activeTab = document.querySelector('#creditMemoTabs .nav-link.active').getAttribute('href');
-            const applySelectedMemosButton = document.getElementById('applySelectedMemos');
-            const applyDiscountButton = document.getElementById('applyDiscount');
+            document.getElementById('applySelectedMemos').classList.toggle('d-none', activeTab !== '#credit-memos');
+            document.getElementById('applyDiscount').classList.toggle('d-none', activeTab === '#credit-memos');
+        };
 
-            if (activeTab === '#memos') {
-                applySelectedMemosButton.classList.remove('d-none');
-                applyDiscountButton.classList.add('d-none');
-            } else if (activeTab === '#discount') {
-                applySelectedMemosButton.classList.add('d-none');
-                applyDiscountButton.classList.remove('d-none');
-            }
-        }
-
-        // Initial button visibility setup
         updateButtonVisibility();
-
-        // Update button visibility on tab change
-        tabElements.forEach(tab => {
+        document.querySelectorAll('#creditMemoTabs a[data-toggle="tab"]').forEach(tab => {
             tab.addEventListener('shown.bs.tab', updateButtonVisibility);
         });
 
         // Enable/Disable input fields and buttons based on checkbox selection
         document.querySelectorAll('.credit-memo-checkbox').forEach(checkbox => {
-            checkbox.addEventListener('change', function () {
-                const row = this.closest('tr');
+            checkbox.addEventListener('change', () => {
+                const row = checkbox.closest('tr');
                 const inputField = row.querySelector('.apply-amount');
                 const applyButton = row.querySelector('.apply-credit');
-
-                if (this.checked) {
-                    inputField.disabled = false;
-                    applyButton.disabled = false;
-                } else {
-                    inputField.disabled = true;
-                    applyButton.disabled = true;
-                }
+                inputField.disabled = !checkbox.checked;
+                applyButton.disabled = !checkbox.checked;
+                updateTotals(); // Update totals whenever a checkbox changes
             });
         });
 
         // Select/Deselect all checkboxes
-        document.getElementById('selectAll').addEventListener('change', function () {
+        document.getElementById('selectAll').addEventListener('change', function() {
             const allChecked = this.checked;
             document.querySelectorAll('.credit-memo-checkbox').forEach(checkbox => {
                 checkbox.checked = allChecked;
@@ -983,86 +950,43 @@ $newCrNo = Payment::getLastCrNo();
         });
 
         // Event listener for Apply Discount button
-        document.getElementById('applyDiscount').addEventListener('click', function () {
+        document.getElementById('applyDiscount').addEventListener('click', () => {
             const discountAccountId = document.getElementById('discountAccount').value;
             const discountAmount = parseFloat(document.getElementById('discountAmount').value);
-
             if (!discountAccountId || isNaN(discountAmount) || discountAmount <= 0) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Invalid Discount',
-                    text: 'Please select an account and enter a valid discount amount.',
-                });
+                alert("Please select a valid account and enter a positive discount amount.");
                 return;
             }
 
             // Apply discount
             applyDiscount(discountAccountId, discountAmount, invoiceId);
-
-            // Close the modal
-            $('#creditMemoModal').modal('hide');
+            updateTotals(); // Update totals after applying discount
         });
 
-
-        // Event listener for Apply Selected button
-        document.getElementById('applySelectedMemos').addEventListener('click', function () {
-            const selectedMemos = [];
-            document.querySelectorAll('.credit-memo-checkbox:checked').forEach(checkbox => {
+        // Event listener for Apply Selected Memos button
+        document.getElementById('applySelectedMemos').addEventListener('click', () => {
+            const selectedMemos = Array.from(document.querySelectorAll('.credit-memo-checkbox:checked')).map(checkbox => {
                 const row = checkbox.closest('tr');
-                const creditId = checkbox.dataset.creditId;
-                const creditNo = checkbox.dataset.creditNo;
-                const inputField = row.querySelector('.apply-amount');
-                const amount = parseFloat(inputField.value);
-
-                selectedMemos.push({ creditId, creditNo, amount });
+                return {
+                    id: checkbox.dataset.creditId,
+                    amount: parseFloat(row.querySelector('.apply-amount').value),
+                    creditNo: checkbox.dataset.creditNo
+                };
             });
 
             if (selectedMemos.length === 0) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'No Memo Selected',
-                    text: 'Please select at least one credit memo before applying.',
-                });
+                alert("Please select at least one credit memo to apply.");
                 return;
             }
 
             // Apply selected credit memos
             applyCreditMemos(selectedMemos, invoiceId);
-
-            // Update UI to reflect the applied credits
-            selectedMemos.forEach(memo => {
-                const row = document.querySelector(`[data-credit-id="${memo.creditId}"]`).closest('tr');
-                row.classList.add('table-success');
-                row.querySelector('.apply-credit').innerHTML = '<i class="fas fa-check-circle"></i> Applied';
-                row.querySelector('.apply-credit').disabled = true;
-                row.querySelector('.apply-amount').disabled = true;
-                row.querySelector('.credit-memo-checkbox').disabled = true;
-            });
-
-            // Update the applied credits/discounts section dynamically
-            updatePaymentSummary(selectedMemos.reduce((total, memo) => total + memo.amount, 0));
-
-
-            // Close the modal
-            $('#creditMemoModal').modal('hide');
-        });
-
-        // Real-time validation for apply amount inputs
-        document.querySelectorAll('.apply-amount').forEach(input => {
-            input.addEventListener('input', function () {
-                const maxAmount = parseFloat(this.max);
-                const amount = parseFloat(this.value);
-
-                if (amount >= 1 && amount <= maxAmount) {
-                    this.classList.remove('is-invalid');
-                    this.classList.add('is-valid');
-                } else {
-                    this.classList.remove('is-valid');
-                    this.classList.add('is-invalid');
-                }
-            });
+            updateTotals(); // Update totals after applying selected memos
         });
     }
+
+
+
 
     function applyDiscount(discountAccountId, discountAmount, invoiceId) {
         const invoiceRow = document.querySelector(`#itemTable tbody tr[data-invoice-id="${invoiceId}"]`);
@@ -1142,7 +1066,6 @@ $newCrNo = Payment::getLastCrNo();
         }
     }
 
-
     function updateOrAddInput(row, className, value, type = 'text') {
         let input = row.querySelector(`.${className}`);
         if (!input) {
@@ -1154,73 +1077,4 @@ $newCrNo = Payment::getLastCrNo();
         }
         input.value = value;
     }
-
-
-
-    function submitPayment(event) {
-        event.preventDefault();
-
-        // Show the loading overlay
-        document.getElementById('loadingOverlay').style.display = 'flex';
-
-        // Create and play the audio
-        const audio = new Audio('photos/rr.mp3');
-        audio.play();
-
-        // Update the gatherSelectedInvoices function
-        function gatherSelectedInvoices() {
-            const selectedInvoices = [];
-            document.querySelectorAll('#itemTable tbody tr').forEach(row => {
-                const checkbox = row.querySelector('.invoice-select');
-                if (checkbox && checkbox.checked) {
-                    const creditInputs = row.querySelectorAll('.credit-input');
-                    const creditNoInputs = row.querySelectorAll('.credit-no-input');
-                    const credits = Array.from(creditInputs).map((input, index) => ({
-                        amount: parseFloat(input.value) || 0,
-                        credit_no: creditNoInputs[index].value
-                    }));
-
-                    const discountAccountInput = row.querySelector('.discount-account-input');
-                    const discountAmountInput = row.querySelector('.discount-amount-input');
-
-                    const invoice = {
-                        invoice_id: checkbox.dataset.invoiceId,
-                        invoice_account_id: row.querySelector('td:nth-child(2)').textContent,
-                        amount_applied: row.querySelector('.payment-input').value || '0',
-                        credits: credits,
-                        discount_account_id: discountAccountInput ? discountAccountInput.value : null,
-                        discount_amount: discountAmountInput ? parseFloat(discountAmountInput.value) || 0 : 0
-                    };
-                    selectedInvoices.push(invoice);
-                }
-            });
-            return selectedInvoices;
-        }
-
-        const selectedInvoices = gatherSelectedInvoices();
-
-
-        // Check if there are any selected invoices
-        if (selectedInvoices.length === 0) {
-            alert("Please select at least one invoice to pay");
-            document.getElementById('loadingOverlay').style.display = 'none'; // Hide overlay
-            return; // Stop form submission
-        }
-
-        // Add selected invoices to a hidden input field
-        const selectedInvoicesInput = document.createElement('input');
-        selectedInvoicesInput.type = 'hidden';
-        selectedInvoicesInput.name = 'selected_invoices';
-        selectedInvoicesInput.value = JSON.stringify(selectedInvoices);
-
-        console.log(selectedInvoicesInput.value);
-
-        document.getElementById('invoiceForm').appendChild(selectedInvoicesInput);
-
-        // Submit the form after a short delay to allow the audio to start playing
-        setTimeout(() => {
-            document.getElementById('invoiceForm').submit();
-        }, 800);
-    }
-
 </script>

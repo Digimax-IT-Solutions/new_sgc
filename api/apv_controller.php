@@ -8,7 +8,7 @@ if (post('action') === 'add') {
     try {
         // Retrieve the last transaction_id
         $transaction_id = Apv::getLastTransactionId();
-     
+
         // Retrieve form data
         $apv_no = post('apv_no');
         $ref_no = post('ref_no');
@@ -42,13 +42,35 @@ if (post('action') === 'add') {
 
         // Save check using WriteCheck class method
         Apv::add(
-            $apv_no, $ref_no, $po_no, $rr_no, $apv_date, $apv_due_date, $terms_id, $account_id, $vendor_id, $vendor_name, $vendor_tin, $memo, $location, $gross_amount, $discount_amount, $net_amount_due, $vat_percentage_amount, $net_of_vat, $tax_withheld_amount, $tax_withheld_percentage, $total_amount_due, $created_by, $items, $wtax_account_id
+            $apv_no,
+            $ref_no,
+            $po_no,
+            $rr_no,
+            $apv_date,
+            $apv_due_date,
+            $terms_id,
+            $account_id,
+            $vendor_id,
+            $vendor_name,
+            $vendor_tin,
+            $memo,
+            $location,
+            $gross_amount,
+            $discount_amount,
+            $net_amount_due,
+            $vat_percentage_amount,
+            $net_of_vat,
+            $tax_withheld_amount,
+            $tax_withheld_percentage,
+            $total_amount_due,
+            $created_by,
+            $items,
+            $wtax_account_id
         );
 
         flashMessage('add_apv', 'Apv added successfully.', FLASH_SUCCESS);
 
         $response = ['success' => true, 'id' => $transaction_id + 1];
-
     } catch (Exception $e) {
         $response = ['success' => false, 'message' => 'Error: ' . $e->getMessage()];
         error_log('Error in write check submission: ' . $e->getMessage());
@@ -71,12 +93,12 @@ if (post('action') === 'fetch_all_receive_items') {
         WHERE po.po_status = 1
         GROUP BY ri.id, v.id, v.vendor_name, po.id, rid.cost_center_id
         ";
-        
+
         $stmt = $connection->prepare($query);
         $stmt->execute();
-        
+
         $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         $response = ['success' => true, 'items' => $items];
     } catch (Exception $e) {
         $response = ['success' => false, 'message' => 'Error: ' . $e->getMessage()];
@@ -101,11 +123,11 @@ if (post('action') === 'update_print_status') {
             throw new Exception("Invalid print status.");
         }
 
-         // Update the print_status in the database
-         $stmt = $connection->prepare("UPDATE apv SET print_status = :status WHERE id = :id");
-         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-         $stmt->bindParam(':status', $printStatus, PDO::PARAM_INT);
-         $result = $stmt->execute();
+        // Update the print_status in the database
+        $stmt = $connection->prepare("UPDATE apv SET print_status = :status WHERE id = :id");
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->bindParam(':status', $printStatus, PDO::PARAM_INT);
+        $result = $stmt->execute();
 
         if ($result) {
             $response = ['success' => true];
@@ -130,9 +152,9 @@ if (post('action') === 'void_apv') {
         if (!$id) {
             throw new Exception("Invoice ID is required.");
         }
-        
+
         $result = Apv::void($id);
-        
+
         if ($result) {
             $response = ['success' => true];
         } else {
@@ -164,7 +186,7 @@ if (post('action') === 'save_draft') {
         $memo = post('memo');
         $location = post('location');
 
-        
+
         // Summary details
         $gross_amount = post('gross_amount');
         $discount_amount = post('discount_amount');
@@ -210,10 +232,9 @@ if (post('action') === 'save_draft') {
             $wtax_account_id
         );
 
-        $response = $result ? 
-            ['success' => true, 'message' => 'APV saved as draft successfully'] : 
+        $response = $result ?
+            ['success' => true, 'message' => 'APV saved as draft successfully'] :
             throw new Exception("Failed to save APV as draft.");
-
     } catch (Exception $ex) {
         error_log('Error in saving draft APV: ' . $ex->getMessage());
         error_log('Stack trace: ' . $ex->getTraceAsString());
@@ -373,7 +394,7 @@ if (post('action') === 'save_final') {
                 apv_no = :apv_no
             WHERE id = :id
         ");
-        
+
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
         $stmt->bindParam(':apv_no', $apv_no, PDO::PARAM_STR);
 
