@@ -189,6 +189,46 @@ $chart_of_accounts = ChartOfAccount::allGroupedByCategory();
     });
 </script>
 
+<script>
+    function confirmExport() {
+        if (confirm("Export all accounts? This may take a while.")) {
+            showLoader();
+            exportToExcel();
+        }
+    }
+
+    function showLoader() {
+        document.getElementById('loader-overlay').style.display = 'block';
+    }
+
+    function hideLoader() {
+        document.getElementById('loader-overlay').style.display = 'none';
+    }
+
+    function exportToExcel() {
+        fetch('api/export_accounts.php?action=export')
+            .then(response => response.json())
+            .then(data => {
+                hideLoader();
+                if (data.op == 'ok') {
+                    var $a = $("<a>");
+                    $a.attr("href", data.file);
+                    $("body").append($a);
+                    $a.attr("download", "chart_of_accounts.xlsx");
+                    $a[0].click();
+                    $a.remove();
+                } else {
+                    alert('Export failed. Please try again.');
+                }
+            })
+            .catch(error => {
+                hideLoader();
+                console.error('Error:', error);
+                alert('An error occurred during export. Please try again.');
+            });
+    }
+</script>
+
 <style>
     .loader-wrapper {
         display: flex;
