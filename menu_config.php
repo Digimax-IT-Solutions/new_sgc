@@ -21,6 +21,16 @@ $menuConfig = [
         'toggle' => 'customer',
         'roles' => getAllRoles(),
         'submenu' => [
+            'Sales Order' => [
+                'icon' => 'fas fa-shopping-cart',
+                'link' => '',
+                'roles' => getAllRoles()
+            ],
+            'Cash Invoice' => [
+                'icon' => 'fas fa-cash-register',
+                'link' => 'or_list',
+                'roles' => getAllRoles()
+            ],
             'Sales Invoice' => [
                 'icon' => 'fas fa-file-invoice-dollar',
                 'link' => 'invoice',
@@ -115,6 +125,11 @@ $menuConfig = [
                 'link' => 'general_journal',
                 'roles' => getAllRoles()
             ],
+            'General Ledger' => [
+                'icon' => 'fas fa-book-open',
+                'link' => 'general_ledger',
+                'roles' => getAllRoles()
+            ],
             'Transaction Entries' => [
                 'icon' => 'fas fa-pencil-alt',
                 'link' => 'transaction_entries',
@@ -174,16 +189,16 @@ $menuConfig = [
         'toggle' => 'otherlist',
         'roles' => getAllRoles(),
         'submenu' => [
-            'Fs Classification' => [
-                'icon' => 'fas fa-sitemap', // More appropriate for classification
-                'link' => 'fs_classification',
-                'roles' => getAllRoles()
-            ],
-            'Fs Notes Classification' => [
-                'icon' => 'fas fa-tags', // Suitable for notes classification
-                'link' => 'fs_notes_classification',
-                'roles' => getAllRoles()
-            ],
+            // 'Fs Classification' => [
+            //     'icon' => 'fas fa-sitemap', // More appropriate for classification
+            //     'link' => 'fs_classification',
+            //     'roles' => getAllRoles()
+            // ],
+            // 'Fs Notes Classification' => [
+            //     'icon' => 'fas fa-tags', // Suitable for notes classification
+            //     'link' => 'fs_notes_classification',
+            //     'roles' => getAllRoles()
+            // ],
             'Department' => [
                 'icon' => 'fas fa-building', // Updated to building for departments
                 'link' => 'department',
@@ -382,7 +397,6 @@ $menuConfig = [
             ],
         ],
     ],
-
     'Reports' => [
         'icon' => 'fas fa-box',
         'toggle' => 'reports',

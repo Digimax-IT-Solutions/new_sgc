@@ -46,33 +46,34 @@ try {
                 $pdf->SetXY(-40, 10);
                 $pdf->SetFont('Arial', '', 8);
 
-                // Reset position for banner
+            // Reset position for banner
                 $pdf->SetXY(10, 10);
-        
+
                 // Calculate banner position
                 $pageWidth = $pdf->GetPageWidth();
-                $bannerWidth = 80; // Adjust as needed
+                $bannerWidth = 40; // Adjust as needed
                 $bannerX = ($pageWidth - $bannerWidth) / 2;
-        
+
                 // Add banner image
-                $pdf->Image('photos/banner.png', 2, 15, $bannerWidth, 0, 'PNG');
-        
+                $pdf->Image('photos/banner.png', 10, 15, $bannerWidth, 0, 'PNG');
+
                 // Move below banner
                 $pdf->SetY($pdf->GetY() + 8);
-        
+
                 // Company details centered under banner
                 $pdf->SetFont('Arial', '', 10);
-                $pdf->Cell(0, 4, 'Montebello, Kanaga, Leyte, 6531', 0, 1, 'R');
-                $pdf->Cell(0, 4, 'VAT Reg. TIN: 000-123-533-00000', 0, 1, 'R');
-                $pdf->Cell(0, 4, 'Tel. No: +63 (53) 553 0058', 0, 1, 'R');
-        
+                $pdf->Cell(0, 4, 'Pilar Development Compound, Warehouse 3 (Unit 2) Rose Ave, Pilar Village,', 0, 1, 'R');
+                $pdf->Cell(0, 4, 'Barangay Almanza, Las Pinas, Philippines', 0, 1, 'R');
+                $pdf->Cell(0, 4, 'VAT Reg. TIN: ', 0, 1, 'R');
+                $pdf->Cell(0, 4, 'Tel. No: ', 0, 1, 'R');
+
                 $pdf->SetY($pdf->GetY() + 15);
                 $pdf->SetFont('Arial', 'B', 14);
                 $pdf->Cell(0, 4, 'RECEIVING REPORT', 0, 3, 'C');
-        
-        
+
+
                 $pdf->Ln(5);
-        
+
                 $pdf->SetFont('Arial', '', 11);
                 $pdf->Cell(175.8, 5, 'RR NO: ' . $receive_items->receive_no, 0, 1, 'R');
 
@@ -82,13 +83,13 @@ try {
                 // Add check data to the PDF
                 // Set font and size
                 $pdf->SetFont('Arial', '', 9);
-        
+
                 // Set maximum width of the cell
                 $maxWidth = 80; // Adjust according to your column width requirement
-        
+
                 // Set line height
                 $lineHeight = 5; // Adjust according to your line spacing requirement
-        
+
                 // Set padding for the cells (space between left-aligned and right-aligned text)
                 $padding = -100; // Adjust as needed
 
@@ -213,8 +214,6 @@ try {
 
                 // Output the PDF
                 $pdf->Output();
-
-
             } else {
                 // Handle the case where the check is not found
                 echo "PO not found.";
@@ -233,4 +232,3 @@ try {
     // Handle any exceptions
     echo "Error: " . $ex->getMessage();
 }
-

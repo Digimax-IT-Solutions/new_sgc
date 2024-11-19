@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
 if (post('action') === 'add') {
     try {
         // Log received data
-        error_log("Received POST data: " . print_r($_POST, true));
+        // error_log("Received POST data: " . print_r($_POST, true));
 
         $receive_account_id = post('account_id');
         $receive_no = post('receive_number');
@@ -78,20 +78,27 @@ if (post('action') === 'add') {
         $zero_rated = post('zero_rated_amount');
         $vat_exempt = post('vat_exempt_amount');
         $total_amount = post('total_amount_due');
-        $discount_account_ids = post('discount_account_ids');
-        $output_vat_ids = post('output_vat_ids');
         $qty_sold = 0;
+        $discount_account_ids = post('discount_account_ids');
+
+        $input_vat_ids = post('output_vat_ids');
+        $created_by = $_SESSION['user_name'];
 
         // Log header data
         error_log("Header data: " . print_r(compact('receive_account_id', 'receive_no', 'vendor_id', 'location', 'terms', 'receive_date', 'receive_due_date', 'memo', 'gross_amount', 'discount_amount', 'net_amount', 'input_vat', 'vatable', 'zero_rated', 'vat_exempt', 'total_amount'), true));
+
+
+        $items = json_decode($_POST['item_data'], true);
+        $purchase_discount_per_item = 0;
+        error_log("Decoded item data: " . print_r($items, true));
+
+
 
         // Insert header information
         ReceivingReport::add(
             $receive_account_id,
             $receive_no,
             $vendor_id,
-            $discount_account_ids,
-            $output_vat_ids,
             $location,
             $terms,
             $receive_date,
@@ -99,19 +106,20 @@ if (post('action') === 'add') {
             $memo,
             $gross_amount,
             $discount_amount,
+            $discount_account_ids,
             $net_amount,
             $input_vat,
+            $input_vat_ids,
             $vatable,
             $zero_rated,
             $vat_exempt,
             $total_amount,
-            []  // Empty array for details, as we'll insert them separately
+            $items,
+            $created_by
         );
 
         $transaction_id = ReceivingReport::getLastTransactionId();
-        $items = json_decode($_POST['item_data'], true);
-        $purchase_discount_per_item = 0;
-        error_log("Decoded item data: " . print_r($items, true));
+
 
         foreach ($items as $index => $item) {
             $item_id = $item['item_id'] ?? null;
@@ -140,11 +148,8 @@ if (post('action') === 'add') {
                 floatval($item['net_amount']),
                 floatval($item['input_vat_percentage']),
                 floatval($item['input_vat_amount']),
-                floatval($item['cost_per_unit']),
-                $item['item_asset_account_id']
+                floatval($item['cost_per_unit'])
             );
-
-            error_log("Inserted receive item detail with ID: $insertedId");
 
             // Update item quantity
             ReceivingReport::updateItemQuantity($item_id, $quantity);
@@ -172,11 +177,6 @@ if (post('action') === 'add') {
                 $item['net_amount'],
                 $item['cost_per_unit']
             );
-
-            // INSERT INTO PURCHASES
-            // ReceivingReport::insertPurchases('Purchase', $transaction_id, $receive_no, $receive_date, $vendor_id, $item_id, $item['cost'], $item['amount'], $item['discount_percentage'], $purchase_discount_per_item, $item['discount_amount'], $item['net_amount_before_input_vat'], $item['input_vat_percentage'], $item['input_vat_amount'], $item['net_amount'], $item['cost_per_unit'], $quantity);
-            // INSERT COSTING
-            //ReceivingReport::insertCosting('Purchase', $transaction_id, $receive_no, $receive_date, $vendor_id, $item_id, );
         }
 
         // Send a message to Discord with the user info

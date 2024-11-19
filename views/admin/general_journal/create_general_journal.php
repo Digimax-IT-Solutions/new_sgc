@@ -717,18 +717,27 @@ foreach ($other_names as $other_name) {
                 },
                 success: function(response) {
                     if (response.success) {
-                        // If the status was updated successfully, proceed with printing
                         console.log('Print status updated, now printing general journal:', id);
-                        // Open a new window with the print view
-                        const printFrame = document.getElementById('printFrame');
+
+                        // Construct the URL for the print content
                         const printContentUrl = `print_general_journal?action=print&id=${id}`;
 
-                        printFrame.src = printContentUrl;
+                        // Open a new mini browser window with custom dimensions
+                        const printWindow = window.open(printContentUrl, 'PrintWindow', 'width=1000,height=700');
 
-                        printFrame.onload = function() {
-                            printFrame.contentWindow.focus();
-                            printFrame.contentWindow.print();
-                        };
+                        if (printWindow) {
+                            // Focus on the new window and print the content once it has loaded
+                            printWindow.onload = function() {
+                                printWindow.focus();
+                                printWindow.print();
+                            };
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Failed to open print window. Please check your browser settings.'
+                            });
+                        }
                     } else {
                         Swal.fire({
                             icon: 'error',
@@ -747,6 +756,7 @@ foreach ($other_names as $other_name) {
                 }
             });
         }
+
     });
 </script>
 

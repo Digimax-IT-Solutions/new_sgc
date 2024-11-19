@@ -174,5 +174,34 @@ class Customer
 
         return 0;
     }
-}
 
+    public static function getLastCustomerId()
+    {
+        global $connection;
+
+        $stmt = $connection->query("SELECT MAX(id) AS last_transaction_id FROM customers");
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $result['last_transaction_id'] ?? null;
+    }
+
+    public static function findByCodeOrName($customer_name)
+    {
+        global $connection;
+
+        $stmt = $connection->prepare("
+                SELECT id, customer_name 
+                FROM customers 
+                WHERE LOWER(customer_name) = LOWER(:customer_name)
+                LIMIT 1
+            ");
+
+
+        $stmt->bindParam(':customer_name', $customer_name, PDO::PARAM_STR);
+        $stmt->execute();
+
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $result ?: null; // Returns the customer record or null if not found
+    }
+}

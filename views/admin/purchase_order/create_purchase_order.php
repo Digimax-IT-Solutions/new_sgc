@@ -202,7 +202,7 @@ $newPoNo = PurchaseOrder::getLastPoNo();
                                                     <div class="form-group">
                                                         <!-- PURCHASE ORDER NO -->
                                                         <label for="po_no">PO No:</label>
-                                                        <input type="text" class="form-control form-control-sm" id="po_no" name="po_no" 
+                                                        <input type="text" class="form-control form-control-sm" id="po_no" name="po_no"
                                                             value="<?php echo $newPoNo; ?>" readonly>
                                                     </div>
                                                 </div>
@@ -226,7 +226,7 @@ $newPoNo = PurchaseOrder::getLastPoNo();
                                                     <!-- DATE -->
                                                     <div class="form-group">
                                                         <label for="po_date">Date</label>
-                                                        <input type="date" class="form-control form-control-sm" id="po_date" name="po_date" 
+                                                        <input type="date" class="form-control form-control-sm" id="po_date" name="po_date"
                                                             value="<?php echo date('Y-m-d'); ?>">
                                                     </div>
                                                 </div>
@@ -235,7 +235,7 @@ $newPoNo = PurchaseOrder::getLastPoNo();
                                                     <!-- DELIVERY DATE -->
                                                     <div class="form-group">
                                                         <label for="delivery_date">Delivery Date</label>
-                                                        <input type="date" class="form-control form-control-sm" id="delivery_date" name="delivery_date" 
+                                                        <input type="date" class="form-control form-control-sm" id="delivery_date" name="delivery_date"
                                                             value="<?php echo date('Y-m-d'); ?>">
                                                     </div>
                                                 </div>
@@ -913,30 +913,25 @@ $newPoNo = PurchaseOrder::getLastPoNo();
                 },
                 success: function(response) {
                     if (response.success) {
-                        console.log('Print status updated, now printing Credit:', id);
+                        console.log('Print status updated, now printing Purchase Order:', id);
 
-                        // Now proceed with printing
-                        const printFrame = document.getElementById('printFrame');
+                        // Create a new window for printing
                         const printContentUrl = `print_purchase_order?action=print&id=${id}`;
+                        const printWindow = window.open(printContentUrl, '_blank');
+
+                        // Disable the submit button while printing
                         const submitButton = document.querySelector('.btn-info[type="submit"]');
                         submitButton.disabled = true;
 
-                        printFrame.src = printContentUrl;
+                        // Wait for the new window to load, then print
+                        printWindow.onload = function() {
+                            printWindow.focus();
+                            printWindow.print();
 
-                        printFrame.onload = function() {
-                            printFrame.contentWindow.focus();
-                            printFrame.contentWindow.print();
-
-                            // Redirect after print dialog closes
-                            const originalOnFocus = window.onfocus;
-
-                            window.onfocus = function() {
+                            // Close the window after printing is done
+                            printWindow.onafterprint = function() {
+                                printWindow.close();
                                 window.location.href = 'purchase_order';
-                            };
-
-                            // Clean up event handler after redirection
-                            printFrame.contentWindow.onafterprint = function() {
-                                window.onfocus = originalOnFocus;
                             };
                         };
                     } else {
@@ -958,6 +953,7 @@ $newPoNo = PurchaseOrder::getLastPoNo();
                 }
             });
         }
+
     });
 
     let warningTimeout;

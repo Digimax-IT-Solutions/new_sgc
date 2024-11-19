@@ -71,7 +71,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                                     </a>
 
                                     <a href="#" class="btn btn-lg btn-outline-success me-2 mb-2" id="apvDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="fas fa-plus fa-lg me-2"></i> Create Receive Payment
+                                        <i class="fas fa-plus fa-lg me-2"></i> Receive Payment
                                     </a>
                                     <ul class="dropdown-menu" aria-labelledby="apvDropdown">
                                         <li><a class="dropdown-item" href="official_receipt">Cash Invoice</a></li>

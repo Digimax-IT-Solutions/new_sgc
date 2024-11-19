@@ -24,6 +24,38 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
 
 <?php require 'views/templates/header.php' ?>
 <?php require 'views/templates/sidebar.php' ?>
+
+<style>
+    .styled-table {
+        border-collapse: collapse;
+        margin: 25px 0;
+        font-size: 0.9em;
+        font-family: sans-serif;
+        min-width: 400px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .styled-table .text-right {
+        text-align: center;
+    }
+
+    .styled-table thead tr {
+        background-color: rgb(4, 47, 48);
+        color: #ffffff;
+        text-align: left;
+    }
+
+
+    .styled-table tbody tr {
+        border-bottom: 2px solid rgb(4, 47, 48);
+    }
+
+
+    .styled-table tbody tr:last-of-type {
+        border-bottom: 2px solid rgb(4, 47, 48);
+    }
+</style>
+
 <div class="main">
     <?php require 'views/templates/navbar.php' ?>
     <!-- Content Wrapper. Contains page content -->
@@ -37,86 +69,88 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                     <?php displayFlashMessage('update_payment_method') ?>
                     <!-- Default box -->
                     <div class="card">
-                    <div class="card shadow mb-4">
+                        <div class="card shadow mb-4">
                             <div class="card-header py-3 d-flex justify-content-between align-items-center">
                                 <div>
-                                <a href="draft_or" class="btn btn-lg btn-outline-secondary me-2 mb-2">
-                                    <i class="fab fa-firstdraft fa-lg me-2"></i> Drafts
-                                </a>
-                                <a href="void_or" class="btn btn-lg btn-outline-danger me-2 mb-2">
-                                    <i class="fas fa-file-excel fa-lg me-2"></i> Voids
-                                </a>
-
-                                <a href="#" class="btn btn-lg btn-outline-success me-2 mb-2" id="apvDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="fas fa-plus fa-lg me-2"></i> Create Receive Payment
+                                    <a href="draft_or" class="btn btn-lg btn-outline-secondary me-2 mb-2">
+                                        <i class="fab fa-firstdraft fa-lg me-2"></i> Drafts
                                     </a>
-                                <ul class="dropdown-menu" aria-labelledby="apvDropdown">
-                                    <li><a class="dropdown-item" href="official_receipt">Cash Invoice</a></li>
-                                    <li><a class="dropdown-item" href="customer_payment">Collection Receipt</a></li>
-                                </ul>
+                                    <a href="void_or" class="btn btn-lg btn-outline-danger me-2 mb-2">
+                                        <i class="fas fa-file-excel fa-lg me-2"></i> Voids
+                                    </a>
+
+                                    <a href="#" class="btn btn-lg btn-outline-success me-2 mb-2" id="apvDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="fas fa-plus fa-lg me-2"></i> Create Cash Invoice
+                                    </a>
+                                    <ul class="dropdown-menu" aria-labelledby="apvDropdown">
+                                        <li><a class="dropdown-item" href="official_receipt">Cash Invoice</a></li>
+                                        <li><a class="dropdown-item" href="customer_payment">Collection Receipt</a></li>
+                                    </ul>
+                                </div>
                             </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive" style="overflow-x: auto;">
-                                <table class="table table-bordered" id="dataTable"
-                                    style="min-width: 1000px; width: 100%;" cellspacing="0">
-                                    <thead>
-                                        <tr>
-                                            <th style="white-space: nowrap;">CI No.</th>
-                                            <th style="white-space: nowrap;">Customer Name</th>
-                                            <th style="white-space: nowrap;">Payment Date</th>
-                                            <th style="white-space: nowrap;">Payment Method</th>
-                                            <th style="white-space: nowrap;">Paid Amount</th>
-                                            <th style="white-space: nowrap;">Ref. No./ Check No.</th>
-                                            <th style="white-space: nowrap;">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ($orPayments as $orPayment): ?>
-                                            <?php if ($orPayment->status != 3 && $orPayment->status != 4): ?>
-                                                <tr>
-                                                    <td style="white-space: nowrap;">
-                                                        <?= htmlspecialchars($orPayment->ci_no) ?></td>
-                                                    <td style="white-space: nowrap;">
-                                                        <?= htmlspecialchars($orPayment->customer_name) ?>
-                                                    </td>
-                                                    <td style="white-space: nowrap;">
-                                                        <?= htmlspecialchars($orPayment->or_date) ?>
-                                                    </td>
-                                                    <td style="white-space: nowrap;">
-                                                        <?= htmlspecialchars($orPayment->payment_method) ?>
-                                                    </td>
-                                                    <td style="white-space: nowrap;">
-                                                        <b>₱<?= number_format($orPayment->total_amount_due, 2, '.', ','); ?></b>
-                                                    </td>
-                                                    <td style="white-space: nowrap;">
-                                                        <?= htmlspecialchars($orPayment->check_no) ?>
-                                                    </td>
-                                                    <td style="white-space: nowrap;">
-                                                        <a href="view_or?action=view&id=<?= htmlspecialchars($orPayment->id) ?>"
-                                                            class="btn btn-sm btn-info">
-                                                            <i class="fas fa-eye"></i> View
-                                                        </a>
-                                                    </td>
-                                                </tr>
-                                            <?php endif; ?>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
+                            <div class="card-body">
+                                <div class="table-responsive" style="overflow-x: auto;">
+                                    <table class="styled-table hover" id="dataTable"
+                                        style="min-width: 1000px; width: 100%;" cellspacing="0">
+                                        <thead>
+                                            <tr>
+                                                <th style="white-space: nowrap;">CI No.</th>
+                                                <th style="white-space: nowrap;">Customer Name</th>
+                                                <th style="white-space: nowrap;">Payment Date</th>
+                                                <th style="white-space: nowrap;">Payment Method</th>
+                                                <th style="white-space: nowrap;">Paid Amount</th>
+                                                <th style="white-space: nowrap;">Ref. No./ Check No.</th>
+                                                <th style="white-space: nowrap;">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($orPayments as $orPayment): ?>
+                                                <?php if ($orPayment->status != 3 && $orPayment->status != 4): ?>
+                                                    <tr>
+                                                        <td style="white-space: nowrap;">
+                                                            <?= htmlspecialchars($orPayment->ci_no) ?></td>
+                                                        <td style="white-space: nowrap;">
+                                                            <?= htmlspecialchars($orPayment->customer_name) ?>
+                                                        </td>
+                                                        <td style="white-space: nowrap;">
+                                                            <?= htmlspecialchars($orPayment->or_date) ?>
+                                                        </td>
+                                                        <td style="white-space: nowrap;">
+                                                            <?= htmlspecialchars($orPayment->payment_method) ?>
+                                                        </td>
+                                                        <td style="white-space: nowrap;">
+                                                            <b>₱<?= number_format($orPayment->total_amount_due, 2, '.', ','); ?></b>
+                                                        </td>
+                                                        <td style="white-space: nowrap;">
+                                                            <?= htmlspecialchars($orPayment->check_no) ?>
+                                                        </td>
+                                                        <td style="white-space: nowrap;">
+                                                            <a href="view_or?action=view&id=<?= htmlspecialchars($orPayment->id) ?>"
+                                                                class="btn btn-sm btn-info">
+                                                                <i class="fas fa-eye"></i> View
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                <?php endif; ?>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
+                    <!-- /.card -->
                 </div>
-                <!-- /.card -->
             </div>
-        </div>
     </main>
 </div>
+
+
 
 <?php require 'views/templates/footer.php' ?>
 
 <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
         var table = $('#dataTable').DataTable({
             responsive: true,
             ordering: true,
@@ -135,12 +169,26 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                 [10, 25, 50, 100, "All"]
             ],
             pageLength: 25,
-            columnDefs: [
-                { className: "text-start", targets: '_all' },
-                { width: "120px", targets: 0 },
-                { width: "150px", targets: [1, 2, 3, 4, 5] },
-                { width: "200px", targets: 6 },
-                { orderable: false, targets: 6 }
+            columnDefs: [{
+                    className: "text-start",
+                    targets: '_all'
+                },
+                {
+                    width: "120px",
+                    targets: 0
+                },
+                {
+                    width: "150px",
+                    targets: [1, 2, 3, 4, 5]
+                },
+                {
+                    width: "200px",
+                    targets: 6
+                },
+                {
+                    orderable: false,
+                    targets: 6
+                }
             ],
             dom: '<"top"Bf>rt<"bottom"lip><"clear">',
             buttons: [
@@ -154,7 +202,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                             search: 'none'
                         }
                     },
-                    customize: function (csv) {
+                    customize: function(csv) {
                         return getHeader() + csv;
                     }
                 },
@@ -180,7 +228,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                 },
                 {
                     text: 'Export TXT',
-                    action: function (e, dt, button, config) {
+                    action: function(e, dt, button, config) {
                         var header = getHeader();
                         var tableData = dt.rows().data().toArray();
                         var content = header;
@@ -197,7 +245,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                         content += separator;
 
                         // Add table rows
-                        tableData.forEach(function (row) {
+                        tableData.forEach(function(row) {
                             content += '|' + [
                                 row[0],
                                 row[1].substring(0, cellWidth - 1),
@@ -222,20 +270,20 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
 
         function getHeader() {
             var recordCount = table.rows().count();
-            var totalAmount = table.column(4).data().reduce(function (sum, value) {
+            var totalAmount = table.column(4).data().reduce(function(sum, value) {
                 return sum + parseFloat(value.replace(/[^\d.-]/g, ''));
             }, 0);
 
-            var dates = table.column(2).data().map(function (d) {
+            var dates = table.column(2).data().map(function(d) {
                 return new Date(d);
-            }).filter(function (d) {
+            }).filter(function(d) {
                 return !isNaN(d.getTime());
             });
 
             var minDate = new Date(Math.min.apply(null, dates));
             var maxDate = new Date(Math.max.apply(null, dates));
 
-            var formatDate = function (date) {
+            var formatDate = function(date) {
                 return date.toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: '2-digit',

@@ -179,9 +179,12 @@ class ReceivingReport
     }
 
     // Adding in database, Receiving Report
-    public static function add($receive_account_id, $receive_no, $vendor_id, $location, $terms, $receive_date, $receive_due_date, $memo, $gross_amount, $discount_amount, $net_amount, $input_vat, $vatable, $zero_rated, $vat_exempt, $total_amount, $details)
+    // Adding in database, Receiving Report
+    public static function add($receive_account_id, $receive_no, $vendor_id, $location, $terms, $receive_date, $receive_due_date, $memo, $gross_amount, $discount_amount, $discount_account_ids, $net_amount, $input_vat, $input_vat_ids, $vatable, $zero_rated, $vat_exempt, $total_amount, $items, $created_by)
     {
         global $connection;
+
+        $transaction_type = 'Purchase';
 
         try {
             $stmt = $connection->prepare("
@@ -211,6 +214,97 @@ class ReceivingReport
                 $vat_exempt,
                 $total_amount
             ]);
+
+            $receive_id = $connection->lastInsertId();
+
+            // AUDIT TRAIL GOODS RECEIPT CLEARING
+            self::logAuditTrail(
+                $receive_id,
+                $transaction_type,
+                $receive_date,
+                $receive_no,
+                $location,
+                $vendor_id,
+                null,
+                null,
+                $receive_account_id,
+                0.00,
+                $net_amount,
+                $created_by
+            );
+
+            // AUDIT TRAIL INPUT VAT ID
+            self::logAuditTrail(
+                $receive_id,
+                $transaction_type,
+                $receive_date,
+                $receive_no,
+                $location,
+                $vendor_id,
+                null,
+                null,
+                $input_vat_ids,
+                $input_vat,
+                0.00,
+                $created_by
+            );
+
+            foreach ($items as $item) {
+
+                // Log discount account 
+                if (!empty($item['discount_account_id'])) {
+                    self::logAuditTrail(
+                        $receive_id,
+                        $transaction_type,
+                        $receive_date,
+                        $receive_no,
+                        $location,
+                        $vendor_id,
+                        $item['item_id'],
+                        $item['quantity'],
+                        $item['item_asset_account_id'],
+                        $item['discount_amount'],
+                        0.00,
+                        $created_by
+                    );
+                }
+
+                // Log asset transaction for this item
+                if (!empty($item['item_asset_account_id'])) {
+                    self::logAuditTrail(
+                        $receive_id,
+                        $transaction_type,
+                        $receive_date,
+                        $receive_no,
+                        $location,
+                        $vendor_id,
+                        $item['item_id'],
+                        $item['quantity'],
+                        $item['item_asset_account_id'],
+                        $item['net_amount'],
+                        0.00,
+                        $created_by
+                    );
+                }
+            }
+
+            // // AUDIT TRAIL DISCOUNT ID
+            self::logAuditTrail(
+                $receive_id,
+                $transaction_type,
+                $receive_date,
+                $receive_no,
+                $location,
+                $vendor_id,
+                null,
+                null,
+                $discount_account_ids,
+                0.00,
+                $discount_amount,
+                $created_by
+            );
+
+
 
             if (!$result) {
                 error_log("SQL Error in ReceivingReport::add: " . implode(", ", $stmt->errorInfo()));
@@ -267,7 +361,6 @@ class ReceivingReport
             throw new Exception("Database error while inserting receive item detail: " . $e->getMessage());
         }
     }
-
     // Method to call the InsertInventory stored procedure
     public static function insertReceiveInventory($type, $transaction_id, $ref_no, $date, $name, $item_id, $quantity)
     {
@@ -712,5 +805,44 @@ class ReceivingReport
             error_log("Error calling insert_inventory_valuation: " . $e->getMessage());
             return false;
         }
+    }
+
+    // ACCOUNTING LOGS
+    private static function logAuditTrail($general_journal_id, $transaction_type, $transaction_date, $ref_no, $location, $customer_name, $item, $qty_sold, $account_id, $debit, $credit, $created_by)
+    {
+        global $connection;
+
+        $stmt = $connection->prepare("
+                INSERT INTO audit_trail (
+                    transaction_id,
+                    transaction_type,
+                    transaction_date,
+                    ref_no,
+                    location,
+                    name,
+                    item,
+                    qty_sold,
+                    account_id,
+                    debit,
+                    credit,
+                    created_by,
+                    created_at
+                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?, NOW())
+            ");
+
+        $stmt->execute([
+            $general_journal_id,
+            $transaction_type,
+            $transaction_date,
+            $ref_no,
+            $location,
+            $customer_name,
+            $item,
+            $qty_sold,
+            $account_id,
+            $debit,
+            $credit,
+            $created_by
+        ]);
     }
 }

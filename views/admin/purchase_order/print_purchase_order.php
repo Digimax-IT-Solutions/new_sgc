@@ -57,20 +57,21 @@ try {
 
                 // Calculate banner position
                 $pageWidth = $pdf->GetPageWidth();
-                $bannerWidth = 80; // Adjust as needed
+                $bannerWidth = 40; // Adjust as needed
                 $bannerX = ($pageWidth - $bannerWidth) / 2;
 
                 // Add banner image
-                $pdf->Image('photos/banner.png', $bannerX, 10, $bannerWidth, 0, 'PNG');
+                $pdf->Image('photos/banner.png', 10, 15, $bannerWidth, 0, 'PNG');
 
                 // Move below banner
-                $pdf->SetY($pdf->GetY() + 20);
+                $pdf->SetY($pdf->GetY() + 8);
 
                 // Company details centered under banner
-                $pdf->SetFont('Arial', '', 7);
-                $pdf->Cell(0, 4, 'Montebello, Kanaga, Leyte, 6531', 0, 1, 'C');
-                $pdf->Cell(0, 4, 'VAT Reg. TIN: 000-123-533-00000', 0, 1, 'C');
-                $pdf->Cell(0, 4, 'Tel. No: +63 (53) 553 0058', 0, 1, 'C');
+                $pdf->SetFont('Arial', '', 10);
+                $pdf->Cell(0, 4, 'Pilar Development Compound, Warehouse 3 (Unit 2) Rose Ave, Pilar Village,', 0, 1, 'R');
+                $pdf->Cell(0, 4, 'Barangay Almanza, Las Pinas, Philippines', 0, 1, 'R');
+                $pdf->Cell(0, 4, 'VAT Reg. TIN: ', 0, 1, 'R');
+                $pdf->Cell(0, 4, 'Tel. No: ', 0, 1, 'R');
 
                 $pdf->Ln(5);
 
@@ -147,43 +148,43 @@ try {
                     foreach ($purchase_order->details as $detail) {
                         $totalCost += $detail['cost'];
                         $totalAmount += $detail['amount'];
-                        
+
                         $startY = $pdf->GetY();
                         $currentX = $pdf->GetX();
-                        
+
                         // Pr No.
                         $pdf->Cell(30, 5, $detail['pr_no'], 0, 0, 'L');
-                        
+
                         // Item Name
                         $pdf->SetXY($currentX + 30, $startY);
                         $pdf->MultiCell(30, 5, $detail['item_name'], 0, 'L');
                         $itemNameEndY = $pdf->GetY(); // Capture the Y position after Item Name
-                        
+
                         // Ensure enough space for Description
                         $pdf->SetXY($currentX + 70, $startY);
-                        
+
                         // Description (using MultiCell for wrapping text)
                         $pdf->MultiCell(30, 5, $detail['item_purchase_description'], 0, 'L');
                         $descriptionEndY = $pdf->GetY(); // Capture the Y position after Description
-                        
+
                         // Determine the maximum Y position used for the current line
                         $endY = max($itemNameEndY, $descriptionEndY);
-                        
+
                         // Set the X position and Y position for the remaining cells
                         $pdf->SetXY($currentX + 100, $startY);
-                        
+
                         // Other details
                         $pdf->Cell(20, 5, $detail['qty'], 0, 0, 'C');
                         $pdf->Cell(20, 5, $detail['uom_name'], 0, 0, 'C');
                         $pdf->Cell(25, 5, number_format($detail['cost'], 2), 0, 0, 'R');
                         $pdf->Cell(25, 5, number_format($detail['amount'], 2), 0, 0, 'R');
-                        
+
                         // Move to the next line, considering the height of the highest cell content
                         $pdf->SetY($endY);
                     }
                 }
-                
-                
+
+
 
 
                 $pdf->SetFont('Arial', 'B', 10); // 'B' indicates bold
@@ -193,25 +194,25 @@ try {
 
                 $pdf->SetFont('Arial', '', 8);
                 $pdf->Line($pdf->GetX(), $pdf->GetY(), $pdf->GetX() + 190, $pdf->GetY()); // Draw a line
-                
+
                 // First row with labels
                 $pdf->Cell(50, 10, 'PREPARED BY:', 0, 0, 'L');
                 $pdf->Cell(50, 10, 'CHECKED/CERTIFIED BY:', 0, 0, 'L');
                 $pdf->Cell(50, 10, 'VERIFIED BY:', 0, 0, 'L');
                 $pdf->Cell(40, 10, 'APPROVED BY:', 0, 1, 'L');
-                
+
                 // Second row with names/values
-                $pdf->Cell(50, 5, 'Edmundo B. Panta', 0, 0, 'L');
                 $pdf->Cell(50, 5, '', 0, 0, 'L');
-                $pdf->Cell(50, 5, 'Ana Liza S. Parrilla', 0, 0, 'L');
-                $pdf->Cell(40, 5, 'Emmanuel Q. Cadungog', 0, 1, 'L');
-                
+                $pdf->Cell(50, 5, '', 0, 0, 'L');
+                $pdf->Cell(50, 5, '', 0, 0, 'L');
+                $pdf->Cell(40, 5, '', 0, 1, 'L');
+
                 // Third row with titles
-                $pdf->Cell(50, 5, 'Purchasing Supervisor', 0, 0, 'L');
                 $pdf->Cell(50, 5, '', 0, 0, 'L');
-                $pdf->Cell(50, 5, 'Audit & Budget Supervisor', 0, 0, 'L');
-                $pdf->Cell(40, 5, 'Asst. to Pres/Resident Manager', 0, 1, 'L');
-                
+                $pdf->Cell(50, 5, '', 0, 0, 'L');
+                $pdf->Cell(50, 5, '', 0, 0, 'L');
+                $pdf->Cell(40, 5, '', 0, 1, 'L');
+
                 $pdf->Ln(5); // Adjust spacing after the rows
                 $pdf->Line($pdf->GetX(), $pdf->GetY(), $pdf->GetX() + 190, $pdf->GetY()); // Draw a line
                 $pdf->Ln(2);
@@ -247,8 +248,6 @@ try {
 
                 // Output the PDF
                 $pdf->Output();
-
-
             } else {
                 // Handle the case where the check is not found
                 echo "PO not found.";
@@ -267,4 +266,3 @@ try {
     // Handle any exceptions
     echo "Error: " . $ex->getMessage();
 }
-

@@ -612,7 +612,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                                                                     <input type="hidden" class="item-asset-account-id" name="asset_account_id[]" value="<?= htmlspecialchars($detail['asset_account_id']) ?>">
                                                                 </td>
                                                                 <td>
-                                                                    <input type="text" class="form-control form-control-sm description-field" name="description[]" value="<?= htmlspecialchars($detail['item_sales_description']) ?>" readonly>
+                                                                    <input type="text" class="form-control form-control-sm description-field" name="description[]" value="<?= htmlspecialchars($detail['item_description']) ?>" readonly>
                                                                 </td>
                                                                 <td>
                                                                     <input type="text" class="form-control form-control-sm quantity" name="quantity[]" value="<?= htmlspecialchars($detail['quantity']) ?>" <?php echo ($invoice->invoice_status != 4) ? 'disabled' : ''; ?>>

@@ -3,13 +3,12 @@
 require_once __DIR__ . '/../../_init.php';
 require_once __DIR__ . '/../../vendor/autoload.php';
 
-// Guard
-Guard::adminOnly();
 
 use PhpOffice\PhpSpreadsheet\IOFactory;
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'upload') {
     header('Content-Type: application/json');
-    
+
     if (isset($_FILES['excel_file']) && $_FILES['excel_file']['error'] == 0) {
         $file_tmp = $_FILES['excel_file']['tmp_name'];
 
@@ -32,17 +31,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
             foreach ($rows as $row) {
                 // Trim the row to the first 7 columns
                 $row = array_slice($row, 0, 7);
-            
+
                 // Ensure all values are set, even if empty
                 $row = array_pad($row, 7, null);
-            
+
                 // Trim whitespace and replace empty strings with null
                 $row = array_map(function ($value) {
                     return trim($value) === '' ? null : trim($value);
                 }, $row);
-            
+
                 // Check if the row is not entirely empty
-                if (array_filter($row, function($value) { return $value !== null; })) {
+                if (array_filter($row, function ($value) {
+                    return $value !== null;
+                })) {
                     if ($stmt->execute($row)) {
                         $importedCount++;
                     } else {
@@ -51,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
                     }
                 }
             }
-            
+
             // Commit transaction
             $connection->commit();
             echo json_encode(['status' => 'success', 'message' => "Upload successful. $importedCount records imported."]);
@@ -128,4 +129,3 @@ if (post('action') === 'update') {
 
     redirect('../../other_name');
 }
-?>

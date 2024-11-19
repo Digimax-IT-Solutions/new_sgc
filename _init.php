@@ -26,6 +26,7 @@ require_once 'models/PurchaseOrder.php';
 require_once 'models/WriteCheck.php';
 require_once 'models/TransactionEntry.php';
 require_once 'models/GeneralJournal.php';
+require_once 'models/GeneralLedger.php';
 require_once 'models/ReceivingReport.php';
 
 // Purchasing

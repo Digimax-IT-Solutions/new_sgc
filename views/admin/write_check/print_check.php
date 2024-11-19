@@ -359,7 +359,7 @@
             $pdf->SetFont('Arial', '', 8);
 
             // Output the first line, left-aligned
-            $pdf->Cell(0, 2, 'Received the check in full/partial payment of account with HIDECO SUGAR MILLING CO., INC. the amount of', 0, 1, 'L');
+            $pdf->Cell(0, 2, 'Received the check in full/partial payment of account with EUROSPEC MOTORS CORPORATION. the amount of', 0, 1, 'L');
 
             // Make the amount in words bold and a little bigger, and center it
             $pdf->SetFont('Arial', 'B', 10);

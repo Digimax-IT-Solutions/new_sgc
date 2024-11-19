@@ -116,6 +116,8 @@ $pages = [
     'draft_general_journal' => 'views/admin/general_journal/draft_general_journal.php',
     'void_general_journal' => 'views/admin/general_journal/void_general_journal.php',
 
+    'general_ledger' => 'views/admin/general_ledger/general_ledger.php',
+
     // TRANSACTION ENTRIES
     'transaction_entries' => 'views/admin/transaction_entries/transaction_entries_list.php',
 

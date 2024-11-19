@@ -40,7 +40,6 @@ class Product
     $this->item_cogs_account_id = $product['item_cogs_account_id'];
     $this->item_income_account_id = $product['item_income_account_id'];
     $this->item_asset_account_id = $product['item_asset_account_id'];
-
   }
 
 
@@ -163,10 +162,10 @@ class Product
 
   public static function find($id)
   {
-      global $connection;
-  
-      // Explicitly list columns from 'items' table along with 'uom' name
-      $stmt = $connection->prepare('
+    global $connection;
+
+    // Explicitly list columns from 'items' table along with 'uom' name
+    $stmt = $connection->prepare('
           SELECT 
               items.id, 
               items.item_name, 
@@ -189,31 +188,31 @@ class Product
           LEFT JOIN uom ON items.item_uom_id = uom.id
           WHERE items.id = :id
       ');
-  
-      // Bind the parameter
-      $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-      $stmt->execute();
-  
-      // Set fetch mode to associative array
-      $stmt->setFetchMode(PDO::FETCH_ASSOC);
-  
-      // Fetch the result
-      $result = $stmt->fetch();
-  
-      // Return result as Product object or null if not found
-      if ($result) {
-          return new Product($result);
-      }
-  
-      return null;
+
+    // Bind the parameter
+    $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+    $stmt->execute();
+
+    // Set fetch mode to associative array
+    $stmt->setFetchMode(PDO::FETCH_ASSOC);
+
+    // Fetch the result
+    $result = $stmt->fetch();
+
+    // Return result as Product object or null if not found
+    if ($result) {
+      return new Product($result);
+    }
+
+    return null;
   }
-  
+
 
   public function update()
   {
-      global $connection;
-  
-      $sql_command = '
+    global $connection;
+
+    $sql_command = '
           UPDATE items SET
               item_name = :item_name,
               item_code = :item_code,
@@ -231,25 +230,24 @@ class Product
               item_income_account_id = :item_income_account_id,
               item_asset_account_id = :item_asset_account_id
           WHERE id = :id';
-  
-      $stmt = $connection->prepare($sql_command);
-      $stmt->bindParam(':item_name', $this->item_name);
-      $stmt->bindParam(':item_code', $this->item_code);
-      $stmt->bindParam(':item_type', $this->item_type);
-      $stmt->bindParam(':item_vendor_id', $this->item_vendor_id);
-      $stmt->bindParam(':item_uom_id', $this->item_uom_id);
-      $stmt->bindParam(':item_reorder_point', $this->item_reorder_point);
-      $stmt->bindParam(':item_category_id', $this->item_category_id);
-      $stmt->bindParam(':item_quantity', $this->item_quantity);
-      $stmt->bindParam(':item_sales_description', $this->item_sales_description);
-      $stmt->bindParam(':item_purchase_description', $this->item_purchase_description);
-      $stmt->bindParam(':item_selling_price', $this->item_selling_price);
-      $stmt->bindParam(':item_cost_price', $this->item_cost_price);
-      $stmt->bindParam(':item_cogs_account_id', $this->item_cogs_account_id);
-      $stmt->bindParam(':item_income_account_id', $this->item_income_account_id);
-      $stmt->bindParam(':item_asset_account_id', $this->item_asset_account_id);
-      $stmt->bindParam(':id', $this->id);
-      $stmt->execute();
-  }
 
+    $stmt = $connection->prepare($sql_command);
+    $stmt->bindParam(':item_name', $this->item_name);
+    $stmt->bindParam(':item_code', $this->item_code);
+    $stmt->bindParam(':item_type', $this->item_type);
+    $stmt->bindParam(':item_vendor_id', $this->item_vendor_id);
+    $stmt->bindParam(':item_uom_id', $this->item_uom_id);
+    $stmt->bindParam(':item_reorder_point', $this->item_reorder_point);
+    $stmt->bindParam(':item_category_id', $this->item_category_id);
+    $stmt->bindParam(':item_quantity', $this->item_quantity);
+    $stmt->bindParam(':item_sales_description', $this->item_sales_description);
+    $stmt->bindParam(':item_purchase_description', $this->item_purchase_description);
+    $stmt->bindParam(':item_selling_price', $this->item_selling_price);
+    $stmt->bindParam(':item_cost_price', $this->item_cost_price);
+    $stmt->bindParam(':item_cogs_account_id', $this->item_cogs_account_id);
+    $stmt->bindParam(':item_income_account_id', $this->item_income_account_id);
+    $stmt->bindParam(':item_asset_account_id', $this->item_asset_account_id);
+    $stmt->bindParam(':id', $this->id);
+    $stmt->execute();
+  }
 }

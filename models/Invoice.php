@@ -126,7 +126,6 @@ class Invoice
         global $connection;
 
         try {
-            global $connection;
 
             // Start a database transaction to ensure data integrity
             $connection->beginTransaction();
@@ -264,6 +263,7 @@ class Invoice
                 self::addInvoiceItems(
                     $invoice_id,
                     $item['item_id'],
+                    $item['description'],
                     $item['quantity'],
                     $item['cost'],
                     $item['amount'],
@@ -429,6 +429,7 @@ class Invoice
     public static function addInvoiceItems(
         $invoice_id,
         $item_id,
+        $description,
         $quantity,
         $cost,
         $amount,
@@ -457,6 +458,7 @@ class Invoice
         $stmt = $connection->prepare("INSERT INTO sales_invoice_details (
                 invoice_id, 
                 item_id, 
+                item_description,
                 quantity, 
                 cost, 
                 amount, 
@@ -471,12 +473,13 @@ class Invoice
                 cogs_account_id, 
                 income_account_id, 
                 asset_account_id
-            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         ");
 
         $stmt->execute([
             $invoice_id,
             $item_id,
+            $description,
             $quantity,
             $cost,
             $amount,
@@ -627,61 +630,65 @@ class Invoice
     {
         global $connection;
 
-        $stmt = $connection->prepare('
-            SELECT 
-                si.id,
-                si.invoice_number,
-                si.invoice_date,
-                si.invoice_account_id,
-                si.customer_po,
-                si.so_no,
-                si.rep,
-                si.invoice_due_date,
-                si.payment_method,
-                si.location,
-                si.terms,
-                si.memo,
-                si.gross_amount,
-                si.discount_amount as invoice_discount_amount,
-                si.net_amount_due,
-                si.vat_amount,
-                si.vatable_amount,
-                si.zero_rated_amount,
-                si.vat_exempt_amount,
-                si.tax_withheld_percentage,
-                si.tax_withheld_amount,
-                si.total_amount_due,
-                si.invoice_status,
-                si.status as invoice_status_code,
-                si.print_status,
-                c.id as customer_id,
-                c.customer_name,
-                c.customer_tin,
-                c.customer_code,
-                c.customer_contact,
-                c.customer_terms,
-                c.customer_email,
-                c.shipping_address,
-                c.billing_address,
-                c.business_style
-            FROM sales_invoice si
-            INNER JOIN customers c ON si.customer_id = c.id
-            WHERE si.id = :id
-        ');
+        try {
+            $stmt = $connection->prepare('
+                SELECT 
+                    si.id,
+                    si.invoice_number,
+                    si.invoice_date,
+                    si.invoice_account_id,
+                    si.customer_po,
+                    si.so_no,
+                    si.rep,
+                    si.invoice_due_date,
+                    si.payment_method,
+                    si.location,
+                    si.terms,
+                    si.memo,
+                    si.gross_amount,
+                    si.discount_amount as invoice_discount_amount,
+                    si.net_amount_due,
+                    si.vat_amount,
+                    si.vatable_amount,
+                    si.zero_rated_amount,
+                    si.vat_exempt_amount,
+                    si.tax_withheld_percentage,
+                    si.tax_withheld_amount,
+                    si.total_amount_due,
+                    si.invoice_status,
+                    si.status as invoice_status_code,
+                    si.print_status,
+                    c.id as customer_id,
+                    c.customer_name,
+                    c.customer_tin,
+                    c.customer_code,
+                    c.customer_contact,
+                    c.customer_terms,
+                    c.customer_email,
+                    c.shipping_address,
+                    c.billing_address,
+                    c.business_style
+                FROM sales_invoice si
+                INNER JOIN customers c ON si.customer_id = c.id
+                WHERE si.id = :id
+            ');
 
-        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-        $stmt->execute();
-        $stmt->setFetchMode(PDO::FETCH_ASSOC);
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
 
-        $invoiceData = $stmt->fetch();
+            $stmt->execute();
+            $invoiceData = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$invoiceData) {
+            if (!$invoiceData) {
+                return null;
+            }
+
+            $invoiceData['details'] = self::getInvoiceDetails($id);
+
+            return new Invoice($invoiceData);
+        } catch (PDOException $e) {
+            error_log("Database error in find(): " . $e->getMessage());
             return null;
         }
-
-        $invoiceData['details'] = self::getInvoiceDetails($id);
-
-        return new Invoice($invoiceData);
     }
 
     public static function getInvoiceDetails($invoice_id)
@@ -692,6 +699,7 @@ class Invoice
             SELECT 
                 sid.id,
                 sid.invoice_id,
+                sid.item_description,
                 sid.quantity,
                 sid.cost,
                 sid.amount,
@@ -1382,7 +1390,6 @@ class Invoice
                     // Fetch the item_name
                     $stmtItemName->execute([':item_id' => $item['item_id']]);
                     $item_name = $stmtItemName->fetchColumn();
-
 
                     // Log VAT for this item
                     if (!empty($item['output_vat_id']) && $item['sales_tax_amount'] > 0) {

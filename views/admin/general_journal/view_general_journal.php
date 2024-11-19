@@ -478,13 +478,14 @@ $general_journal_details = GeneralJournal::getJournalDetails($journal_id);
                 },
                 success: function(response) {
                     if (response.success) {
+                        // Construct the URL for the print content
                         const printContentUrl = `print_general_journal?action=print&id=${id}`;
 
-                        // Open the print content in a new tab
-                        const printWindow = window.open(printContentUrl, '_blank');
+                        // Open a new mini browser window with custom dimensions
+                        const printWindow = window.open(printContentUrl, 'PrintWindow', 'width=1000,height=700');
 
                         if (printWindow) {
-                            // Focus on the new tab and print the content once it has loaded
+                            // Focus on the new window and print the content once it has loaded
                             printWindow.onload = function() {
                                 printWindow.focus();
                                 printWindow.print();
@@ -518,6 +519,7 @@ $general_journal_details = GeneralJournal::getJournalDetails($journal_id);
                 }
             });
         }
+
 
 
         function voidCheck(id) {
@@ -697,15 +699,15 @@ $general_journal_details = GeneralJournal::getJournalDetails($journal_id);
             // Add a new row to the table
             function addRow() {
                 const newRow = `
-        <tr>
-            <td><select class="form-control form-control-sm account-dropdown select2" name="account_id[]" required>${accountDropdownOptions}</select></td>
-            <td class="debit-cell"><input type="text" class="form-control form-control-sm debit" name="debit[]" placeholder="0.00"></td>
-            <td class="credit-cell"><input type="text" class="form-control form-control-sm credit" name="credit[]" placeholder="0.00"></td>
-            <td><select class="form-control form-control-sm name-dropdown select2" name="name[]" required>${generateNameOptions()}</select></td>
-            <td class="memo-cell"><input type="text" class="form-control form-control-sm memo" name="memo[]" placeholder="Enter memo"></td>
-            <td><select class="form-control form-control-sm cost-dropdown select2" name="cost_center_id[]">${costCenterDropdownOptions}</select></td>
-            <td><button type="button" class="btn btn-sm btn-outline-danger removeRow"><i class="fas fa-trash"></i></button></td>
-        </tr>`;
+                    <tr>
+                        <td><select class="form-control form-control-sm account-dropdown select2" name="account_id[]" required>${accountDropdownOptions}</select></td>
+                        <td class="debit-cell"><input type="text" class="form-control form-control-sm debit" name="debit[]" placeholder="0.00"></td>
+                        <td class="credit-cell"><input type="text" class="form-control form-control-sm credit" name="credit[]" placeholder="0.00"></td>
+                        <td><select class="form-control form-control-sm name-dropdown select2" name="name[]" required>${generateNameOptions()}</select></td>
+                        <td class="memo-cell"><input type="text" class="form-control form-control-sm memo" name="memo[]" placeholder="Enter memo"></td>
+                        <td><select class="form-control form-control-sm cost-dropdown select2" name="cost_center_id[]">${costCenterDropdownOptions}</select></td>
+                        <td><button type="button" class="btn btn-sm btn-outline-danger removeRow"><i class="fas fa-trash"></i></button></td>
+                    </tr>`;
                 $('#itemTableBody').append(newRow);
 
                 // Initialize Select2 for the new dropdowns
@@ -761,10 +763,6 @@ $general_journal_details = GeneralJournal::getJournalDetails($journal_id);
                 });
                 return items;
             }
-
-
-
-
 
             $('#generalJournalForm').submit(function(event) {
                 event.preventDefault();

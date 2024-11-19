@@ -87,6 +87,7 @@ if (post('action') === 'add') {
             $vat_percentage_amount,
             $net_of_vat,
             $tax_withheld_amount,
+            $tax_withheld_percentage,
             $total_amount_due,
             $created_by,
             $items,
@@ -105,7 +106,6 @@ if (post('action') === 'add') {
 
         // Prepare the response with just the transaction_id
         $response = ['success' => true, 'id' => $transaction_id + 1];
-
     } catch (Exception $e) {
         $response = ['success' => false, 'message' => 'Error: ' . $e->getMessage()];
         error_log('Error in write check submission: ' . $e->getMessage());
@@ -171,7 +171,6 @@ if (post('action') === 'update') {
 
         flashMessage('update_write_check', 'Check updated successfully.', FLASH_SUCCESS);
         $response = ['success' => true, 'id' => $id];
-
     } catch (Exception $e) {
         $response = ['success' => false, 'message' => 'Error: ' . $e->getMessage()];
         error_log('Error in write check update: ' . $e->getMessage());
@@ -465,7 +464,7 @@ if (post('action') === 'save_final') {
         $total_amount_due = post('total_amount_due');
 
         $items = json_decode(post('item_data'), true);
-        
+
         // Extract account IDs from the first item (assuming they're the same for all items)
         $discount_account_id = $items[0]['discount_account_id'] ?? null;
         $input_vat_account_id = $items[0]['input_vat_account_id'] ?? null;

@@ -14,11 +14,11 @@ try {
         $orPayment = OfficialReceipt::find($id);
         if ($orPayment) {
 
-            // Get the check ID from the request
-            $or_id = $_GET['id']; // Assuming the ID is passed as a query parameter
+            // // Get the check ID from the request
+            // $or_id = $_GET['id']; // Assuming the ID is passed as a query parameter
 
-            // Fetch invoice data based on the provided ID
-            $orPayment = OfficialReceipt::find($or_id);
+            // // Fetch invoice data based on the provided ID
+            // $orPayment = OfficialReceipt::find($or_id);
 
             // Invoice if the invoice exists
             if ($orPayment) {
@@ -27,16 +27,16 @@ try {
                 $pdf = new FPDF();
                 $pdf->AddPage();
 
-            // Add a watermark based on the invoice status
-            if ($orPayment->status == 3) {
-                // If invoice status is 3, add a "VOID" watermark
-                $pdf->SetFont('Arial', 'B', 190);
-                $pdf->RotatedText(55, 190, 'VOID', 45, array(192, 192, 192)); // Light gray color
-            } elseif ($orPayment->status == 4) {
-                // If invoice status is 4, add a "DRAFT" watermark
-                $pdf->SetFont('Arial', 'B', 175);
-                $pdf->RotatedText(55, 190, 'DRAFT', 45, array(192, 192, 192)); // Light gray color
-            }
+                // Add a watermark based on the invoice status
+                if ($orPayment->status == 3) {
+                    // If invoice status is 3, add a "VOID" watermark
+                    $pdf->SetFont('Arial', 'B', 190);
+                    $pdf->RotatedText(55, 190, 'VOID', 45, array(192, 192, 192)); // Light gray color
+                } elseif ($orPayment->status == 4) {
+                    // If invoice status is 4, add a "DRAFT" watermark
+                    $pdf->SetFont('Arial', 'B', 175);
+                    $pdf->RotatedText(55, 190, 'DRAFT', 45, array(192, 192, 192)); // Light gray color
+                }
 
 
                 // Set margins
@@ -59,20 +59,21 @@ try {
 
                 // Calculate banner position
                 $pageWidth = $pdf->GetPageWidth();
-                $bannerWidth = 80; // Adjust as needed
+                $bannerWidth = 40; // Adjust as needed
                 $bannerX = ($pageWidth - $bannerWidth) / 2;
 
                 // Add banner image
-                $pdf->Image('photos/banner.png', 2, 15, $bannerWidth, 0, 'PNG');
+                $pdf->Image('photos/banner.png', 10, 15, $bannerWidth, 0, 'PNG');
 
                 // Move below banner
                 $pdf->SetY($pdf->GetY() + 8);
 
                 // Company details centered under banner
                 $pdf->SetFont('Arial', '', 10);
-                $pdf->Cell(0, 4, 'Montebello, Kanaga, Leyte, 6531', 0, 1, 'R');
-                $pdf->Cell(0, 4, 'VAT Reg. TIN: 000-123-533-00000', 0, 1, 'R');
-                $pdf->Cell(0, 4, 'Tel. No: +63 (53) 553 0058', 0, 1, 'R');
+                $pdf->Cell(0, 4, 'Pilar Development Compound, Warehouse 3 (Unit 2) Rose Ave, Pilar Village,', 0, 1, 'R');
+                $pdf->Cell(0, 4, 'Barangay Almanza, Las Pinas, Philippines', 0, 1, 'R');
+                $pdf->Cell(0, 4, 'VAT Reg. TIN: ', 0, 1, 'R');
+                $pdf->Cell(0, 4, 'Tel. No: ', 0, 1, 'R');
 
                 $pdf->SetY($pdf->GetY() + 15);
                 $pdf->SetFont('Arial', 'B', 14);
@@ -86,7 +87,7 @@ try {
                 $lineHeight = 5; // Adjust according to your line spacing requirement
                 $rightColumnX = $pageWidth - 60; // X position for the right column
 
-                
+
                 // Date and Terms
 
                 $date = new DateTime($orPayment->or_date);
@@ -254,8 +255,6 @@ try {
 
                 // Output the PDF
                 $pdf->Output();
-
-
             } else {
                 // Handle the case where the check is not found
                 echo "Invoice not found.";
@@ -268,7 +267,7 @@ try {
         }
     } else {
         // Handle the case where the check ID is invalid or not found
-        echo "Sales Invoice not found!";
+        echo "Cash Invoice not found!";
     }
 } catch (Exception $ex) {
     // Handle any exceptions

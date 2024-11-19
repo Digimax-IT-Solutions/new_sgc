@@ -77,24 +77,24 @@ class WriteCheck
         }
     }
     // add/insert wchecks data 
-    public static function add($cv_no, $check_no, $ref_no, $check_date, $bank_account_id, $payee_type, $payee_id, $payee_name, $memo, $location, $gross_amount, $discount_amount, $net_amount_due, $vat_percentage_amount, $net_of_vat, $tax_withheld_amount, $total_amount_due, $created_by, $items, $wtax_account_id)
+    public static function add($cv_no, $check_no, $ref_no, $check_date, $bank_account_id, $payee_type, $payee_id, $payee_name, $memo, $location, $gross_amount, $discount_amount, $net_amount_due, $vat_percentage_amount, $net_of_vat, $tax_withheld_amount, $tax_withheld_percentage, $total_amount_due, $created_by, $items, $wtax_account_id)
     {
         global $connection;
-    
+
         try {
             // Start a transaction
             $connection->beginTransaction();
-    
+
             // Get the next transaction ID
             $nextId = self::getNextTransactionId();
             $transaction_type = "Check Expense";
-    
+
             $stmt = $connection->prepare("INSERT INTO wchecks (
                 id, cv_no, check_no, ref_no, check_date, account_id, payee_type, payee_id,
                 memo, location, gross_amount, discount_amount, net_amount_due, vat_percentage_amount,
-                net_of_vat, tax_withheld_amount, total_amount_due, created_by) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    
+                net_of_vat, tax_withheld_amount, tax_withheld_percentage, total_amount_due, created_by) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
             $stmt->execute([
                 $nextId,
                 $cv_no,
@@ -112,30 +112,31 @@ class WriteCheck
                 $vat_percentage_amount,
                 $net_of_vat,
                 $tax_withheld_amount,
+                $tax_withheld_percentage,
                 $total_amount_due,
                 $created_by
             ]);
-    
+
             // Retrieve the ID of the newly inserted write check entry
             $wcheck_id = $connection->lastInsertId();
-    
+
             $total_discount = 0;
             $total_input_vat = 0;
-    
+
             // Ensure $items is an array before proceeding
             if (!is_array($items)) {
                 throw new Exception('Items must be an array');
             }
-    
+
             foreach ($items as $item) {
                 // Ensure that the amount is a number and remove any commas
                 $amount = isset($item['amount']) ? preg_replace('/[^\d.]/', '', $item['amount']) : 0;
-    
+
                 // Ensure numeric values are cast to floats before calculations
                 $item['discount_amount'] = (float)$item['discount_amount'];
                 $item['net_amount'] = (float)$item['net_amount'];
                 $item['input_vat'] = (float)$item['input_vat'];
-    
+
                 // Insert check details
                 self::addItem(
                     $wcheck_id,
@@ -150,7 +151,7 @@ class WriteCheck
                     $item['vat_percentage'],
                     $item['input_vat']
                 );
-    
+
                 // Audit Check Accounts Account
                 self::logAuditTrail(
                     $wcheck_id,
@@ -164,12 +165,12 @@ class WriteCheck
                     0.00,
                     $created_by
                 );
-    
+
                 // Accumulate total discount and input VAT
                 $total_discount += $item['discount_amount'];
                 $total_input_vat += $item['input_vat'];
             }
-    
+
             // Ensure we have at least one item before accessing array index 0
             if (!empty($items)) {
                 // Audit Check Discount Account (single entry for total discount)
@@ -185,7 +186,7 @@ class WriteCheck
                     $total_discount,
                     $created_by
                 );
-    
+
                 // Audit Check Input VAT Account (single entry for total input VAT)
                 self::logAuditTrail(
                     $wcheck_id,
@@ -200,7 +201,7 @@ class WriteCheck
                     $created_by
                 );
             }
-    
+
             // Audit Trail Wtax Account
             self::logAuditTrail(
                 $wcheck_id,
@@ -214,7 +215,7 @@ class WriteCheck
                 $tax_withheld_amount,
                 $created_by
             );
-    
+
             // Audit Trail Bank Account
             self::logAuditTrail(
                 $wcheck_id,
@@ -228,7 +229,7 @@ class WriteCheck
                 $total_amount_due,
                 $created_by
             );
-    
+
             // Commit the transaction
             $connection->commit();
         } catch (Exception $e) {
@@ -853,10 +854,10 @@ class WriteCheck
         $input_vat_account_id
     ) {
         global $connection;
-    
+
         try {
             $connection->beginTransaction();
-    
+
             // Update the main wcheck record
             $stmt = $connection->prepare("
                 UPDATE wchecks 
@@ -880,7 +881,7 @@ class WriteCheck
                     status = 4
                 WHERE id = :wcheck_id
             ");
-    
+
             // Bind the parameters
             $stmt->bindParam(':wcheck_id', $wcheck_id, PDO::PARAM_INT);
             $stmt->bindParam(':cv_no', $cv_no, PDO::PARAM_STR);
@@ -900,23 +901,23 @@ class WriteCheck
             $stmt->bindParam(':tax_withheld_amount', $tax_withheld_amount, PDO::PARAM_STR);
             $stmt->bindParam(':tax_withheld_percentage', $tax_withheld_percentage, PDO::PARAM_STR);
             $stmt->bindParam(':total_amount_due', $total_amount_due, PDO::PARAM_STR);
-    
+
             // Execute the statement
             $result = $stmt->execute();
-    
+
             if (!$result) {
                 throw new Exception("Failed to update wcheck. " . implode(", ", $stmt->errorInfo()));
             }
-    
+
             // Delete existing check details
             $stmt = $connection->prepare("DELETE FROM wchecks_details WHERE wcheck_id = ?");
             $stmt->execute([$wcheck_id]);
-    
+
             // Check if $items is an array before proceeding
             if (!is_array($items)) {
                 throw new Exception("Items must be an array.");
             }
-    
+
             // Prepare statement for inserting new check details
             $stmt = $connection->prepare("
                 INSERT INTO wchecks_details (
@@ -927,7 +928,7 @@ class WriteCheck
                     :discount_amount, :net_amount_before_vat, :net_amount, :vat_percentage, :input_vat
                 )
             ");
-    
+
             // Insert new check details
             foreach ($items as $item) {
                 $stmt->execute([
@@ -944,10 +945,10 @@ class WriteCheck
                     ':input_vat' => isset($item['input_vat']) ? $item['input_vat'] : 0
                 ]);
             }
-    
+
             // Commit the transaction
             $connection->commit();
-    
+
             return [
                 'success' => true,
                 'wcheckId' => $wcheck_id
@@ -962,7 +963,7 @@ class WriteCheck
             ];
         }
     }
-    
+
     public static function saveFinal(
         $wcheck_id,
         $cv_no,
@@ -1216,7 +1217,7 @@ class WriteCheck
         }
     }
 
-    
+
 
 
     public static function void($id)
@@ -1260,6 +1261,4 @@ class WriteCheck
             throw $e;
         }
     }
-
-    
 }

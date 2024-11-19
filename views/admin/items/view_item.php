@@ -136,11 +136,11 @@ sort($itemTypes);
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
-                                            <label for="item_quantity" class="col-sm-2 col-form-label">Initial Quantity</label>
+                                            <label for="item_quantity" class="col-sm-2 col-form-label">Quantity on hand</label>
                                             <div class="col-sm-4">
                                                 <input type="number" class="form-control" id="item_quantity"
                                                     name="item_quantity" required min="0"
-                                                    value="<?= $item ? $item->item_quantity : '1' ?>">
+                                                    value="<?= $item ? $item->item_quantity : '1' ?>" disabled>
                                             </div>
                                         </div>
 

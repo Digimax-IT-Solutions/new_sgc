@@ -69,26 +69,40 @@ try {
 
         // Calculate banner position
         $pageWidth = $pdf->GetPageWidth();
-        $bannerWidth = 80; // Adjust as needed
+        $bannerWidth = 40; // Adjust as needed
         $bannerX = ($pageWidth - $bannerWidth) / 2;
 
         // Add banner image
-        $pdf->Image('photos/banner.png', $bannerX, 10, $bannerWidth, 0, 'PNG');
+        $pdf->Image('photos/banner.png', 10, 15, $bannerWidth, 0, 'PNG');
 
         // Move below banner
-        $pdf->SetY($pdf->GetY() + 20);
+        $pdf->SetY($pdf->GetY() + 8);
 
         // Company details centered under banner
-        $pdf->SetFont('Arial', '', 7);
-        $pdf->Cell(0, 4, 'Montebello, Kanaga, Leyte, 6531', 0, 1, 'C');
-        $pdf->Cell(0, 4, 'VAT Reg. TIN: 000-123-533-00000', 0, 1, 'C');
-        $pdf->Cell(0, 4, 'Tel. No: +63 (53) 553 0058', 0, 1, 'C');
+        $pdf->SetFont('Arial', '', 10);
+        $pdf->Cell(0, 4, 'Pilar Development Compound, Warehouse 3 (Unit 2) Rose Ave, Pilar Village,', 0, 1, 'R');
+        $pdf->Cell(0, 4, 'Barangay Almanza, Las Pinas, Philippines', 0, 1, 'R');
+        $pdf->Cell(
+            0,
+            4,
+            'VAT Reg. TIN: ',
+            0,
+            1,
+            'R'
+        );
+        $pdf->Cell(
+            0,
+            4,
+            'Tel. No: ',
+            0,
+            1,
+            'R'
+        );
 
-        $pdf->Ln(5);
-
+        $pdf->SetY($pdf->GetY() + 15);
         $pdf->SetFont('Arial', 'B', 14);
-        $pdf->Cell(0, 10, 'GENERAL JOURNAL', 0, 1, 'C');
-        $pdf->Ln(15);
+        $pdf->Cell(0, 4, 'GENERAL JOURNAL', 0, 3, 'C');
+        $pdf->Ln(5);
 
         // Add journal data to the PDF
         // Set font and size
@@ -131,29 +145,51 @@ try {
 
         $pdf->Ln(2);
 
+        // Set column widths
+        $colWidth1 = 30; // Account Code column (adjusted width)
+        $colWidth2 = 106; // Account Title column
+        $colWidth3 = 27; // Debit column
+        $colWidth4 = 27; // Credit column
+
         // Table headers
+        $pdf->SetFont('Arial', 'B', 10);
+        $pdf->Cell(
+            $colWidth1,
+            10,
+            'Account Code',
+            'LTR',
+            0,
+            'C'
+        );
+        $pdf->Cell(
+            $colWidth2,
+            10,
+            'Account Title',
+            'LTR',
+            0,
+            'C'
+        );
+        $pdf->Cell($colWidth3, 10, 'Debit', 'LTR', 0, 'C');
+        $pdf->Cell($colWidth4, 10, 'Credit', 'LTR', 0, 'C');
+        $pdf->Cell($colWidth4, 5, '', 0, 1, 'C');
 
-        // Center align the table
-        $pdf->Ln(); // Move to the next line
-        $pdf->Line($pdf->GetX(), $pdf->GetY(), $pdf->GetX() + 190, $pdf->GetY()); // Draw a line
-
-        $pdf->Cell(30, 10, 'Account Code', 0, 0, 'C');
-
-        $pdf->Cell(50, 10, 'Account', 0, 0, 'C');
-        $pdf->Cell(30, 10, 'Debit', 0, 0, 'R');
-        $pdf->Cell(30, 10, 'Credit', 0, 0, 'R');
-        $pdf->Ln(); // Move to the next line
-        $pdf->Line($pdf->GetX(), $pdf->GetY(), $pdf->GetX() + 190, $pdf->GetY()); // Draw a line
+        // Reset font for data rows
+        $pdf->SetFont('Arial', '', 10);
 
         // Initialize total debit and credit
         $totalDebit = 0;
         $totalCredit = 0;
 
+
+        $pdf->Ln(4);
+        // Fetch transaction entries for the check
         // Fetch transaction entries for the journal
         $transactionEntries = GeneralJournal::getJournalDetails($journalId);
         foreach ($transactionEntries as $entry) {
             // Skip the row if both debit and credit are zero
-            if ($entry['debit'] == 0 && $entry['credit'] == 0) {
+            if (
+                $entry['debit'] == 0 && $entry['credit'] == 0
+            ) {
                 continue;
             }
 
@@ -161,35 +197,56 @@ try {
             $totalDebit += $entry['debit'];
             $totalCredit += $entry['credit'];
 
-            // Determine if the account_description needs to be indented
-            $indent = ($entry['credit'] != 0) ? '       ' : ''; // Using spaces for indentation if credit is not zero
-
-            // Split account code into GL and SL
-            $glCode = substr($entry['account_code'], 0, 5);
-
+            // Use the full account code
+            $accountCode = $entry['account_code'];
 
             $startY = $pdf->GetY();
-            $pdf->Cell(30, 5, $glCode, 0, 0, 'C'); // Adjust width directly in Cell
+            $pdf->Cell(
+                $colWidth1,
+                7,
+                $accountCode,
+                'LR',
+                0,
+                'C'
+            );
+
+
 
             // Use MultiCell for Account Title to allow text wrapping
-            $pdf->MultiCell(60, 5, $entry['account_description'], 0, 'L');
+            $pdf->MultiCell($colWidth2, 7, $entry['account_description'], 'LR', 'L');
+
             $endY = $pdf->GetY();
+            $pdf->SetXY($pdf->GetX() + $colWidth1 + $colWidth2, $startY);
 
-            $pdf->Cell(50, 10, '', 0, 0, 'C'); // This cell has no border
-            $pdf->Cell(90, 2, ($entry['debit'] != 0 ? number_format($entry['debit'], 2) : ''), 0, 0, 'R');
-            $pdf->Cell(30, 2, ($entry['credit'] != 0 ? number_format($entry['credit'], 2) : ''), 0, 0, 'R');
+            $pdf->Cell($colWidth3, $endY - $startY, ($entry['debit'] != 0 ? number_format($entry['debit'], 2) : ''), 'LR', 0, 'R');
+            $pdf->Cell($colWidth4, $endY - $startY, ($entry['credit'] != 0 ? number_format($entry['credit'], 2) : ''), 'LR', 1, 'R');
 
-            $pdf->Ln(5);
+            $pdf->SetY($endY);
         }
 
-        // Add a row for total debit and credit
+        // Draw a line
+        $pdf->Line(
+            $pdf->GetX(),
+            $pdf->GetY(),
+            $pdf->GetX() + 190,
+            $pdf->GetY()
+        );
 
-        $pdf->SetFont('Arial', 'B', 10); // 'B' indicates bold
-        $pdf->Cell(110, 10, 'TOTAL:', 0, 0, 'R');
-        $pdf->Cell(30, 10, 'P' . number_format($totalDebit, 2), 0, 0, 'R');
-        $pdf->Cell(30, 10, 'P' . number_format($totalCredit, 2), 0, 0, 'R');
-        $pdf->Ln(15); // Move to the next line after the last row
+        // Total row
+        $pdf->SetFont('Arial', 'B', 10);
+        $pdf->Cell(
+            $colWidth1 + $colWidth2,
+            7,
+            'Total',
+            0,
+            0,
+            'R'
+        );
+        $pdf->Cell($colWidth3, 7, number_format($totalDebit, 2), 0, 0, 'R');
+        $pdf->Cell($colWidth4, 7, number_format($totalCredit, 2), 0, 1, 'R');
 
+
+        $pdf->Ln(10);
 
         $pdf->SetFont('Arial', '', 8);
         $pdf->Line($pdf->GetX(), $pdf->GetY(), $pdf->GetX() + 190, $pdf->GetY()); // Draw a line
@@ -200,11 +257,11 @@ try {
         $pdf->Cell(40, 10, 'APPROVED BY:', 0, 1, 'L');
 
         // Second row with names/values
-        $pdf->Cell(55, 5, 'LFS', 0, 0, 'L');
-        $pdf->Cell(50, 5, 'JCM/AVP', 0, 0, 'L');
-        $pdf->Cell(50, 5, 'ASP', 0, 0, 'L');
-        $pdf->Cell(40, 5, 'EQC', 0, 0, 'L');
-        $pdf->Ln(15); // Move to the next line
+        $pdf->Cell(55, 5, '', 0, 0, 'L');
+        $pdf->Cell(50, 5, '', 0, 0, 'L');
+        $pdf->Cell(50, 5, '', 0, 0, 'L');
+        $pdf->Cell(40, 5, '', 0, 0, 'L');
+        $pdf->Ln(2); // Move to the next line
         $pdf->Line($pdf->GetX(), $pdf->GetY(), $pdf->GetX() + 190, $pdf->GetY()); // Draw a line
 
         $pdf->Ln(2);

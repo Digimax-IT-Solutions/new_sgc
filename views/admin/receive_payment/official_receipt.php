@@ -19,41 +19,49 @@ $discounts = Discount::all();
 $input_vats = InputVat::all();
 $sales_taxes = SalesTax::all();
 
-$neworNo = OfficialReceipt::getLastOrNo();
+// Generate the new CI number by getting the last CI number and incrementing it
+// $ci_no = OfficialReceipt::getLastOrNo();
 
 
-$page = 'sales_invoice'; // Set the variable corresponding to the current page
 ?>
 
 <?php require 'views/templates/header.php' ?>
 <?php require 'views/templates/sidebar.php' ?>
 
 <style>
+    .styled-table {
+        border-collapse: collapse;
+        margin: 25px 0;
+        font-size: 0.9em;
+        font-family: sans-serif;
+        min-width: 400px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .styled-table .text-right {
+        text-align: center;
+    }
+
+    .styled-table thead tr {
+        background-color: rgb(4, 47, 48);
+        color: #ffffff;
+        text-align: left;
+    }
+
+
+    .styled-table tbody tr {
+        border-bottom: 2px solid rgb(4, 47, 48);
+    }
+
+
+    .styled-table tbody tr:last-of-type {
+        border-bottom: 2px solid rgb(4, 47, 48);
+    }
+
+
     .form-label {
         font-size: 0.675rem;
         margin-bottom: 0.25rem;
-    }
-
-    .card-body {
-        font-size: 0.875rem;
-    }
-
-    #itemTable th {
-        white-space: nowrap;
-    }
-
-    #itemTable tbody tr:nth-child(even) {
-        background-color: #f8f9fa;
-    }
-
-    #itemTable th,
-    #itemTable td {
-        padding: 0.5rem;
-        vertical-align: middle;
-    }
-
-    #itemTable .text-right {
-        text-align: right;
     }
 
     #loadingOverlay {
@@ -114,10 +122,17 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                         </nav>
                     </div>
                     <div>
-                        <a href="receive_payment" class="btn btn-secondary">
+                        <!-- New Cash Invoice Button with Custom Styles -->
+                        <a href="" class="btn btn-success">
+                            <i class="fas fa-plus-circle"></i> Create new
+                        </a>
+
+                        <!-- Back Button (no change) -->
+                        <a href="or_list" class="btn btn-secondary">
                             <i class="fas fa-arrow-left"></i> Back
                         </a>
                     </div>
+
                 </div>
             </div>
 
@@ -128,6 +143,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                 <input type="hidden" id="customer_name_hidden" name="customer_name">
                 <div class="row">
                     <div class="col-12 col-lg-8">
+
                         <div class="card h-100">
                             <div class="card-body">
                                 <div class="row g-2">
@@ -135,20 +151,34 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                                     <div class="col-12 mb-3">
                                         <h6 class="border-bottom pb-2">Customer Details</h6>
                                     </div>
-                                    <!-- customer_id -->
+                                    <!-- <h1 style="color: rgb(4, 47, 48);">Cash Invoice #</h1> -->
+
                                     <div class="col-md-4 customer-details">
-                                        <label for="customer_name" class="form-label">Customer</label>
-                                        <select class="form-select form-select-sm select2" id="customer_id"
-                                            name="customer_id" required>
+                                        <label for="invoice_no" class="form-label" style="color: rgb(4, 47, 48);">INVOICE #</label>
+                                        <input type="text" class="form-control form-control-sm" id="invoice_no"
+                                            name="invoice_no">
+                                    </div>
+
+
+                                    <!-- customer_id -->
+                                    <!-- Customer Dropdown with Add New Customer Option -->
+                                    <!-- Customer Dropdown with Add New Customer option next to the label -->
+                                    <div class="col-md-4 customer-details">
+                                        <label for="customer_name" class="form-label">
+                                            Customer
+                                            <a href="#" id="addNewCustomerLink" class="ms-3 text-primary">| Add New</a>
+                                        </label>
+                                        <select class="form-select form-select-sm select2" id="customer_id" name="customer_id" required>
                                             <option value="">Select Customer</option>
                                             <?php foreach ($customers as $customer): ?>
-                                                <option value="<?= $customer->id ?>"
-                                                    data-customer-name="<?= htmlspecialchars($customer->customer_name, ENT_QUOTES, 'UTF-8') ?>">
+                                                <option value="<?= $customer->id ?>" data-customer-name="<?= htmlspecialchars($customer->customer_name, ENT_QUOTES, 'UTF-8') ?>">
                                                     <?= $customer->customer_name ?>
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
                                     </div>
+
+
                                     <div class="col-md-4 customer-details">
                                         <label for="customer_tin" class="form-label">TIN</label>
                                         <input type="text" class="form-control form-control-sm" id="customer_tin"
@@ -240,7 +270,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                                     </div>
                                     <!-- so_no -->
                                     <div class="col-md-3 invoice-details">
-                                        <label for="so_no" class="form-label">S.O No.</label>
+                                        <label for="so_no" class="form-label">J.O No.</label>
                                         <input type="text" class="form-control form-control-sm" id="so_no" name="so_no">
                                     </div>
                                     <!-- memo -->
@@ -373,20 +403,20 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
 
                 <div class="row mt-4">
                     <div class="col-12">
-                        <div class="card">
+                        <div class="card" style="border: 1px solid rgb(4, 47, 48);">
                             <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5 class="card-title mb-0">Items</h5>
+                                <h5 class="card-title mb-0">Items / Services</h5>
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">
-                                    <table class="table table-sm table-hover" id="itemTable">
-                                        <thead class="bg-light" style="font-size: 12px;">
+                                    <table class="styled-table" id="itemTable">
+                                        <thead class="bg-light" style="font-size: 15px;">
                                             <tr>
                                                 <th style="width: 15%;">Item</th>
                                                 <th style="width: 9%;">Description</th>
-                                                <th style="width: 8%;">Unit</th>
+                                                <th style="width: 5%;">Unit</th>
                                                 <th class="text-right" style="width: 3%;">Quantity</th>
-                                                <th class="text-right" style="width: 8%;">Cost</th>
+                                                <th class="text-right" style="width: 11%;">Cost</th>
                                                 <th class="text-right" style="width: 8%;">Amount</th>
                                                 <th style="width: 8%;">Discount Type</th>
                                                 <th class="text-right" style="width: 8%;">Discount</th>
@@ -423,6 +453,143 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
 
 
 <iframe id="printFrame" style="display:none;"></iframe>
+
+
+<!-- Bootstrap Modal for Adding New Customer -->
+<!-- Modal for Adding New Customer -->
+<div class="modal fade" id="addCustomerModal" tabindex="-1" aria-labelledby="addCustomerModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addCustomerModalLabel">Add New Customer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="api/masterlist/direct_add_customer.php" id="addCustomerForm">
+                    <input type="hidden" name="action" value="add">
+
+                    <!-- CUSTOMER CODE -->
+                    <div class="mb-3">
+                        <label for="customer_code" class="form-label">Customer Code</label>
+                        <input type="text" class="form-control" id="customer_code" name="customer_code" placeholder="Enter Customer Code">
+                    </div>
+
+                    <!-- CUSTOMER NAME -->
+                    <div class="mb-3">
+                        <label for="customer_name" class="form-label">Customer Name</label>
+                        <input type="text" class="form-control" id="customer_name" name="customer_name" placeholder="Enter Customer Name" required>
+                    </div>
+
+                    <!-- SHIPPING ADDRESS -->
+                    <div class="mb-3">
+                        <label for="shipping_address" class="form-label">Shipping Address</label>
+                        <textarea class="form-control" id="shipping_address" name="shipping_address" rows="3" placeholder="Enter Shipping Address"></textarea>
+                    </div>
+
+                    <!-- BILLING ADDRESS -->
+                    <div class="mb-3">
+                        <label for="billing_address" class="form-label">Billing Address</label>
+                        <textarea class="form-control" id="billing_address" name="billing_address" rows="3" placeholder="Enter Billing Address"></textarea>
+                    </div>
+
+                    <!-- BUSINESS STYLE AND TERMS -->
+                    <div class="mb-3">
+                        <label for="business_style" class="form-label">Business Style</label>
+                        <input type="text" class="form-control" id="business_style" name="business_style" placeholder="Enter Business Style">
+                    </div>
+                    <div class="mb-3">
+                        <label for="customer_terms" class="form-label">Terms</label>
+                        <select class="form-select" id="customer_terms" name="customer_terms">
+                            <option value="">Select Term</option>
+                            <?php foreach ($terms as $term): ?>
+                                <option value="<?= $term->id ?>"><?= $term->term_name ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <!-- TIN AND EMAIL -->
+                    <div class="mb-3">
+                        <label for="customer_tin" class="form-label">TIN Number</label>
+                        <input type="text" class="form-control" id="customer_tin" name="customer_tin" placeholder="Enter TIN Number">
+                    </div>
+                    <div class="mb-3">
+                        <label for="customer_email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="customer_email" name="customer_email" placeholder="Enter Email">
+                    </div>
+
+                    <!-- Submit Button in the Modal -->
+                    <button type="button" class="btn btn-primary" id="addCustomerSubmit">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // function checkCustomerSelection() {
+    //     const customerSelect = document.getElementById("customer_id");
+
+    //     // Open the modal if "Add New Customer" is selected
+    //     if (customerSelect.value === "add_new") {
+    //         const addCustomerModal = new bootstrap.Modal(document.getElementById("addCustomerModal"));
+    //         addCustomerModal.show();
+    //         // Reset the dropdown selection to prevent form submission conflicts
+    //         customerSelect.value = "";
+    //     }
+    // }
+
+
+    // Open the modal when the "Add New Customer" link is clicked
+    document.getElementById("addNewCustomerLink").addEventListener("click", function() {
+        const addCustomerModal = new bootstrap.Modal(document.getElementById("addCustomerModal"));
+        addCustomerModal.show();
+    });
+
+    // Handle the customer addition form submission
+    document.getElementById("addCustomerSubmit").addEventListener("click", function() {
+        const form = document.getElementById("addCustomerForm");
+        const formData = new FormData(form);
+
+        // Set action to direct_add
+        formData.set("action", "direct_add");
+
+        fetch("api/masterlist/direct_add_customer.php", {
+                method: "POST",
+                body: formData,
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.success) {
+                    alert("Customer added successfully");
+
+                    // Add the new customer to the dropdown
+                    const customerSelect = document.getElementById("customer_id");
+                    const newOption = document.createElement("option");
+                    newOption.value = data.customer.id;
+                    newOption.textContent = data.customer.customer_name;
+                    newOption.selected = true; // Automatically select the new customer
+                    customerSelect.appendChild(newOption);
+
+                    // Close the modal
+                    const addCustomerModal = bootstrap.Modal.getInstance(document.getElementById("addCustomerModal"));
+                    addCustomerModal.hide();
+
+                    // Remove all modal backdrops
+                    document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+
+                    // Reset the form
+                    form.reset();
+                } else {
+                    alert("Failed to add customer: " + data.message);
+                }
+            })
+            .catch((error) => {
+                console.error("Error:", error);
+                alert("An error occurred while adding the customer.");
+            });
+    });
+</script>
+
 
 
 <script>
@@ -628,12 +795,6 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
             allowClear: false
         });
 
-        $('#invoice_terms').select2({
-            theme: 'classic', // Use 'bootstrap-5' for Bootstrap 5, 'bootstrap-4' for Bootstrap 4
-            width: '100%',
-            placeholder: 'Select Terms',
-            allowClear: false
-        });
 
         $('#or_account_id').select2({
             theme: 'classic', // Use 'bootstrap-5' for Bootstrap 5, 'bootstrap-4' for Bootstrap 4
@@ -641,13 +802,6 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
             placeholder: '',
             allowClear: false
         });
-
-        // $('#tax_withheld_percentage').select2({
-        //     theme: 'classic', // Use 'bootstrap-5' for Bootstrap 5, 'bootstrap-4' for Bootstrap 4
-        //     width: '100%',
-        //     placeholder: 'Select Tax Withheld',
-        //     allowClear: false
-        // });
 
         $('#customer_id').change(function() {
             var customerId = $(this).val();
@@ -676,45 +830,38 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
             }
         });
 
-
-        // INVOICE TERMS 
-        // $('#invoice_terms').change(function () {
-        //     var terms = $(this).val();
-        //     var deliveryDate = calculateDeliveryDate(terms);
-        //     $('#invoice_due_date').val(deliveryDate);
-        // });
-
-        // function calculateDeliveryDate(terms) {
-        //     var currentDate = new Date();
-        //     var deliveryDate = new Date(currentDate);
-
-        //     if (terms === 'Due on Receipt') {
-        //         // Delivery date is the same as the current date
-        //         return currentDate.toISOString().split('T')[0];
-        //     } else {
-        //         var daysToAdd = parseInt(terms.replace('NET ', ''));
-        //         deliveryDate.setDate(deliveryDate.getDate() + daysToAdd);
-        //         return deliveryDate.toISOString().split('T')[0];
-        //     }
-        // }
-
-
         // Initialize dropdowns
         const initDropdowns = (data, template) => data.reduce((acc, item) => acc + template(item), '');
 
+        // const itemDropdownOptions = initDropdowns(<?php echo json_encode($products); ?>,
+        //     product => `<option value="${product.id}"
+        //             data-item-type="${product.item_type}"
+        //             data-item-name="${product.item_name}"
+        //             data-description="${product.item_sales_description}"
+        //             data-uom="${product.uom_name}"
+        //             data-cost-price="${product.item_cost_price}"
+        //             data-cogs-account-id="${product.item_cogs_account_id}"
+        //             data-income-account-id="${product.item_income_account_id}"
+        //             data-asset-account-id="${product.item_asset_account_id}"
+        //               ${product.item_quantity === 0 && product.item_type !== "Service" ? 'disabled' : ''}>
+        //           ${product.item_name} ${product.item_quantity > 0 ? `(${product.item_quantity})` : (product.item_type === "Service" ? '' : '(no stock)')}
+        //         </option>`
+        // );
 
         const itemDropdownOptions = initDropdowns(<?php echo json_encode($products); ?>,
             product => `<option value="${product.id}"
-                      data-item-name="${product.item_name}"
-                      data-description="${product.item_sales_description}"
-                      data-uom="${product.uom_name}"
-                      data-cost-price="${product.item_cost_price}"
-                      data-cogs-account-id="${product.item_cogs_account_id}"
-                      data-income-account-id="${product.item_income_account_id}"
-                      data-asset-account-id="${product.item_asset_account_id}">
-                  ${product.item_name}
+                    data-item-type="${product.item_type}"
+                    data-item-name="${product.item_name}"
+                    data-description="${product.item_sales_description}"
+                    data-uom="${product.uom_name}"
+                    data-cost-price="${product.item_cost_price}"
+                    data-cogs-account-id="${product.item_cogs_account_id}"
+                    data-income-account-id="${product.item_income_account_id}"
+                    data-asset-account-id="${product.item_asset_account_id}">
+                    ${product.item_name} ${product.item_quantity > 0 ? `(${product.item_quantity})` : (product.item_type === "Service" ? '' : '(no stock)')}
                 </option>`
         );
+
 
         const discountDropdownOptions = initDropdowns(<?php echo json_encode($discounts); ?>,
             discount => `<option value="${discount.discount_rate}" data-account-id="${discount.discount_account_id}">${discount.discount_name}</option>`
@@ -731,12 +878,13 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                     <td><select class="form-control form-control-sm account-dropdown select2" id="item" name="item_id[]" onchange="populateFields(this)">
                     <option value=""></option>
                     ${itemDropdownOptions}</select></td>
+                    <input type="hidden" class="item-type" name="item_type[]" value="">
                     <input type="hidden" class="item-name" name="item_name[]" value="">
                     <input type="hidden" class="item-cost-price" name="cost_price[]" value="">
                     <input type="hidden" class="item-cogs-account-id" name="item_cogs_account_id[]" value="">
                     <input type="hidden" class="item-income-account-id" name="item_income_account_id[]" value="">
                     <input type="hidden" class="item-asset-account-id" name="item_asset_account_id[]" value="">
-                    <td><input type="text" class="form-control form-control-sm description-field" name="description[]" readonly></td>
+                    <td><textarea class="form-control form-control-sm description-field" name="description[]" rows="1"></textarea></td>
                     <td><input type="text" class="form-control form-control-sm uom" name="uom[]" readonly></td>
                     <td><input type="text" class="form-control form-control-sm quantity" name="quantity[]" placeholder="Qty"></td>
                     <td><input type="text" class="form-control form-control-sm cost" name="cost[]" placeholder="Enter Cost"></td>
@@ -766,7 +914,6 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                 allowClear: true,
                 theme: 'classic'
             });
-
 
             $newRow.find('.quantity, .cost, .discount_percentage, .sales_tax_percentage, .sales_tax_amount').on('input', function() {
                 calculateRowValues($(this).closest('tr'));
@@ -873,7 +1020,6 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
             });
         }
 
-
         // REMOVE ITEM
         $(document).on('click', '.removeRow', function() {
             $(this).closest('tr').remove();
@@ -922,6 +1068,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
 
             $('#itemTableBody tr').each(function(index) {
                 const item_id = $(this).find('select[name="item_id[]"]').val();
+                const description = $(this).find('textarea[name="description[]"]').val(); // Get description value
                 const quantity = $(this).find('input[name="quantity[]"]').val();
                 const cost = $(this).find('input[name="cost[]"]').val();
 
@@ -952,7 +1099,9 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
 
                 const item = {
                     item_id: $(this).find('select[name="item_id[]"]').val(),
+                    item_type: $(this).find('.item-type').val(),
                     item_name: $(this).find('.item-name').val(),
+                    description: description, // Add description to item object
                     quantity: quantity,
                     cost: cost,
                     cost_price: $(this).find('input[name="cost_price[]"]').val(),
@@ -969,6 +1118,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                     income_account_id: $(this).find('.item-income-account-id').val(),
                     asset_account_id: $(this).find('.item-asset-account-id').val()
                 };
+                console.log(item);
                 items.push(item);
             });
 
@@ -1013,6 +1163,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
             return items;
         }
 
+        // SUBMIT TRIGGER
         $('#officialReceiptFrom').submit(function(event) {
             event.preventDefault();
             const items = gatherTableItems();
@@ -1074,6 +1225,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                         }).then((result) => {
                             if (result.isConfirmed && response.id) {
                                 printMethod(response.id, 1); // Pass 1 for initial print
+
                             } else {
                                 location.reload();
                             }
@@ -1112,15 +1264,19 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                 success: function(response) {
                     if (response.success) {
                         console.log('Print status updated, now printing receipt:', id);
-                        const printFrame = document.getElementById('printFrame');
+
+                        // Construct the print content URL
                         const printContentUrl = `print_or?action=print&id=${id}`;
 
-                        printFrame.src = printContentUrl;
+                        // Open a new window with the print content
+                        const printWindow = window.open(printContentUrl, 'PrintWindow', 'width=1000,height=700');
 
-                        printFrame.onload = function() {
-                            printFrame.contentWindow.focus();
-                            printFrame.contentWindow.print();
+                        // Ensure the new window is ready to print
+                        printWindow.onload = function() {
+                            printWindow.focus(); // Focus the window to make it active
+                            printWindow.print(); // Trigger the print dialog
                         };
+
                     } else {
                         Swal.fire({
                             icon: 'error',
@@ -1139,11 +1295,13 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                 }
             });
         }
+
     });
 
     // Function to populate multiple fields based on selected option
     function populateFields(select) {
         const selectedOption = $(select).find('option:selected');
+        const itemType = selectedOption.data('item-type');
         const itemName = selectedOption.data('item-name');
         const description = selectedOption.data('description');
         const uom = selectedOption.data('uom');
@@ -1154,6 +1312,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
 
         const row = $(select).closest('tr');
         row.find('.item-name').val(itemName);
+        row.find('.item-type').val(itemType);
         row.find('.description-field').val(description);
         row.find('.uom').val(uom);
         row.find('.item-cost-price').val(costPrice);
@@ -1162,6 +1321,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
         row.find('.item-asset-account-id').val(assetAccountId);
 
         console.log("Item Name:" + itemName);
+        console.log("Item Type:" + itemType);
         console.log("Cost Price:" + costPrice);
         console.log("COGS:" + cogsAccountId);
         console.log("INCOME:" + incomeAccountId);

@@ -529,28 +529,23 @@ $newPrNo = PurchaseRequest::getLastPrNo();
                     if (response.success) {
                         console.log('Print status updated, now printing Credit:', id);
 
-                        // Now proceed with printing
-                        const printFrame = document.getElementById('printFrame');
+                        // Create a new window for printing
                         const printContentUrl = `print_purchase_request?action=print&id=${id}`;
+                        const printWindow = window.open(printContentUrl, '_blank');
+
+                        // Disable the submit button while printing
                         const submitButton = document.querySelector('.btn-primary[type="submit"]');
                         submitButton.disabled = true;
 
-                        printFrame.src = printContentUrl;
+                        // Wait for the new window to load, then print
+                        printWindow.onload = function() {
+                            printWindow.focus();
+                            printWindow.print();
 
-                        printFrame.onload = function() {
-                            printFrame.contentWindow.focus();
-                            printFrame.contentWindow.print();
-
-                            // Redirect after print dialog closes
-                            const originalOnFocus = window.onfocus;
-
-                            window.onfocus = function() {
+                            // Close the window after printing is done
+                            printWindow.onafterprint = function() {
+                                printWindow.close();
                                 window.location.href = 'purchase_request';
-                            };
-
-                            // Clean up event handler after redirection
-                            printFrame.contentWindow.onafterprint = function() {
-                                window.onfocus = originalOnFocus;
                             };
                         };
                     } else {
@@ -572,6 +567,7 @@ $newPrNo = PurchaseRequest::getLastPrNo();
                 }
             });
         }
+
     });
 
     // Function to populate multiple fields based on selected option

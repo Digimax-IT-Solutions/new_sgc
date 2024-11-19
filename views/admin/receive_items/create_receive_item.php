@@ -277,6 +277,7 @@ $page = 'sales_purchase-order'; // Set the variable corresponding to the current
 <?php require 'views/templates/footer.php' ?>
 <iframe id="printFrame" style="display:none;"></iframe>
 
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const poDateInput = document.getElementById('receive_date');
@@ -370,6 +371,7 @@ $page = 'sales_purchase-order'; // Set the variable corresponding to the current
         tableBody.innerHTML = `<tr><td colspan="14">Error fetching purchase orders: ${errorMessage}. Please try again.</td></tr>`;
     }
 
+
     $(document).ready(function() {
         initializeSelect2();
         setupEventListeners();
@@ -392,7 +394,7 @@ $page = 'sales_purchase-order'; // Set the variable corresponding to the current
     function generateInputVatDropdownOptions(selectedRate) {
         return inputVatOptions.map(inputVat =>
             `<option value="${inputVat.input_vat_rate}" 
-                data-account-id="${inputVat.input_vat_account_id}"
+              data-account-id="${inputVat.input_vat_account_id}"
                 ${inputVat.input_vat_rate == selectedRate ? 'selected' : ''}>
             ${inputVat.input_vat_name}
          </option>`
@@ -477,6 +479,8 @@ $page = 'sales_purchase-order'; // Set the variable corresponding to the current
                 }
             });
         });
+
+
     }
 
     function updateSummary() {
@@ -522,31 +526,6 @@ $page = 'sales_purchase-order'; // Set the variable corresponding to the current
 
         const totalAmountDue = netAmountDue;
         $('#total_amount_due').val(totalAmountDue.toFixed(2));
-    }
-
-    // Function to get unique discount account IDs
-    function getUniqueDiscountAccountIds() {
-        const uniqueIds = new Set();
-        $('#itemTableBody tr').each(function() {
-            const discountAccountId = $(this).find('.discount-type option:selected').data('account-id');
-            if (discountAccountId) {
-                uniqueIds.add(discountAccountId);
-            }
-        });
-
-        return Array.from(uniqueIds);
-    }
-
-    // Function to get unique output VAT IDs
-    function getUniqueOutputVatIds() {
-        const uniqueIds = new Set();
-        $('#itemTableBody tr').each(function() {
-            const outputVatId = $(this).find('.input_vat_percentage option:selected').data('account-id');
-            if (outputVatId) {
-                uniqueIds.add(outputVatId);
-            }
-        });
-        return Array.from(uniqueIds);
     }
 
     function recalculateRow(row) {
@@ -616,6 +595,32 @@ $page = 'sales_purchase-order'; // Set the variable corresponding to the current
         $('#gross_amount, #total_discount_amount, #net_amount_due, #total_vat_amount, #vatable_amount, #zero_rated_amount, #vat_exempt_amount, #total_amount_due').val('0.00');
     }
 
+    // Function to get unique discount account IDs
+    function getUniqueDiscountAccountIds() {
+        const uniqueIds = new Set();
+        $('#itemTableBody tr').each(function() {
+            const discountAccountId = $(this).find('.discount-type option:selected').data('account-id');
+            if (discountAccountId) {
+                uniqueIds.add(discountAccountId);
+            }
+        });
+
+        return Array.from(uniqueIds);
+    }
+
+    // Function to get unique output VAT IDs
+    function getUniqueOutputVatIds() {
+        const uniqueIds = new Set();
+        $('#itemTableBody tr').each(function() {
+            const outputVatId = $(this).find('.input_vat_percentage option:selected').data('account-id');
+            if (outputVatId) {
+                uniqueIds.add(outputVatId);
+            }
+        });
+        return Array.from(uniqueIds);
+    }
+
+
     function submitPayment(event) {
         event.preventDefault();
 
@@ -638,24 +643,20 @@ $page = 'sales_purchase-order'; // Set the variable corresponding to the current
                 // Ensure quantity and netAmount are valid numbers
                 quantity = isNaN(quantity) ? 0 : quantity;
 
-                const itemAssetAccountId = row.data('item-asset-account-id'); // Get item_asset_account_id
-
-                // Log the item_asset_account_id
-                console.log('Item Asset Account ID:', itemAssetAccountId);
-
                 itemData.push({
                     po_id: parseInt(row.data('purchase-order-id'), 10),
                     purchase_order_detail_id: parseInt(row.find('input[name="purchase_order_detail_ids[]"]').val(), 10),
                     item_id: parseInt(row.data('item-id'), 10),
                     cost_center_id: parseInt(row.data('cost-center-id'), 10),
-                    item_asset_account_id: itemAssetAccountId,
+                    item_asset_account_id: parseInt(row.data('item-asset-account-id'), 10),
                     description: row.find('td:eq(4)').text(),
-                    uom: row.find('td:eq(5)').text(),
+                    uom: row.find('td:eq(6)').text(),
                     quantity: parseFloat(row.find('.quantity').val()),
                     cost: parseFloat(row.find('.cost').text()),
                     amount: parseFloat(row.find('.amount').text()),
                     discount_percentage: parseFloat(row.find('.discount-type').val()),
                     discount_amount: parseFloat(row.find('.discount').text()),
+                    discount_account_id: $(this).find('.discount-type option:selected').data('account-id'),
                     net_amount_before_input_vat: parseFloat(row.find('.net').text()),
                     net_amount: parseFloat(row.find('.taxable_amount').text()),
                     input_vat_percentage: parseFloat(row.find('.input_vat_percentage').val()),
@@ -684,15 +685,14 @@ $page = 'sales_purchase-order'; // Set the variable corresponding to the current
 
         formData.append('item_data', JSON.stringify(itemData));
 
-        // Get unique discount account IDs and discount account ids
+        // Get unique discount account IDs and output VAT IDs
         const discountAccountIds = getUniqueDiscountAccountIds();
         const outputVatIds = getUniqueOutputVatIds();
-        console.log(outputVatIds);
+
 
         // Add hidden fields for discount_account_ids and output_vat_ids
-        $(this).append(`<input type="hidden" name="discount_account_ids" value="${discountAccountIds.join(',')}">`);
-        $(this).append(`<input type="hidden" name="output_vat_ids" value="${outputVatIds.join(',')}">`);
-
+        formData.append('discount_account_ids', discountAccountIds.join(','));
+        formData.append('output_vat_ids', outputVatIds.join(','));
 
         fetch('api/receiving_report_controller.php?action=add', {
                 method: 'POST',
@@ -734,6 +734,7 @@ $page = 'sales_purchase-order'; // Set the variable corresponding to the current
     }
 
     function updatePrintStatusAndPrint(id, printStatus) {
+        console.log('RR id is:' + id);
         if (!id) {
             console.error('Received Items ID is required.');
             Swal.fire({
@@ -755,16 +756,22 @@ $page = 'sales_purchase-order'; // Set the variable corresponding to the current
             },
             success: function(response) {
                 if (response.success) {
-                    console.log('Print status updated, now printing Credit:', id);
+                    console.log('Print status updated, now printing Receiving Report:', id);
 
-                    const printFrame = document.getElementById('printFrame');
-                    const printContentUrl = `print_receive_item?action=print&id=${id}, '_blank'`;
+                    // Open the print content in a new tab
+                    const printContentUrl = `print_receive_item?action=print&id=${id}`;
+                    const printWindow = window.open(printContentUrl, '_blank');
 
-                    printFrame.src = printContentUrl;
+                    // Wait for the new window to load, then print
+                    printWindow.onload = function() {
+                        printWindow.focus();
+                        printWindow.print();
 
-                    printFrame.onload = function() {
-                        printFrame.contentWindow.focus();
-                        printFrame.contentWindow.print();
+                        // Close the window after printing is done
+                        printWindow.onafterprint = function() {
+                            printWindow.close();
+                            window.location.href = 'receiving_report';
+                        };
                     };
                 } else {
                     console.error('Failed to update print status:', response.message);

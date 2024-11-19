@@ -179,7 +179,7 @@ try {
                         $pdf->SetXY($currentX + $itemNameWidth, $startY);
 
                         // Truncate Description if needed
-                        $itemSalesDescription = $detail['item_sales_description'];
+                        $itemSalesDescription = $detail['item_description'];
                         $descriptionWidthActual = $pdf->GetStringWidth($itemSalesDescription);
 
                         if ($descriptionWidthActual > $descriptionWidth) {

@@ -62,12 +62,12 @@ $page = 'other_name_list';
                                 <input type="hidden" name="id" id="other_nameId" value="" />
                                 <div class="row mb-3">
                                     <!-- Column 1 -->
-                                        <label for="other_name" class="col-sm-2 col-form-label">Other Name</label>
+                                    <label for="other_name" class="col-sm-2 col-form-label">Other Name</label>
                                     <div class="col-sm-4">
                                         <input type="text" class="form-control" id="other_name" name="other_name"
                                             placeholder="Enter Other Name" required>
                                     </div>
-             
+
                                     <label for="other_name_code" class="col-sm-2 col-form-label">Other Name Code</label>
                                     <div class="col-sm-4">
                                         <input type="text" class="form-control" id="other_name_code" name="other_name_code"
@@ -85,8 +85,8 @@ $page = 'other_name_list';
                                         <input type="text" class="form-control" id="other_name_address"
                                             name="other_name_address" placeholder="Enter Other Name Address">
                                     </div>
-                                    </div>
-                                    <div class="row mb-3">
+                                </div>
+                                <div class="row mb-3">
                                     <label for="contact_number" class="col-sm-2 col-form-label">Contact #</label>
                                     <div class="col-sm-4">
                                         <input type="text" class="form-control" id="contact_number" name="contact_number"
@@ -108,52 +108,52 @@ $page = 'other_name_list';
                                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                                     <button type="submit" class="btn btn-primary">Submit</button>
                                 </div>
-                                </div>
-                            </form>
                         </div>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
-    </main>
+</div>
+</main>
 
-    <!-- Rest of your HTML content -->
+<!-- Rest of your HTML content -->
 
-    <?php require 'views/templates/footer.php' ?>
+<?php require 'views/templates/footer.php' ?>
 
-    <script>
-        $(function () {
-            $("#other_nameTable").DataTable({
-                "responsive": true,
-                "lengthChange": false,
-                "autoWidth": false,
-                "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"]
-            }).buttons().container().appendTo('#other_nameTable_wrapper .col-md-6:eq(0)');
-            
-            // JavaScript for updating modal data when Update button is clicked
-            $('.update-btn').click(function () {
-                var id = $(this).data('id');
-                var name = $(this).closest('tr').find('td:eq(0)').text().trim(); // Example: Replace with actual field
-                var code = $(this).data('code');
-                var account = $(this).data('account');
-                var address = $(this).data('address');
-                var contact = $(this).data('contact');
-                var email = $(this).data('email');
-                var terms = $(this).data('terms');
+<script>
+    $(function() {
+        $("#other_nameTable").DataTable({
+            "responsive": true,
+            "lengthChange": false,
+            "autoWidth": false,
+            "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"]
+        }).buttons().container().appendTo('#other_nameTable_wrapper .col-md-6:eq(0)');
 
-                // Set form values in the modal
-                $('#modalAction').val('update'); // Set action to 'update'
-                $('#other_nameId').val(id);
-                $('#other_name').val(name);
-                $('#other_name_code').val(code);
-                $('#account_number').val(account);
-                $('#other_name_address').val(address);
-                $('#contact_number').val(contact);
-                $('#email').val(email);
-                $('#terms').val(terms);
+        // JavaScript for updating modal data when Update button is clicked
+        $('.update-btn').click(function() {
+            var id = $(this).data('id');
+            var name = $(this).closest('tr').find('td:eq(0)').text().trim(); // Example: Replace with actual field
+            var code = $(this).data('code');
+            var account = $(this).data('account');
+            var address = $(this).data('address');
+            var contact = $(this).data('contact');
+            var email = $(this).data('email');
+            var terms = $(this).data('terms');
 
-                // Show the modal
-                $('#other_nameModal').modal('show');
-            });
+            // Set form values in the modal
+            $('#modalAction').val('update'); // Set action to 'update'
+            $('#other_nameId').val(id);
+            $('#other_name').val(name);
+            $('#other_name_code').val(code);
+            $('#account_number').val(account);
+            $('#other_name_address').val(address);
+            $('#contact_number').val(contact);
+            $('#email').val(email);
+            $('#terms').val(terms);
+
+            // Show the modal
+            $('#other_nameModal').modal('show');
         });
-    </script>
+    });
+</script>

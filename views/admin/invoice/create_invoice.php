@@ -38,24 +38,6 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
         font-size: 0.875rem;
     }
 
-    #itemTable th {
-        white-space: nowrap;
-    }
-
-    #itemTable tbody tr:nth-child(even) {
-        background-color: #f8f9fa;
-    }
-
-    #itemTable th,
-    #itemTable td {
-        padding: 0.5rem;
-        vertical-align: middle;
-    }
-
-    #itemTable .text-right {
-        text-align: right;
-    }
-
     #loadingOverlay {
         position: fixed;
         top: 0;
@@ -213,7 +195,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                                     <div class="col-md-3 invoice-details">
                                         <label for="invoice_number" class="form-label">Invoice Number</label>
                                         <input type="text" class="form-control form-control-sm" id="invoice_number"
-                                            name="invoice_number" value="<?php echo $newInvoiceNo; ?>" readonly>
+                                            name="invoice_number" required>
                                     </div>
                                     <div class="col-md-3 invoice-details">
                                         <label for="invoice_date" class="form-label">Invoice Date</label>
@@ -392,7 +374,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                                         <thead class="bg-light" style="font-size: 12px;">
                                             <tr>
                                                 <th style="width: 15%;">Item</th>
-                                                <th style="width: 9%;">Description</th>
+                                                <th style="width: 10%;">Description</th>
                                                 <th class="text-right" style="width: 3%;">Quantity</th>
                                                 <th class="text-left" style="width: 8%;">Unit</th>
                                                 <th class="text-right" style="width: 8%;">Selling Price</th>
@@ -731,31 +713,6 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
         //     }
         // }
 
-
-        // Initialize dropdowns
-        const initDropdowns = (data, template) => data.reduce((acc, item) => acc + template(item), '');
-
-        const itemDropdownOptions = initDropdowns(<?php echo json_encode($products); ?>,
-            product => `<option value="${product.id}"
-                      data-item-name="${product.item_name}"
-                      data-description="${product.item_sales_description}"
-                      data-uom="${product.uom_name}"
-                      data-cost-price="${product.item_cost_price}"
-                      data-cogs-account-id="${product.item_cogs_account_id}"
-                      data-income-account-id="${product.item_income_account_id}"
-                      data-asset-account-id="${product.item_asset_account_id}">
-                  ${product.item_name}
-                </option>`
-        );
-
-        const discountDropdownOptions = initDropdowns(<?php echo json_encode($discounts); ?>,
-            discount => `<option value="${discount.discount_rate}" data-account-id="${discount.discount_account_id}">${discount.discount_name}</option>`
-        );
-
-        const inputVatDropdownOption = initDropdowns(<?php echo json_encode($sales_taxes); ?>,
-            tax => `<option value="${tax.sales_tax_rate}" data-account-id="${tax.sales_tax_account_id}">${tax.sales_tax_name}</option>`
-        );
-
         // Add these functions at the beginning of your script
         function formatNumber(number) {
             return new Intl.NumberFormat('en-US', {
@@ -770,6 +727,32 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
 
 
 
+
+        // Initialize dropdowns
+        const initDropdowns = (data, template) => data.reduce((acc, item) => acc + template(item), '');
+
+        const itemDropdownOptions = initDropdowns(<?php echo json_encode($products); ?>,
+            product => `<option value="${product.id}"
+                      data-item-name="${product.item_name}"
+                      data-description="${product.item_sales_description}"
+                      data-uom="${product.uom_name}"
+                      data-cost-price="${product.item_cost_price}"
+                      data-cogs-account-id="${product.item_cogs_account_id}"
+                      data-income-account-id="${product.item_income_account_id}"
+                      data-asset-account-id="${product.item_asset_account_id}"
+                      ${product.item_quantity === 0 && product.item_type !== "Service" ? 'disabled' : ''}>
+                  ${product.item_name} ${product.item_quantity > 0 ? `(${product.item_quantity})` : (product.item_type === "Service" ? '' : '(no stock)')}
+                </option>`
+        );
+
+        const discountDropdownOptions = initDropdowns(<?php echo json_encode($discounts); ?>,
+            discount => `<option value="${discount.discount_rate}" data-account-id="${discount.discount_account_id}">${discount.discount_name}</option>`
+        );
+
+        const inputVatDropdownOption = initDropdowns(<?php echo json_encode($sales_taxes); ?>,
+            tax => `<option value="${tax.sales_tax_rate}" data-account-id="${tax.sales_tax_account_id}">${tax.sales_tax_name}</option>`
+        );
+
         // Add new row
         $('#addItemBtn').click(() => {
             const newRow = `
@@ -782,7 +765,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                     <input type="hidden" class="item-cogs-account-id" name="item_cogs_account_id[]" value="">
                     <input type="hidden" class="item-income-account-id" name="item_income_account_id[]" value="">
                     <input type="hidden" class="item-asset-account-id" name="item_asset_account_id[]" value="">
-                    <td><input type="text" class="form-control form-control-sm description-field" name="description[]" readonly></td>
+                    <td><textarea class="form-control form-control-sm description-field" name="description[]" rows="1"></textarea></td>
                     <td><input type="text" class="form-control form-control-sm quantity" name="quantity[]" placeholder="Qty"></td>
                     <td><input type="text" class="form-control form-control-sm uom" name="uom[]" readonly></td>
                     <td><input type="text" class="form-control form-control-sm cost" name="cost[]" placeholder="Enter Cost"></td>
@@ -981,6 +964,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
             $('#itemTableBody tr').each(function(index) {
 
                 const item_id = $(this).find('select[name="item_id[]"]').val();
+                const description = $(this).find('textarea[name="description[]"]').val(); // Get description value
                 const quantity = unformatNumber($(this).find('input[name="quantity[]"]').val());
                 const cost = unformatNumber($(this).find('input[name="cost[]"]').val());
 
@@ -1011,6 +995,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
 
                 const item = {
                     item_id: item_id,
+                    description: description, // Add description to item object
                     item_name: $(this).find('.item-name').val(),
                     quantity: quantity,
                     cost: cost,
@@ -1195,15 +1180,15 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                     if (response.success) {
                         // If the status was updated successfully, proceed with printing
                         console.log('Print status updated, now printing invoice:', invoiceId);
-                        // Open a new window with the print view
-                        const printFrame = document.getElementById('printFrame');
+
+                        // Open a new tab with the print view
                         const printContentUrl = `print_invoice?action=print&id=${invoiceId}`;
+                        const newTab = window.open(printContentUrl, '_blank');
 
-                        printFrame.src = printContentUrl;
-
-                        printFrame.onload = function() {
-                            printFrame.contentWindow.focus();
-                            printFrame.contentWindow.print();
+                        // Wait for the new tab to load, then trigger the print dialog
+                        newTab.onload = function() {
+                            newTab.focus();
+                            newTab.print();
                         };
                     } else {
                         Swal.fire({
@@ -1223,6 +1208,7 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                 }
             });
         }
+
     });
 
     // Function to populate multiple fields based on selected option

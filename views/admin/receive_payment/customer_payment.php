@@ -20,19 +20,6 @@ $newCrNo = Payment::getLastCrNo();
 <?php require 'views/templates/sidebar.php' ?>
 <div class="main">
     <style>
-        .custom-select2-dropdown {
-            z-index: 9999;
-        }
-
-        .select2-container {
-            width: 100% !important;
-        }
-
-        .select2-container--open .select2-dropdown {
-            top: 100%;
-            left: 0;
-        }
-
         .form-label {
             font-size: 0.675rem;
             margin-bottom: 0.25rem;
