@@ -317,26 +317,23 @@ class ReceivingReport
     }
 
     // Adding Details
-    public static function addItem($transaction_id, $po_id = null, $item_id, $cost_center_id, $quantity, $cost, $amount, $discount_percentage, $discount_amount, $net_amount_before_input_vat, $net_amount, $input_vat_percentage, $input_vat_amount, $cost_per_unit)
+    public static function addItem($transaction_id, $po_id, $item_id, $cost_center_id, $quantity, $cost, $amount, $discount_percentage, $discount_amount, $net_amount_before_input_vat, $net_amount, $input_vat_percentage, $input_vat_amount, $cost_per_unit)
     {
         global $connection;
-    
+
         try {
-            // Add comprehensive error logging
-            error_log("Attempting to insert receive item detail with params: " . json_encode(func_get_args()));
-    
             $stmt = $connection->prepare("
-                INSERT INTO receive_item_details (
-                    receive_id, po_id, item_id, cost_center_id, quantity,
-                    cost, amount, discount_percentage, discount,
-                    net_amount_before_input_vat, net_amount,
-                    input_vat_percentage, input_vat_amount, cost_per_unit
-                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-            ");
-    
+        INSERT INTO receive_item_details (
+            receive_id, po_id, item_id, cost_center_id, quantity,
+            cost, amount, discount_percentage, discount,
+            net_amount_before_input_vat, net_amount,
+            input_vat_percentage, input_vat_amount, cost_per_unit
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+    ");
+
             $params = [
                 $transaction_id,
-                $po_id, // Allow null PO ID
+                $po_id,
                 $item_id,
                 $cost_center_id,
                 $quantity,
@@ -350,37 +347,20 @@ class ReceivingReport
                 $input_vat_amount,
                 $cost_per_unit
             ];
-    
-            // Validate each parameter before insertion
-            foreach ($params as $index => $param) {
-                // Modify the null check to allow null for po_id
-                if ($param === null && $index !== 1) {
-                    error_log("Parameter at index $index is null");
-                    throw new Exception("Invalid parameter at index $index");
-                }
-            }
-    
+
+            error_log("Executing SQL with params: " . print_r($params, true));
+
             $result = $stmt->execute($params);
-    
+
             if (!$result) {
-                $errorInfo = $stmt->errorInfo();
-                error_log("SQL Error in ReceivingReport::addItem: " . print_r($errorInfo, true));
-                throw new Exception("Failed to insert receive item detail. SQL Error: " . implode(", ", $errorInfo));
+                error_log("SQL Error in ReceivingReport::addItem: " . implode(", ", $stmt->errorInfo()));
+                throw new Exception("Failed to insert receive item detail. SQL Error: " . implode(", ", $stmt->errorInfo()));
             }
-    
-            // Log successful insertion
-            error_log("Successfully inserted receive item detail for transaction ID: " . $transaction_id);
-    
-            return $connection->lastInsertId(); // Return the ID of the inserted row
         } catch (PDOException $e) {
             error_log("PDO Exception in ReceivingReport::addItem: " . $e->getMessage());
             throw new Exception("Database error while inserting receive item detail: " . $e->getMessage());
-        } catch (Exception $e) {
-            error_log("General Exception in ReceivingReport::addItem: " . $e->getMessage());
-            throw $e;
         }
     }
-
     // Method to call the InsertInventory stored procedure
     public static function insertReceiveInventory($type, $transaction_id, $ref_no, $date, $name, $item_id, $quantity)
     {
