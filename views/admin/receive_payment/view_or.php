@@ -481,8 +481,8 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                                                     <tr>
                                                         <th style="width: 15%;">Item</th>
                                                         <th style="width: 9%;">Description</th>
-                                                        <th style="width: 8%;">Unit</th>
-                                                        <th class="text-right" style="width: 3%;">Quantity</th>
+                                                        <th style="width: 8%;">Quantity</th>
+                                                        <th class="text-right" style="width: 3%;">Unit</th>
                                                         <th class="text-right" style="width: 8%;">Cost</th>
                                                         <th class="text-right" style="width: 8%;">Amount</th>
                                                         <th style="width: 8%;">Discount Type</th>
@@ -529,14 +529,14 @@ $page = 'sales_invoice'; // Set the variable corresponding to the current page
                                                                             value="<?= htmlspecialchars($detail['item_sales_description']) ?>" readonly>
                                                                     </td>
                                                                     <td>
+                                                                    <input type="text" class="form-control form-control-sm quantity" name="quantity[]"
+                                                                        value="<?= htmlspecialchars($detail['quantity']) ?>" placeholder="Qty"
+                                                                        <?php if (!$isEditable) echo 'disabled'; ?>>
+                                                                    <td>
                                                                         <input type="text" class="form-control form-control-sm uom_name" name="uom_name[]"
                                                                             value="<?= htmlspecialchars($detail['uom_name']) ?>" readonly>
                                                                     </td>
-                                                                    <td>
-                                                                        <input type="text" class="form-control form-control-sm quantity" name="quantity[]"
-                                                                            value="<?= htmlspecialchars($detail['quantity']) ?>" placeholder="Qty"
-                                                                            <?php if (!$isEditable) echo 'disabled'; ?>>
-                                                                    </td>
+
                                                                     <td>
                                                                         <input type="text" class="form-control form-control-sm cost" name="cost[]"
                                                                             value="<?= number_format($detail['cost'], 2, '.', ',') ?>" placeholder="Enter Cost"
