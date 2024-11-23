@@ -414,8 +414,8 @@ $sales_taxes = SalesTax::all();
                                             <tr>
                                                 <th style="width: 15%;">Item</th>
                                                 <th style="width: 9%;">Description</th>
-                                                <th style="width: 5%;">Unit</th>
-                                                <th class="text-right" style="width: 3%;">Quantity</th>
+                                                <th style="width: 5%;">Quantity</th>
+                                                <th class="text-right" style="width: 3%;">Unit</th>
                                                 <th class="text-right" style="width: 11%;">Cost</th>
                                                 <th class="text-right" style="width: 8%;">Amount</th>
                                                 <th style="width: 8%;">Discount Type</th>
@@ -885,8 +885,8 @@ $sales_taxes = SalesTax::all();
                     <input type="hidden" class="item-income-account-id" name="item_income_account_id[]" value="">
                     <input type="hidden" class="item-asset-account-id" name="item_asset_account_id[]" value="">
                     <td><textarea class="form-control form-control-sm description-field" name="description[]" rows="1"></textarea></td>
-                    <td><input type="text" class="form-control form-control-sm uom" name="uom[]" readonly></td>
                     <td><input type="text" class="form-control form-control-sm quantity" name="quantity[]" placeholder="Qty"></td>
+                    <td><input type="text" class="form-control form-control-sm uom" name="uom[]" readonly></td>
                     <td><input type="text" class="form-control form-control-sm cost" name="cost[]" placeholder="Enter Cost"></td>
                     <td><input type="text" class="form-control form-control-sm amount" name="amount[]" placeholder="Amount" readonly></td>
                     <td><select class="form-control form-control-sm discount_percentage select2" name="discount_percentage[]">${discountDropdownOptions}</select></td>
