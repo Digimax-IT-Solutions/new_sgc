@@ -71,6 +71,11 @@ $menuConfig = [
                 'link' => 'receive_items',
                 'roles' => getAllRoles()
             ],
+            'Receive Item no PO' => [
+                'icon' => 'fas fa-dolly-flatbed',
+                'link' => 'receive_item_no_po_list',
+                'roles' => getAllRoles()
+            ],
             'AP Voucher' => [
                 'icon' => 'fas fa-file-invoice',
                 'link' => 'accounts_payable_voucher',

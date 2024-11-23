@@ -122,60 +122,63 @@ if (post('action') === 'add') {
 
 
         foreach ($items as $index => $item) {
-            $item_id = $item['item_id'] ?? null;
-            if (!$item_id) {
+            // Validate required fields
+            if (!isset($item['item_id'])) {
                 error_log("Missing item_id for item at index $index");
                 continue;
             }
-            $quantity = floatval($item['quantity']);
+
+            // Use null coalescing operator to provide default value of 0 if quantity is not set
+            $quantity = floatval($item['quantity'] ?? 0);
+            
+            // Validate quantity
             if ($quantity <= 0) {
-                error_log("Invalid quantity for item_id $item_id: $quantity");
+                error_log("Invalid quantity for item_id {$item['item_id']}: $quantity");
                 continue;
             }
 
-
             $insertedId = ReceivingReport::addItem(
                 $transaction_id,
-                intval($item['po_id']),
-                $item_id,
-                intval($item['cost_center_id']),
+                intval($item['po_id'] ?? 0),
+                $item['item_id'],
+                intval($item['cost_center_id'] ?? 0),
                 $quantity,
-                floatval($item['cost']),
-                floatval($item['amount']),
-                floatval($item['discount_percentage']),
-                floatval($item['discount_amount']),
-                floatval($item['net_amount_before_input_vat']),
-                floatval($item['net_amount']),
-                floatval($item['input_vat_percentage']),
-                floatval($item['input_vat_amount']),
-                floatval($item['cost_per_unit'])
+                floatval($item['cost'] ?? 0),
+                floatval($item['amount'] ?? 0),
+                floatval($item['discount_percentage'] ?? 0),
+                floatval($item['discount_amount'] ?? 0),
+                floatval($item['net_amount_before_input_vat'] ?? 0),
+                floatval($item['net_amount'] ?? 0),
+                floatval($item['input_vat_percentage'] ?? 0),
+                floatval($item['input_vat_amount'] ?? 0),
+                floatval($item['cost_per_unit'] ?? 0)
             );
 
             // Update item quantity
-            ReceivingReport::updateItemQuantity($item_id, $quantity);
+            ReceivingReport::updateItemQuantity($item['item_id'], $quantity);
+            
             // Update purchase order details, PO status, and receive status
-            ReceivingReport::updatePurchaseOrderDetails(intval($item['po_id']), $item_id, $quantity, $transaction_id);
-            // INSERT INTO INVENTORY
-            // ReceivingReport::insertReceiveInventory('Purchase', $transaction_id, $receive_no, $receive_date, $vendor_id, $item_id, $quantity);
+            ReceivingReport::updatePurchaseOrderDetails(intval($item['po_id'] ?? 0), $item['item_id'], $quantity, $transaction_id);
+            
             ReceivingReport::insert_inventory_valuation(
                 'Purchase',
                 $transaction_id,
                 $receive_no,
                 $receive_date,
                 $vendor_id,
-                $item_id,
+                $item['item_id'],
                 $quantity,
                 $qty_sold,
-                $item['cost'],
-                $item['amount'],
-                $item['discount_percentage'],
+                floatval($item['cost'] ?? 0),
+                floatval($item['amount'] ?? 0),
+                floatval($item['discount_percentage'] ?? 0),
                 $purchase_discount_per_item,
-                $item['discount_amount'],
-                $item['net_amount_before_input_vat'],
-                $item['input_vat_percentage'],
-                $item['input_vat_amount'],
-                $item['net_amount'],
-                $item['cost_per_unit']
+                floatval($item['discount_amount'] ?? 0),
+                floatval($item['net_amount_before_input_vat'] ?? 0),
+                floatval($item['input_vat_percentage'] ?? 0),
+                floatval($item['input_vat_amount'] ?? 0),
+                floatval($item['net_amount'] ?? 0),
+                floatval($item['cost_per_unit'] ?? 0)
             );
         }
 

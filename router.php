@@ -64,6 +64,15 @@ $pages = [
     'view_receive_item' => 'views/admin/receive_items/view_receive_item.php',
     'print_receive_item' => 'views/admin/receive_items/print_receive_item.php',
 
+    // RECEIVE ITEMS NO PO
+    'receive_item_no_po_list' => 'views/admin/receive_items_no_po/receive_item_no_po_list.php',
+    'create_receive_item_no_po' => 'views/admin/receive_items_no_po/create_receive_item_no_po.php',
+    'view_receive_item_no_po' => 'views/admin/receive_items_no_po/view_receive_item_no_po.php',
+    'draft_receive_items_no_po' => 'views/admin/receive_items_no_po/draft_receive_item_no_po.php',
+    'void_receive_items_no_po' => 'views/admin/receive_items_no_po/void_receive_item_no_po.php',
+    'print_receive_items' => 'views/admin/receive_items_no_po/print_receive_items.php',
+ 
+
     // APV
     'accounts_payable_voucher' => 'views/admin/apv/apv_list.php',
     'create_apv_expense' => 'views/admin/apv/create_apv_expense.php',

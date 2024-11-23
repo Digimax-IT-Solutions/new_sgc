@@ -10,7 +10,7 @@ function getCurrentPage()
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>EUROSPEC</title>
+  <title>NEW SGC</title>
   <link rel="shortcut icon" href="photos/logo.png">
 
   <link rel="preconnect" href="https://fonts.gstatic.com">
