@@ -180,141 +180,146 @@ class ReceivingReport
 
     // Adding in database, Receiving Report
     // Adding in database, Receiving Report
-    public static function add($receive_account_id, $receive_no, $vendor_id, $location, $terms, $receive_date, $receive_due_date, $memo, $gross_amount, $discount_amount, $discount_account_ids, $net_amount, $input_vat, $input_vat_ids, $vatable, $zero_rated, $vat_exempt, $total_amount, $items, $created_by)
-    {
-        global $connection;
+    public static function add($receive_account_id, $receive_no, $vendor_id, $location, $terms, 
+    $receive_date, $receive_due_date, $memo, $gross_amount, $discount_amount, 
+    $discount_account_ids, $net_amount, $input_vat, $input_vat_ids, $vatable, 
+    $zero_rated, $vat_exempt, $total_amount, $items, $created_by)
+{
+    global $connection;
+    $transaction_type = 'Purchase';
 
-        $transaction_type = 'Purchase';
+    try {
+        // Log input parameters for debugging
+        error_log("ReceivingReport::add - Input parameters: " . json_encode([
+            'receive_account_id' => $receive_account_id,
+            'receive_no' => $receive_no,
+            'vendor_id' => $vendor_id,
+            'location' => $location,
+            'terms' => $terms,
+            'receive_date' => $receive_date,
+            'receive_due_date' => $receive_due_date,
+            'memo' => $memo,
+            'gross_amount' => $gross_amount,
+            'discount_amount' => $discount_amount,
+            'net_amount' => $net_amount,
+            'input_vat' => $input_vat,
+            'vatable' => $vatable,
+            'zero_rated' => $zero_rated,
+            'vat_exempt' => $vat_exempt,
+            'total_amount' => $total_amount
+        ]));
 
-        try {
-            $stmt = $connection->prepare("
+        // Validate input parameters
+        if (empty($receive_account_id) || empty($receive_no) || empty($vendor_id)) {
+            throw new Exception("Required fields missing: account_id, receive_no, or vendor_id");
+        }
+
+        // Begin transaction
+        $connection->beginTransaction();
+
+        $stmt = $connection->prepare("
             INSERT INTO receive_items (
                 receive_account_id, receive_no, vendor_id, location, terms,
                 receive_date, receive_due_date, memo, gross_amount,
                 discount_amount, net_amount, input_vat, vatable,
                 zero_rated, vat_exempt, total_amount
-            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            ) VALUES (
+                :receive_account_id, :receive_no, :vendor_id, :location, :terms,
+                :receive_date, :receive_due_date, :memo, :gross_amount,
+                :discount_amount, :net_amount, :input_vat, :vatable,
+                :zero_rated, :vat_exempt, :total_amount
+            )
         ");
 
-            $result = $stmt->execute([
-                $receive_account_id,
-                $receive_no,
-                $vendor_id,
-                $location,
-                $terms,
-                $receive_date,
-                $receive_due_date,
-                $memo,
-                $gross_amount,
-                $discount_amount,
-                $net_amount,
-                $input_vat,
-                $vatable,
-                $zero_rated,
-                $vat_exempt,
-                $total_amount
-            ]);
+        $params = [
+            ':receive_account_id' => $receive_account_id,
+            ':receive_no' => $receive_no,
+            ':vendor_id' => $vendor_id,
+            ':location' => $location,
+            ':terms' => $terms,
+            ':receive_date' => $receive_date,
+            ':receive_due_date' => $receive_due_date,
+            ':memo' => $memo,
+            ':gross_amount' => floatval($gross_amount),
+            ':discount_amount' => floatval($discount_amount),
+            ':net_amount' => floatval($net_amount),
+            ':input_vat' => floatval($input_vat),
+            ':vatable' => floatval($vatable),
+            ':zero_rated' => floatval($zero_rated),
+            ':vat_exempt' => floatval($vat_exempt),
+            ':total_amount' => floatval($total_amount)
+        ];
 
-            $receive_id = $connection->lastInsertId();
+        $result = $stmt->execute($params);
 
-            // AUDIT TRAIL GOODS RECEIPT CLEARING
-            self::logAuditTrail(
-                $receive_id,
-                $transaction_type,
-                $receive_date,
-                $receive_no,
-                $location,
-                $vendor_id,
-                null,
-                null,
-                $receive_account_id,
-                0.00,
-                $net_amount,
-                $created_by
-            );
-
-            // AUDIT TRAIL INPUT VAT ID
-            self::logAuditTrail(
-                $receive_id,
-                $transaction_type,
-                $receive_date,
-                $receive_no,
-                $location,
-                $vendor_id,
-                null,
-                null,
-                $input_vat_ids,
-                $input_vat,
-                0.00,
-                $created_by
-            );
-
-            foreach ($items as $item) {
-
-                // Log discount account 
-                if (!empty($item['discount_account_id'])) {
-                    self::logAuditTrail(
-                        $receive_id,
-                        $transaction_type,
-                        $receive_date,
-                        $receive_no,
-                        $location,
-                        $vendor_id,
-                        $item['item_id'],
-                        $item['quantity'],
-                        $item['item_asset_account_id'],
-                        $item['discount_amount'],
-                        0.00,
-                        $created_by
-                    );
-                }
-
-                // Log asset transaction for this item
-                if (!empty($item['item_asset_account_id'])) {
-                    self::logAuditTrail(
-                        $receive_id,
-                        $transaction_type,
-                        $receive_date,
-                        $receive_no,
-                        $location,
-                        $vendor_id,
-                        $item['item_id'],
-                        $item['quantity'],
-                        $item['item_asset_account_id'],
-                        $item['net_amount'],
-                        0.00,
-                        $created_by
-                    );
-                }
-            }
-
-            // // AUDIT TRAIL DISCOUNT ID
-            self::logAuditTrail(
-                $receive_id,
-                $transaction_type,
-                $receive_date,
-                $receive_no,
-                $location,
-                $vendor_id,
-                null,
-                null,
-                $discount_account_ids,
-                0.00,
-                $discount_amount,
-                $created_by
-            );
-
-
-
-            if (!$result) {
-                error_log("SQL Error in ReceivingReport::add: " . implode(", ", $stmt->errorInfo()));
-                throw new Exception("Failed to insert receiving report.");
-            }
-        } catch (PDOException $e) {
-            error_log("PDO Exception in ReceivingReport::add: " . $e->getMessage());
-            throw new Exception("Database error while inserting receiving report.");
+        if (!$result) {
+            $errorInfo = $stmt->errorInfo();
+            error_log("SQL Error in ReceivingReport::add: " . print_r($errorInfo, true));
+            throw new Exception("Database error: " . $errorInfo[2]);
         }
+
+        $receive_id = $connection->lastInsertId();
+
+        // Log audit trails
+        self::logAuditTrail(
+            $receive_id, $transaction_type, $receive_date, $receive_no,
+            $location, $vendor_id, null, null, $receive_account_id,
+            0.00, $net_amount, $created_by
+        );
+
+        if ($input_vat > 0 && !empty($input_vat_ids)) {
+            self::logAuditTrail(
+                $receive_id, $transaction_type, $receive_date, $receive_no,
+                $location, $vendor_id, null, null, $input_vat_ids,
+                $input_vat, 0.00, $created_by
+            );
+        }
+
+        // Process items
+        foreach ($items as $item) {
+            if (!empty($item['discount_account_id']) && floatval($item['discount_amount']) > 0) {
+                self::logAuditTrail(
+                    $receive_id, $transaction_type, $receive_date, $receive_no,
+                    $location, $vendor_id, $item['item_id'], $item['quantity'],
+                    $item['discount_account_id'], $item['discount_amount'],
+                    0.00, $created_by
+                );
+            }
+
+            if (!empty($item['item_asset_account_id'])) {
+                self::logAuditTrail(
+                    $receive_id, $transaction_type, $receive_date, $receive_no,
+                    $location, $vendor_id, $item['item_id'], $item['quantity'],
+                    $item['item_asset_account_id'], $item['net_amount'],
+                    0.00, $created_by
+                );
+            }
+        }
+
+        // Log discount audit trail if exists
+        if ($discount_amount > 0 && !empty($discount_account_ids)) {
+            self::logAuditTrail(
+                $receive_id, $transaction_type, $receive_date, $receive_no,
+                $location, $vendor_id, null, null, $discount_account_ids,
+                0.00, $discount_amount, $created_by
+            );
+        }
+
+        $connection->commit();
+        return $receive_id;
+
+    } catch (PDOException $e) {
+        $connection->rollBack();
+        error_log("PDO Exception in ReceivingReport::add: " . $e->getMessage());
+        error_log("Stack trace: " . $e->getTraceAsString());
+        throw new Exception("Database error while inserting receiving report: " . $e->getMessage());
+    } catch (Exception $e) {
+        $connection->rollBack();
+        error_log("General Exception in ReceivingReport::add: " . $e->getMessage());
+        error_log("Stack trace: " . $e->getTraceAsString());
+        throw $e;
     }
+}
 
     // Adding Details
     public static function addItem($transaction_id, $po_id = null, $item_id, $cost_center_id, $quantity, $cost, $amount, $discount_percentage, $discount_amount, $net_amount_before_input_vat, $net_amount, $input_vat_percentage, $input_vat_amount, $cost_per_unit)
