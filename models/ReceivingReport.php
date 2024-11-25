@@ -612,8 +612,7 @@ class ReceivingReport
                 UPDATE purchase_order_details 
                 SET 
                     received_qty = :received_qty,
-                    balance_qty = :balance_qty,
-                    receive_id = :receive_id
+                    balance_qty = :balance_qty
                 WHERE po_id = :po_id 
                 AND item_id = :item_id
             ");
@@ -621,7 +620,6 @@ class ReceivingReport
             $updateResult = $updateStmt->execute([
                 ':received_qty' => $newReceivedQty,
                 ':balance_qty' => $newRemainingQty,
-                ':receive_id' => $receive_id,
                 ':po_id' => $po_id,
                 ':item_id' => $item_id
             ]);
