@@ -558,135 +558,149 @@ class ReceivingReport
     }
 
     // Update Purchase Order Received Quantity
-    public static function updatePurchaseOrderDetails($po_id, $item_id, $received_qty, $receive_id)
+    public static function updatePurchaseOrderDetails($po_id, $item_id, $received_quantity, $receive_id) 
     {
         global $connection;
         
         try {
-            // Input validation
-            if (!is_numeric($po_id) || !is_numeric($item_id) || !is_numeric($received_qty) || !is_numeric($receive_id)) {
-                throw new Exception("Invalid input parameters");
+            // Begin transaction
+            $connection->beginTransaction();
+            
+            // Skip processing if PO ID is 0 or null (direct receiving without PO)
+            if (empty($po_id)) {
+                error_log("No PO ID provided - skipping PO update");
+                return true;
             }
     
-            // Log input parameters for debugging
-            error_log("Updating PO Details - Input parameters: " . json_encode([
-                'po_id' => $po_id,
-                'item_id' => $item_id,
-                'received_qty' => $received_qty,
-                'receive_id' => $receive_id
-            ]));
+            // Log the update attempt
+            error_log("Updating PO Details - PO ID: $po_id, Item ID: $item_id, Received Qty: $received_quantity, Receive ID: $receive_id");
     
-            $connection->beginTransaction();
-    
-            // First, verify the PO and item exist
+            // 1. Get current PO details
             $stmt = $connection->prepare("
-                SELECT pod.received_qty, pod.qty 
-                FROM purchase_order_details pod
-                JOIN purchase_order po ON po.id = pod.po_id
-                WHERE pod.po_id = :po_id AND pod.item_id = :item_id
+                SELECT 
+                    quantity,
+                    received_quantity,
+                    remaining_quantity,
+                    status
+                FROM purchase_order_details 
+                WHERE po_id = :po_id 
+                AND item_id = :item_id
+                FOR UPDATE
             ");
-            
+    
             $stmt->execute([
                 ':po_id' => $po_id,
                 ':item_id' => $item_id
             ]);
+    
+            $poDetail = $stmt->fetch(PDO::FETCH_ASSOC);
             
-            $poDetails = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if (!$poDetails) {
-                throw new Exception("Purchase order details not found for PO ID: $po_id and Item ID: $item_id");
+            if (!$poDetail) {
+                throw new Exception("Purchase order detail not found for PO ID: $po_id and Item ID: $item_id");
             }
     
-            $current_received_qty = $poDetails['received_qty'];
-            $new_received_qty = $current_received_qty + $received_qty;
-            $balance_qty = $poDetails['qty'] - $new_received_qty;
-    
-            if ($balance_qty < 0) {
-                throw new Exception("Received quantity exceeds ordered quantity");
+            // 2. Calculate new quantities
+            $newReceivedQty = floatval($poDetail['received_quantity']) + floatval($received_quantity);
+            $newRemainingQty = floatval($poDetail['quantity']) - $newReceivedQty;
+            
+            // Determine new status
+            $newStatus = 'Partially Received';
+            if ($newRemainingQty <= 0) {
+                $newStatus = 'Fully Received';
             }
     
-            // Update purchase_order_details with new quantities
-            $stmt = $connection->prepare("
-                UPDATE purchase_order_details
-                SET received_qty = :new_received_qty,
-                    balance_qty = :balance_qty,
-                    updated_at = CURRENT_TIMESTAMP
-                WHERE po_id = :po_id AND item_id = :item_id
+            // Validate quantities
+            if ($newReceivedQty > floatval($poDetail['quantity'])) {
+                throw new Exception("Received quantity ($newReceivedQty) exceeds ordered quantity ({$poDetail['quantity']})");
+            }
+    
+            // 3. Update PO details
+            $updateStmt = $connection->prepare("
+                UPDATE purchase_order_details 
+                SET 
+                    received_quantity = :received_quantity,
+                    remaining_quantity = :remaining_quantity,
+                    status = :status,
+                    receive_id = :receive_id,
+                    date_received = CURRENT_TIMESTAMP
+                WHERE po_id = :po_id 
+                AND item_id = :item_id
             ");
     
-            $updateResult = $stmt->execute([
-                ':new_received_qty' => $new_received_qty,
-                ':balance_qty' => $balance_qty,
+            $updateResult = $updateStmt->execute([
+                ':received_quantity' => $newReceivedQty,
+                ':remaining_quantity' => $newRemainingQty,
+                ':status' => $newStatus,
+                ':receive_id' => $receive_id,
                 ':po_id' => $po_id,
                 ':item_id' => $item_id
             ]);
     
             if (!$updateResult) {
-                throw new Exception("Failed to update purchase order details: " . implode(" ", $stmt->errorInfo()));
+                throw new Exception("Failed to update purchase order details: " . implode(", ", $updateStmt->errorInfo()));
             }
     
-            // Update receive_item_details
-            $stmt = $connection->prepare("
-                UPDATE receive_item_details
-                SET last_received_qty = :last_received_qty,
-                    updated_at = CURRENT_TIMESTAMP
-                WHERE receive_id = :receive_id AND item_id = :item_id
-            ");
-    
-            $receiveUpdateResult = $stmt->execute([
-                ':last_received_qty' => $current_received_qty,
-                ':receive_id' => $receive_id,
-                ':item_id' => $item_id
-            ]);
-    
-            if (!$receiveUpdateResult) {
-                throw new Exception("Failed to update receive item details: " . implode(" ", $stmt->errorInfo()));
-            }
-    
-            // Check PO completion status
-            $stmt = $connection->prepare("
+            // 4. Update main PO status
+            $poStatusStmt = $connection->prepare("
                 SELECT 
-                    COUNT(*) as total_items,
-                    SUM(CASE WHEN qty <= received_qty THEN 1 ELSE 0 END) as fully_received_items
-                FROM purchase_order_details
+                    CASE 
+                        WHEN COUNT(*) = SUM(CASE WHEN status = 'Fully Received' THEN 1 ELSE 0 END) THEN 'Fully Received'
+                        WHEN SUM(CASE WHEN status IN ('Partially Received', 'Fully Received') THEN 1 ELSE 0 END) > 0 THEN 'Partially Received'
+                        ELSE 'Pending'
+                    END as new_status
+                FROM purchase_order_details 
                 WHERE po_id = :po_id
             ");
-            
-            $stmt->execute([':po_id' => $po_id]);
-            $completion = $stmt->fetch(PDO::FETCH_ASSOC);
     
-            // Calculate status (1 = Fully Received, 2 = Partially Received)
-            $new_status = ($completion['total_items'] == $completion['fully_received_items']) ? 1 : 2;
+            $poStatusStmt->execute([':po_id' => $po_id]);
+            $newPoStatus = $poStatusStmt->fetchColumn();
     
-            // Update both PO and receive status atomically
-            $statusUpdates = [
-                "UPDATE purchase_order SET po_status = :status, updated_at = CURRENT_TIMESTAMP WHERE id = :po_id",
-                "UPDATE receive_items SET receive_status = :status, updated_at = CURRENT_TIMESTAMP WHERE id = :receive_id"
-            ];
+            // Update main PO status
+            $updatePoStmt = $connection->prepare("
+                UPDATE purchase_orders 
+                SET status = :status 
+                WHERE id = :po_id
+            ");
     
-            foreach ($statusUpdates as $query) {
-                $stmt = $connection->prepare($query);
-                $result = $stmt->execute([
-                    ':status' => $new_status,
-                    ':po_id' => $po_id,
-                    ':receive_id' => $receive_id
-                ]);
+            $updatePoResult = $updatePoStmt->execute([
+                ':status' => $newPoStatus,
+                ':po_id' => $po_id
+            ]);
     
-                if (!$result) {
-                    throw new Exception("Failed to update status: " . implode(" ", $stmt->errorInfo()));
-                }
+            if (!$updatePoResult) {
+                throw new Exception("Failed to update main purchase order status: " . implode(", ", $updatePoStmt->errorInfo()));
             }
     
+            // 5. Update receive items status
+            $updateReceiveStmt = $connection->prepare("
+                UPDATE receive_items 
+                SET po_status = :status 
+                WHERE id = :receive_id
+            ");
+    
+            $updateReceiveResult = $updateReceiveStmt->execute([
+                ':status' => $newPoStatus,
+                ':receive_id' => $receive_id
+            ]);
+    
+            if (!$updateReceiveResult) {
+                throw new Exception("Failed to update receive items status: " . implode(", ", $updateReceiveStmt->errorInfo()));
+            }
+    
+            // Commit transaction
             $connection->commit();
-            
-            // Log successful completion
-            error_log("Successfully updated PO details for PO ID: $po_id, Item ID: $item_id");
-            
-        } catch (Exception $e) {
+            return true;
+    
+        } catch (PDOException $e) {
             $connection->rollBack();
-            error_log("Error in ReceivingReport::updatePurchaseOrderDetails: " . $e->getMessage());
+            error_log("PDO Exception in updatePurchaseOrderDetails: " . $e->getMessage());
             error_log("Stack trace: " . $e->getTraceAsString());
             throw new Exception("Database error while updating purchase order and receive items details: " . $e->getMessage());
+        } catch (Exception $e) {
+            $connection->rollBack();
+            error_log("Exception in updatePurchaseOrderDetails: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            throw $e;
         }
     }
 
