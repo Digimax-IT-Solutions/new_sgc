@@ -46,7 +46,7 @@ $menuConfig = [
                 'link' => 'credit_memo'
             ],
             'Sales Return' => [
-                'icon' => 'fas fa-credit-card', // Updated to represent credit methods
+                'icon' => 'fas fa-undo-alt', // New icon class for "Sales Return"
                 'link' => 'sales_return'
             ],
         ]

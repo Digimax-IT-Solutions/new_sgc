@@ -184,142 +184,142 @@ class ReceivingReport
     $receive_date, $receive_due_date, $memo, $gross_amount, $discount_amount, 
     $discount_account_ids, $net_amount, $input_vat, $input_vat_ids, $vatable, 
     $zero_rated, $vat_exempt, $total_amount, $items, $created_by)
-{
-    global $connection;
-    $transaction_type = 'Purchase';
+    {
+        global $connection;
+        $transaction_type = 'Purchase';
 
-    try {
-        // Log input parameters for debugging
-        error_log("ReceivingReport::add - Input parameters: " . json_encode([
-            'receive_account_id' => $receive_account_id,
-            'receive_no' => $receive_no,
-            'vendor_id' => $vendor_id,
-            'location' => $location,
-            'terms' => $terms,
-            'receive_date' => $receive_date,
-            'receive_due_date' => $receive_due_date,
-            'memo' => $memo,
-            'gross_amount' => $gross_amount,
-            'discount_amount' => $discount_amount,
-            'net_amount' => $net_amount,
-            'input_vat' => $input_vat,
-            'vatable' => $vatable,
-            'zero_rated' => $zero_rated,
-            'vat_exempt' => $vat_exempt,
-            'total_amount' => $total_amount
-        ]));
+        try {
+            // Log input parameters for debugging
+            error_log("ReceivingReport::add - Input parameters: " . json_encode([
+                'receive_account_id' => $receive_account_id,
+                'receive_no' => $receive_no,
+                'vendor_id' => $vendor_id,
+                'location' => $location,
+                'terms' => $terms,
+                'receive_date' => $receive_date,
+                'receive_due_date' => $receive_due_date,
+                'memo' => $memo,
+                'gross_amount' => $gross_amount,
+                'discount_amount' => $discount_amount,
+                'net_amount' => $net_amount,
+                'input_vat' => $input_vat,
+                'vatable' => $vatable,
+                'zero_rated' => $zero_rated,
+                'vat_exempt' => $vat_exempt,
+                'total_amount' => $total_amount
+            ]));
 
-        // Validate input parameters
-        if (empty($receive_account_id) || empty($receive_no) || empty($vendor_id)) {
-            throw new Exception("Required fields missing: account_id, receive_no, or vendor_id");
-        }
+            // Validate input parameters
+            if (empty($receive_account_id) || empty($receive_no) || empty($vendor_id)) {
+                throw new Exception("Required fields missing: account_id, receive_no, or vendor_id");
+            }
 
-        // Begin transaction
-        $connection->beginTransaction();
+            // Begin transaction
+            $connection->beginTransaction();
 
-        $stmt = $connection->prepare("
-            INSERT INTO receive_items (
-                receive_account_id, receive_no, vendor_id, location, terms,
-                receive_date, receive_due_date, memo, gross_amount,
-                discount_amount, net_amount, input_vat, vatable,
-                zero_rated, vat_exempt, total_amount
-            ) VALUES (
-                :receive_account_id, :receive_no, :vendor_id, :location, :terms,
-                :receive_date, :receive_due_date, :memo, :gross_amount,
-                :discount_amount, :net_amount, :input_vat, :vatable,
-                :zero_rated, :vat_exempt, :total_amount
-            )
-        ");
+            $stmt = $connection->prepare("
+                INSERT INTO receive_items (
+                    receive_account_id, receive_no, vendor_id, location, terms,
+                    receive_date, receive_due_date, memo, gross_amount,
+                    discount_amount, net_amount, input_vat, vatable,
+                    zero_rated, vat_exempt, total_amount
+                ) VALUES (
+                    :receive_account_id, :receive_no, :vendor_id, :location, :terms,
+                    :receive_date, :receive_due_date, :memo, :gross_amount,
+                    :discount_amount, :net_amount, :input_vat, :vatable,
+                    :zero_rated, :vat_exempt, :total_amount
+                )
+            ");
 
-        $params = [
-            ':receive_account_id' => $receive_account_id,
-            ':receive_no' => $receive_no,
-            ':vendor_id' => $vendor_id,
-            ':location' => $location,
-            ':terms' => $terms,
-            ':receive_date' => $receive_date,
-            ':receive_due_date' => $receive_due_date,
-            ':memo' => $memo,
-            ':gross_amount' => floatval($gross_amount),
-            ':discount_amount' => floatval($discount_amount),
-            ':net_amount' => floatval($net_amount),
-            ':input_vat' => floatval($input_vat),
-            ':vatable' => floatval($vatable),
-            ':zero_rated' => floatval($zero_rated),
-            ':vat_exempt' => floatval($vat_exempt),
-            ':total_amount' => floatval($total_amount)
-        ];
+            $params = [
+                ':receive_account_id' => $receive_account_id,
+                ':receive_no' => $receive_no,
+                ':vendor_id' => $vendor_id,
+                ':location' => $location,
+                ':terms' => $terms,
+                ':receive_date' => $receive_date,
+                ':receive_due_date' => $receive_due_date,
+                ':memo' => $memo,
+                ':gross_amount' => floatval($gross_amount),
+                ':discount_amount' => floatval($discount_amount),
+                ':net_amount' => floatval($net_amount),
+                ':input_vat' => floatval($input_vat),
+                ':vatable' => floatval($vatable),
+                ':zero_rated' => floatval($zero_rated),
+                ':vat_exempt' => floatval($vat_exempt),
+                ':total_amount' => floatval($total_amount)
+            ];
 
-        $result = $stmt->execute($params);
+            $result = $stmt->execute($params);
 
-        if (!$result) {
-            $errorInfo = $stmt->errorInfo();
-            error_log("SQL Error in ReceivingReport::add: " . print_r($errorInfo, true));
-            throw new Exception("Database error: " . $errorInfo[2]);
-        }
+            if (!$result) {
+                $errorInfo = $stmt->errorInfo();
+                error_log("SQL Error in ReceivingReport::add: " . print_r($errorInfo, true));
+                throw new Exception("Database error: " . $errorInfo[2]);
+            }
 
-        $receive_id = $connection->lastInsertId();
+            $receive_id = $connection->lastInsertId();
 
-        // Log audit trails
-        self::logAuditTrail(
-            $receive_id, $transaction_type, $receive_date, $receive_no,
-            $location, $vendor_id, null, null, $receive_account_id,
-            0.00, $net_amount, $created_by
-        );
-
-        if ($input_vat > 0 && !empty($input_vat_ids)) {
+            // Log audit trails
             self::logAuditTrail(
                 $receive_id, $transaction_type, $receive_date, $receive_no,
-                $location, $vendor_id, null, null, $input_vat_ids,
-                $input_vat, 0.00, $created_by
+                $location, $vendor_id, null, null, $receive_account_id,
+                0.00, $net_amount, $created_by
             );
-        }
 
-        // Process items
-        foreach ($items as $item) {
-            if (!empty($item['discount_account_id']) && floatval($item['discount_amount']) > 0) {
+            if ($input_vat > 0 && !empty($input_vat_ids)) {
                 self::logAuditTrail(
                     $receive_id, $transaction_type, $receive_date, $receive_no,
-                    $location, $vendor_id, $item['item_id'], $item['quantity'],
-                    $item['discount_account_id'], $item['discount_amount'],
-                    0.00, $created_by
+                    $location, $vendor_id, null, null, $input_vat_ids,
+                    $input_vat, 0.00, $created_by
                 );
             }
 
-            if (!empty($item['item_asset_account_id'])) {
+            // Process items
+            foreach ($items as $item) {
+                if (!empty($item['discount_account_id']) && floatval($item['discount_amount']) > 0) {
+                    self::logAuditTrail(
+                        $receive_id, $transaction_type, $receive_date, $receive_no,
+                        $location, $vendor_id, $item['item_id'], $item['quantity'],
+                        $item['discount_account_id'], $item['discount_amount'],
+                        0.00, $created_by
+                    );
+                }
+
+                if (!empty($item['item_asset_account_id'])) {
+                    self::logAuditTrail(
+                        $receive_id, $transaction_type, $receive_date, $receive_no,
+                        $location, $vendor_id, $item['item_id'], $item['quantity'],
+                        $item['item_asset_account_id'], $item['net_amount'],
+                        0.00, $created_by
+                    );
+                }
+            }
+
+            // Log discount audit trail if exists
+            if ($discount_amount > 0 && !empty($discount_account_ids)) {
                 self::logAuditTrail(
                     $receive_id, $transaction_type, $receive_date, $receive_no,
-                    $location, $vendor_id, $item['item_id'], $item['quantity'],
-                    $item['item_asset_account_id'], $item['net_amount'],
-                    0.00, $created_by
+                    $location, $vendor_id, null, null, $discount_account_ids,
+                    0.00, $discount_amount, $created_by
                 );
             }
+
+            $connection->commit();
+            return $receive_id;
+
+        } catch (PDOException $e) {
+            $connection->rollBack();
+            error_log("PDO Exception in ReceivingReport::add: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            throw new Exception("Database error while inserting receiving report: " . $e->getMessage());
+        } catch (Exception $e) {
+            $connection->rollBack();
+            error_log("General Exception in ReceivingReport::add: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            throw $e;
         }
-
-        // Log discount audit trail if exists
-        if ($discount_amount > 0 && !empty($discount_account_ids)) {
-            self::logAuditTrail(
-                $receive_id, $transaction_type, $receive_date, $receive_no,
-                $location, $vendor_id, null, null, $discount_account_ids,
-                0.00, $discount_amount, $created_by
-            );
-        }
-
-        $connection->commit();
-        return $receive_id;
-
-    } catch (PDOException $e) {
-        $connection->rollBack();
-        error_log("PDO Exception in ReceivingReport::add: " . $e->getMessage());
-        error_log("Stack trace: " . $e->getTraceAsString());
-        throw new Exception("Database error while inserting receiving report: " . $e->getMessage());
-    } catch (Exception $e) {
-        $connection->rollBack();
-        error_log("General Exception in ReceivingReport::add: " . $e->getMessage());
-        error_log("Stack trace: " . $e->getTraceAsString());
-        throw $e;
     }
-}
 
     // Adding Details
     public static function addItem($transaction_id, $po_id = null, $item_id, $cost_center_id, $quantity, $cost, $amount, $discount_percentage, $discount_amount, $net_amount_before_input_vat, $net_amount, $input_vat_percentage, $input_vat_amount, $cost_per_unit)
@@ -558,149 +558,101 @@ class ReceivingReport
     }
 
     // Update Purchase Order Received Quantity
-    public static function updatePurchaseOrderDetails($po_id, $item_id, $received_quantity, $receive_id) 
+    public static function updatePurchaseOrderDetails($po_id, $item_id, $received_qty, $receive_id)
     {
         global $connection;
-        
+    
         try {
-            // Begin transaction
             $connection->beginTransaction();
-            
-            // Skip processing if PO ID is 0 or null (direct receiving without PO)
-            if (empty($po_id)) {
-                error_log("No PO ID provided - skipping PO update");
-                return true;
-            }
     
-            // Log the update attempt
-            error_log("Updating PO Details - PO ID: $po_id, Item ID: $item_id, Received Qty: $received_quantity, Receive ID: $receive_id");
-    
-            // 1. Get current PO details
+            // First, get the current received_qty from purchase_order_details
             $stmt = $connection->prepare("
-                SELECT 
-                    quantity,
-                    received_quantity,
-                    remaining_quantity,
-                    status
-                FROM purchase_order_details 
-                WHERE po_id = :po_id 
-                AND item_id = :item_id
-                FOR UPDATE
+                SELECT received_qty 
+                FROM purchase_order_details
+                WHERE po_id = :po_id AND item_id = :item_id
             ");
-    
             $stmt->execute([
                 ':po_id' => $po_id,
                 ':item_id' => $item_id
             ]);
     
-            $poDetail = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if (!$poDetail) {
-                throw new Exception("Purchase order detail not found for PO ID: $po_id and Item ID: $item_id");
-            }
+            $current_received_qty = $stmt->fetchColumn();
     
-            // 2. Calculate new quantities
-            $newReceivedQty = floatval($poDetail['received_quantity']) + floatval($received_quantity);
-            $newRemainingQty = floatval($poDetail['quantity']) - $newReceivedQty;
-            
-            // Determine new status
-            $newStatus = 'Partially Received';
-            if ($newRemainingQty <= 0) {
-                $newStatus = 'Fully Received';
-            }
-    
-            // Validate quantities
-            if ($newReceivedQty > floatval($poDetail['quantity'])) {
-                throw new Exception("Received quantity ($newReceivedQty) exceeds ordered quantity ({$poDetail['quantity']})");
-            }
-    
-            // 3. Update PO details
-            $updateStmt = $connection->prepare("
-                UPDATE purchase_order_details 
-                SET 
-                    received_quantity = :received_quantity,
-                    remaining_quantity = :remaining_quantity,
-                    status = :status,
-                    receive_id = :receive_id,
-                    date_received = CURRENT_TIMESTAMP
-                WHERE po_id = :po_id 
-                AND item_id = :item_id
+            // Update purchase_order_details
+            $stmt = $connection->prepare("
+                UPDATE purchase_order_details
+                SET received_qty = received_qty + :received_qty,
+                    balance_qty = qty - received_qty
+                WHERE po_id = :po_id AND item_id = :item_id
             ");
     
-            $updateResult = $updateStmt->execute([
-                ':received_quantity' => $newReceivedQty,
-                ':remaining_quantity' => $newRemainingQty,
-                ':status' => $newStatus,
-                ':receive_id' => $receive_id,
+            $result = $stmt->execute([
+                ':received_qty' => $received_qty,
                 ':po_id' => $po_id,
                 ':item_id' => $item_id
             ]);
     
-            if (!$updateResult) {
-                throw new Exception("Failed to update purchase order details: " . implode(", ", $updateStmt->errorInfo()));
+            if (!$result) {
+                throw new Exception("Failed to update purchase order details.");
             }
     
-            // 4. Update main PO status
-            $poStatusStmt = $connection->prepare("
-                SELECT 
-                    CASE 
-                        WHEN COUNT(*) = SUM(CASE WHEN status = 'Fully Received' THEN 1 ELSE 0 END) THEN 'Fully Received'
-                        WHEN SUM(CASE WHEN status IN ('Partially Received', 'Fully Received') THEN 1 ELSE 0 END) > 0 THEN 'Partially Received'
-                        ELSE 'Pending'
-                    END as new_status
-                FROM purchase_order_details 
+            // Update receive_item_details with last_received_qty
+            $stmt = $connection->prepare("
+                UPDATE receive_item_details
+                SET last_received_qty = :last_received_qty
+                WHERE receive_id = :receive_id AND item_id = :item_id
+            ");
+    
+            $result = $stmt->execute([
+                ':last_received_qty' => $current_received_qty,
+                ':receive_id' => $receive_id,
+                ':item_id' => $item_id
+            ]);
+    
+            if (!$result) {
+                throw new Exception("Failed to update receive item details.");
+            }
+    
+            // Check if all items for this PO are fully received
+            $stmt = $connection->prepare("
+                SELECT COUNT(*) as total_items,
+                       SUM(CASE WHEN qty = received_qty THEN 1 ELSE 0 END) as fully_received_items
+                FROM purchase_order_details
                 WHERE po_id = :po_id
             ");
+            $stmt->execute([':po_id' => $po_id]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
     
-            $poStatusStmt->execute([':po_id' => $po_id]);
-            $newPoStatus = $poStatusStmt->fetchColumn();
+            // Determine new status
+            $new_status = ($result['total_items'] == $result['fully_received_items']) ? 1 : 2;
     
-            // Update main PO status
-            $updatePoStmt = $connection->prepare("
-                UPDATE purchase_orders 
-                SET status = :status 
+            // Update PO status
+            $stmt = $connection->prepare("
+                UPDATE purchase_order
+                SET po_status = :status
                 WHERE id = :po_id
             ");
-    
-            $updatePoResult = $updatePoStmt->execute([
-                ':status' => $newPoStatus,
+            $stmt->execute([
+                ':status' => $new_status,
                 ':po_id' => $po_id
             ]);
     
-            if (!$updatePoResult) {
-                throw new Exception("Failed to update main purchase order status: " . implode(", ", $updatePoStmt->errorInfo()));
-            }
-    
-            // 5. Update receive items status
-            $updateReceiveStmt = $connection->prepare("
-                UPDATE receive_items 
-                SET po_status = :status 
+            // Update receive_items status
+            $stmt = $connection->prepare("
+                UPDATE receive_items
+                SET receive_status = :status
                 WHERE id = :receive_id
             ");
-    
-            $updateReceiveResult = $updateReceiveStmt->execute([
-                ':status' => $newPoStatus,
+            $stmt->execute([
+                ':status' => $new_status,
                 ':receive_id' => $receive_id
             ]);
     
-            if (!$updateReceiveResult) {
-                throw new Exception("Failed to update receive items status: " . implode(", ", $updateReceiveStmt->errorInfo()));
-            }
-    
-            // Commit transaction
             $connection->commit();
-            return true;
-    
-        } catch (PDOException $e) {
-            $connection->rollBack();
-            error_log("PDO Exception in updatePurchaseOrderDetails: " . $e->getMessage());
-            error_log("Stack trace: " . $e->getTraceAsString());
-            throw new Exception("Database error while updating purchase order and receive items details: " . $e->getMessage());
         } catch (Exception $e) {
             $connection->rollBack();
-            error_log("Exception in updatePurchaseOrderDetails: " . $e->getMessage());
-            error_log("Stack trace: " . $e->getTraceAsString());
-            throw $e;
+            error_log("Error in ReceivingReport::updatePurchaseOrderDetails: " . $e->getMessage());
+            throw new Exception("Database error while updating purchase order and receive items details.");
         }
     }
 
