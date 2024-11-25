@@ -575,13 +575,12 @@ class ReceivingReport
             // Log the update attempt
             error_log("Updating PO Details - PO ID: $po_id, Item ID: $item_id, Received Qty: $received_quantity, Receive ID: $receive_id");
     
-            // 1. Get current PO details - Updated column names to match schema
+            // 1. Get current PO details
             $stmt = $connection->prepare("
                 SELECT 
                     qty,
                     received_qty,
-                    balance_qty,
-                    po_status as status
+                    balance_qty
                 FROM purchase_order_details 
                 WHERE po_id = :po_id 
                 AND item_id = :item_id
@@ -602,25 +601,18 @@ class ReceivingReport
             // 2. Calculate new quantities
             $newReceivedQty = floatval($poDetail['received_qty']) + floatval($received_quantity);
             $newRemainingQty = floatval($poDetail['qty']) - $newReceivedQty;
-            
-            // Determine new status
-            $newStatus = 2; // Partially Received
-            if ($newRemainingQty <= 0) {
-                $newStatus = 1; // Fully Received
-            }
     
             // Validate quantities
             if ($newReceivedQty > floatval($poDetail['qty'])) {
                 throw new Exception("Received quantity ($newReceivedQty) exceeds ordered quantity ({$poDetail['qty']})");
             }
     
-            // 3. Update PO details - Updated column names and removed date_received
+            // 3. Update PO details
             $updateStmt = $connection->prepare("
                 UPDATE purchase_order_details 
                 SET 
                     received_qty = :received_qty,
                     balance_qty = :balance_qty,
-                    po_status = :status,
                     receive_id = :receive_id
                 WHERE po_id = :po_id 
                 AND item_id = :item_id
@@ -629,7 +621,6 @@ class ReceivingReport
             $updateResult = $updateStmt->execute([
                 ':received_qty' => $newReceivedQty,
                 ':balance_qty' => $newRemainingQty,
-                ':status' => $newStatus,
                 ':receive_id' => $receive_id,
                 ':po_id' => $po_id,
                 ':item_id' => $item_id
@@ -639,7 +630,7 @@ class ReceivingReport
                 throw new Exception("Failed to update purchase order details: " . implode(", ", $updateStmt->errorInfo()));
             }
     
-            // 4. Update main PO status - Updated table name and status logic
+            // 4. Check completion status of all items in the PO
             $poStatusStmt = $connection->prepare("
                 SELECT 
                     CASE 
@@ -654,7 +645,7 @@ class ReceivingReport
             $poStatusStmt->execute([':po_id' => $po_id]);
             $newPoStatus = $poStatusStmt->fetchColumn();
     
-            // Update main PO status - Updated table name to purchase_order
+            // Update main PO status
             $updatePoStmt = $connection->prepare("
                 UPDATE purchase_order 
                 SET po_status = :status 
@@ -670,7 +661,7 @@ class ReceivingReport
                 throw new Exception("Failed to update main purchase order status: " . implode(", ", $updatePoStmt->errorInfo()));
             }
     
-            // 5. Update receive items status - Updated column name to receive_status
+            // 5. Update receive items status
             $updateReceiveStmt = $connection->prepare("
                 UPDATE receive_items 
                 SET receive_status = :status 
@@ -702,7 +693,7 @@ class ReceivingReport
             throw $e;
         }
     }
-    
+
     // GET LAST RR_NO 
     public static function getLastRRNo()
     {
