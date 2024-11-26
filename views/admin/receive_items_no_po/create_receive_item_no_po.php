@@ -681,112 +681,136 @@ $newRRNo = ReceivingReport::getLastRRNo();
             calculateTotalAmount();
         });
 
-        // Gather table items and submit form
-        function gatherTableItems() {
-            const items = [];
-            let hasEmptyItem = false;
-            let hasEmptyQuantity = false;
-            let hasEmptyCost = false;
-            let firstEmptyItemRow;
-            let firstEmptyQuantityRow;
-            let firstEmptyCostRow;
-
-            $('#itemTableBody tr').each(function(index) {
-                const item_id = $(this).find('select[name="item_id[]"]').val();
-                const qty = $(this).find('input[name="quantity[]"]').val();
-                const cost = $(this).find('input[name="cost[]"]').val();
-                
-                // Check for empty required fields
-                if (!item_id) {
-                    hasEmptyItem = true;
-                    if (!firstEmptyItemRow) {
-                        firstEmptyItemRow = $(this);
-                    }
-                    return true;
+        // Function to get unique discount account IDs
+        function getUniqueDiscountAccountIds() {
+            const uniqueIds = new Set();
+            $('#itemTableBody tr').each(function() {
+                const discountAccountId = $(this).find('.discount_percentage option:selected').data('account-id');
+                if (discountAccountId) {
+                    uniqueIds.add(discountAccountId);
                 }
-
-                if (!qty) {
-                    hasEmptyQuantity = true;
-                    if (!firstEmptyQuantityRow) {
-                        firstEmptyQuantityRow = $(this);
-                    }
-                    return true;
-                }
-
-                if (!cost) {
-                    hasEmptyCost = true;
-                    if (!firstEmptyCostRow) {
-                        firstEmptyCostRow = $(this);
-                    }
-                    return true;
-                }
-
-                // Get the selected option for item
-                const selectedOption = $(this).find('select[name="item_id[]"] option:selected');
-                
-                const item = {
-                    item_id: item_id,
-                    quantity: qty, // Added this field
-                    item_asset_account_id: selectedOption.data('asset-account-id'), // Get from data attribute
-                    cost_center_id: $(this).find('select[name="cost_center_id[]"]').val(),
-                    description: $(this).find('input[name="description[]"]').val(),
-                    uom: $(this).find('input[name="uom[]"]').val(),
-                    cost: cost,
-                    amount: $(this).find('input[name="amount[]"]').val(),
-                    discount_percentage: $(this).find('select[name="discount_percentage[]"]').val(),
-                    discount_amount: $(this).find('input[name="discount_amount[]"]').val(), // Changed from discount to discount_amount
-                    net_amount: $(this).find('input[name="net_amount[]"]').val(),
-                    taxable_amount: $(this).find('input[name="taxable_amount[]"]').val(),
-                    input_vat_percentage: $(this).find('select[name="input_vat_percentage[]"]').val(),
-                    input_vat: $(this).find('input[name="input_vat_amount[]"]').val(),
-                    discount_account_id: $(this).find('.discount_percentage option:selected').data('account-id'),
-                    input_vat_account_id: $(this).find('.input_vat_percentage option:selected').data('account-id')
-                };
-
-                if (index === 0) {
-                    item.input_vat_account_id_first_row = item.input_vat_account_id;
-                    item.discount_account_id_first_row = item.discount_account_id;
-                }
-
-                items.push(item);
             });
 
-            // Show warnings based on which validation failed
-            if (hasEmptyItem) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Warning',
-                    text: 'Please select an item.'
-                }).then(() => {
-                    firstEmptyItemRow.find('select[name="item_id[]"]').focus().css('border', '2px solid red');
-                });
-                return false;
-            }
-
-            if (hasEmptyQuantity) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Warning',
-                    text: 'Please enter a quantity for every item.'
-                }).then(() => {
-                    firstEmptyQuantityRow.find('input[name="quantity[]"]').focus().css('border', '2px solid red');
-                });
-                return false;
-            }
-
-            if (hasEmptyCost) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Warning',
-                    text: 'Please enter item cost.'
-                }).then(() => {
-                    firstEmptyCostRow.find('input[name="cost[]"]').focus().css('border', '2px solid red');
-                });
-                return false;
-            }
-
-            return items;
+            return Array.from(uniqueIds);
         }
+
+        // Function to get unique output VAT IDs
+        function getUniqueOutputVatIds() {
+            const uniqueIds = new Set();
+            $('#itemTableBody tr').each(function() {
+                const outputVatId = $(this).find('.input_vat_percentage option:selected').data('account-id');
+                if (outputVatId) {
+                    uniqueIds.add(outputVatId);
+                }
+            });
+            return Array.from(uniqueIds);
+        }
+
+        // Gather table items and submit form
+        function gatherTableItems() {
+    const items = [];
+    let hasEmptyItem = false;
+    let hasEmptyQuantity = false;
+    let hasEmptyCost = false;
+    let firstEmptyItemRow;
+    let firstEmptyQuantityRow;
+    let firstEmptyCostRow;
+
+    $('#itemTableBody tr').each(function (index) {
+        const row = $(this);
+        const item_id = row.find('select[name="item_id[]"]').val();
+        const qty = parseFloat(row.find('input[name="quantity[]"]').val()) || 0;
+        const cost = parseFloat(row.find('input[name="cost[]"]').val()) || 0;
+
+        // Validate required fields
+        if (!item_id) {
+            hasEmptyItem = true;
+            if (!firstEmptyItemRow) firstEmptyItemRow = row;
+            return true; // Skip this iteration
+        }
+
+        if (qty <= 0) {
+            hasEmptyQuantity = true;
+            if (!firstEmptyQuantityRow) firstEmptyQuantityRow = row;
+            return true;
+        }
+
+        if (cost <= 0) {
+            hasEmptyCost = true;
+            if (!firstEmptyCostRow) firstEmptyCostRow = row;
+            return true;
+        }
+
+        // Get the selected option for item
+        const selectedOption = row.find('select[name="item_id[]"] option:selected');
+
+        // Construct the item object
+        const item = {
+            item_id: item_id,
+            quantity: qty,
+            item_asset_account_id: selectedOption.data('asset-account-id'), // From data attribute
+            cost_center_id: row.find('select[name="cost_center_id[]"]').val(),
+            description: row.find('input[name="description[]"]').val(),
+            uom: row.find('input[name="uom[]"]').val(),
+            cost: cost,
+            amount: row.find('input[name="amount[]"]').val(),
+            discount_percentage: row.find('select[name="discount_percentage[]"]').val(),
+            discount_amount: row.find('input[name="discount_amount[]"]').val(),
+            net_amount_before_input_vat: row.find('input[name="net_amount[]"]').val(),
+            net_amount: row.find('input[name="taxable_amount[]"]').val(),
+            input_vat_percentage: row.find('select[name="input_vat_percentage[]"]').val(),
+            input_vat_amount: row.find('input[name="input_vat_amount[]"]').val(),
+            discount_account_id: row.find('.discount_percentage option:selected').data('account-id'),
+            input_vat_account_id: row.find('.input_vat_percentage option:selected').data('account-id'),
+            cost_per_unit: qty !== 0 ? parseFloat(row.find('.taxable_amount').text()) / qty : 0
+        };
+
+        // Add first row-specific fields
+        if (index === 0) {
+            item.input_vat_account_id_first_row = item.input_vat_account_id;
+            item.discount_account_id_first_row = item.discount_account_id;
+        }
+
+        items.push(item);
+    });
+
+    // Show warnings based on which validation failed
+    if (hasEmptyItem) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Warning',
+            text: 'Please select an item.'
+        }).then(() => {
+            firstEmptyItemRow.find('select[name="item_id[]"]').focus().css('border', '2px solid red');
+        });
+        return false;
+    }
+
+    if (hasEmptyQuantity) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Warning',
+            text: 'Please enter a valid quantity for every item.'
+        }).then(() => {
+            firstEmptyQuantityRow.find('input[name="quantity[]"]').focus().css('border', '2px solid red');
+        });
+        return false;
+    }
+
+    if (hasEmptyCost) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Warning',
+            text: 'Please enter a valid item cost.'
+        }).then(() => {
+            firstEmptyCostRow.find('input[name="cost[]"]').focus().css('border', '2px solid red');
+        });
+        return false;
+    }
+
+    return items;
+}
+
 
 
         $('#purchaseOrderForm').submit(function(event) {
@@ -804,6 +828,23 @@ $newRRNo = ReceivingReport::getLastRRNo();
                 return;
             }
             $('#item_data').val(JSON.stringify(items));
+
+            // Get unique discount account IDs and output VAT IDs
+            const discountAccountIds = getUniqueDiscountAccountIds();
+            const outputVatIds = getUniqueOutputVatIds();
+
+            // Add hidden fields for discount_account_ids and output_vat_ids
+            $('<input>').attr({
+                type: 'hidden',
+                name: 'discount_account_ids',
+                value: discountAccountIds.join(',')
+            }).appendTo($(this));
+
+            $('<input>').attr({
+                type: 'hidden',
+                name: 'output_vat_ids',
+                value: outputVatIds.join(',')
+            }).appendTo($(this));
 
             // Show loading overlay
             $('#loadingOverlay').css('display', 'flex');
