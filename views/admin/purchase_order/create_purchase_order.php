@@ -539,13 +539,13 @@ $newPoNo = PurchaseOrder::getLastPoNo();
         $('#location').select2({
             theme: 'classic', // Use 'bootstrap-5' for Bootstrap 5, 'bootstrap-4' for Bootstrap 4
             width: '100%',
-            placeholder: 'Select Vendor',
+            placeholder: 'Select Location',
             allowClear: true
         });
         $('#invoice_terms').select2({
             theme: 'classic', // Use 'bootstrap-5' for Bootstrap 5, 'bootstrap-4' for Bootstrap 4
             width: '100%',
-            placeholder: 'Select Vendor',
+            placeholder: 'Select Terms',
             allowClear: true
         });
 
@@ -688,9 +688,10 @@ $newPoNo = PurchaseOrder::getLastPoNo();
             // Calculate vatable, zero-rated, and VAT exempt amounts
             $('.net_amount').each(function() {
                 const net_amount = parseFloat($(this).val()) || 0;
+                console.log(net_amount);
                 const inputVatName = $(this).closest('tr').find('.input_vat_percentage option:selected').text();
 
-                if (inputVatName === '12%') {
+                if (inputVatName === '12% (COGS)' || '12% (EXPENSE)') {
                     vatableAmount += net_amount;
                     console.log("TOTAL 12%: ", vatableAmount);
                 } else if (inputVatName === 'E') {
