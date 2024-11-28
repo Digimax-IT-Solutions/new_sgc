@@ -41,12 +41,17 @@ $menuConfig = [
                 'link' => 'receive_payment',
                 'roles' => getAllRoles()
             ],
+            'Open Invoice' => [
+                'icon' => 'fas fa-file-invoice',
+                'link' => 'open_invoice',
+                'roles' => getAllRoles()
+            ],
             'Credit Memo' => [
                 'icon' => 'fas fa-credit-card', // Updated to represent credit methods
                 'link' => 'credit_memo'
             ],
             'Sales Return' => [
-                'icon' => 'fas fa-undo-alt', // New icon class for "Sales Return"
+                'icon' => 'fas fa-undo-alt', // Updated to represent credit methods
                 'link' => 'sales_return'
             ],
         ]

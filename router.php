@@ -18,6 +18,14 @@ $pages = [
     'void_invoice' => 'views/admin/invoice/void_invoice_list.php',
     'draft_invoice' => 'views/admin/invoice/draft_invoice_list.php',
 
+    // SALES OPEN INVOICE
+    'open_invoice' => 'views/admin/open_invoice/open_invoice_list.php',
+    'create_open_invoice' => 'views/admin/open_invoice/create_open_invoice.php',
+    'view_open_invoice' => 'views/admin/open_invoice/view_open_invoice.php',
+    'print_open_invoice' => 'views/admin/open_invoice/print_open_invoice.php',
+    'void_open_invoice' => 'views/admin/open_invoice/void_open_invoice_list.php',
+    'draft_open_invoice' => 'views/admin/open_invoice/draft_open_invoice_list.php',
+
     // RECEIVE PAYMENT
     'receive_payment' => 'views/admin/receive_payment/receive_payment_list.php',
     'customer_payment' => 'views/admin/receive_payment/customer_payment.php',

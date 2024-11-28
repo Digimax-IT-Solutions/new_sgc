@@ -15,6 +15,7 @@ require_once 'models/InventoryValuation.php';
 // Customer Center
 require_once 'models/Sales.php';
 require_once 'models/Invoice.php';
+require_once 'models/OpenInvoice.php';
 require_once 'models/ReceivePayment.php';
 require_once 'models/Payment.php';
 require_once 'models/CreditMemo.php';
