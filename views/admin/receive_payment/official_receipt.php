@@ -201,15 +201,15 @@ $sales_taxes = SalesTax::all();
                                     </div>
                                     <!-- location -->
                                     <div class="col-md-4 customer-details">
-                                        <label for="location" class="form-label">Location</label>
-                                        <select class="form-select form-select-sm" id="location" name="location"
-                                            required>
+                                        <label for="location" class="form-label">
+                                            Location
+                                            <a href="#" id="addNewLocationLink" class="ms-3 text-primary">| Add New</a>
+                                        </label>
+                                        <select class="form-select form-select-sm" id="location" name="location" required>
                                             <option value="">Select Location</option>
                                             <?php foreach ($locations as $location): ?>
-                                                <option value="<?= $location->id ?>"><?= $location->name ?>
-                                                </option>
+                                                <option value="<?= $location->id ?>"><?= $location->name ?></option>
                                             <?php endforeach; ?>
-                                        </select>
                                         </select>
                                     </div>
                                     <!-- customer_po -->
@@ -525,6 +525,33 @@ $sales_taxes = SalesTax::all();
     </div>
 </div>
 
+<!-- Bootstrap Modal for Adding New Location -->
+<!-- Modal for Adding New Location -->
+<div class="modal fade" id="addLocationModal" tabindex="-1" aria-labelledby="addLocationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addLocationModalLabel">Add New Location</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="api/masterlist/direct_add_location.php" id="addLocationForm">
+                    <input type="hidden" name="action" value="add">
+
+                    <!-- LOCATION -->
+                    <div class="mb-3">
+                        <label for="location" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="location" name="location" placeholder="Enter location">
+                    </div>
+
+                    <!-- Submit Button in the Modal -->
+                    <button type="button" class="btn btn-primary" id="addLocationSubmit">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     // function checkCustomerSelection() {
     //     const customerSelect = document.getElementById("customer_id");
@@ -544,6 +571,7 @@ $sales_taxes = SalesTax::all();
         const addCustomerModal = new bootstrap.Modal(document.getElementById("addCustomerModal"));
         addCustomerModal.show();
     });
+
 
     // Handle the customer addition form submission
     document.getElementById("addCustomerSubmit").addEventListener("click", function() {
@@ -587,6 +615,49 @@ $sales_taxes = SalesTax::all();
                 console.error("Error:", error);
                 alert("An error occurred while adding the customer.");
             });
+    });
+
+
+    // Open the modal when the "Add New Location" link is clicked
+    document.getElementById("addNewLocationLink").addEventListener("click", function() {
+        const addLocationModal = new bootstrap.Modal(document.getElementById("addLocationModal"));
+        addLocationModal.show();
+    });    
+
+    // Handle the location addition form submission
+    document.getElementById("addLocationSubmit").addEventListener("click", function() {
+        const form = document.getElementById("addLocationForm");
+        const formData = new FormData(form);
+
+        // Set action to direct_add
+        formData.set("action", "direct_add");
+
+        fetch("api/masterlist/direct_add_location.php", {
+            method: "POST",
+            body: formData,
+        })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.success) {
+                alert("Location added successfully");
+
+                // Close the modal
+                const addLocationModal = bootstrap.Modal.getInstance(document.getElementById("addLocationModal"));
+                addLocationModal.hide();
+
+                // Remove all modal backdrops
+                document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+
+                // Reset the form
+                form.reset();
+            } else {
+                alert("Failed to add location: " + data.message);
+            }
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+            alert("An error occurred while adding the location.");
+        });
     });
 </script>
 
