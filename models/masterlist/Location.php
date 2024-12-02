@@ -72,7 +72,10 @@ class Location
         $stmt = $connection->prepare('INSERT INTO location (name) VALUES (:name)');
         $stmt->bindParam(':name', $name);
         $stmt->execute();
+
+        return $connection->lastInsertId(); // Return the last inserted ID
     }
+
 
     public static function findByName($name)
     {

@@ -457,16 +457,18 @@ $sales_taxes = SalesTax::all();
 
 <!-- Bootstrap Modal for Adding New Customer -->
 <?php include('layouts/add_customer.php'); ?>
-<?php include('layouts/add_location.php'); ?>
+<?php
+require_once(__DIR__ . '/../layouts/add_location.php');
+require_once(__DIR__ . '/../layouts/add_customer.php');
+?>
 
-
+// modal script
 <script>
     // Open the modal when the "Add New Customer" link is clicked
     document.getElementById("addNewCustomerLink").addEventListener("click", function() {
         const addCustomerModal = new bootstrap.Modal(document.getElementById("addCustomerModal"));
         addCustomerModal.show();
     });
-
 
     // Handle the customer addition form submission
     document.getElementById("addCustomerSubmit").addEventListener("click", function() {
@@ -485,23 +487,8 @@ $sales_taxes = SalesTax::all();
                 if (data.success) {
                     alert("Customer added successfully");
 
-                    // Add the new customer to the dropdown
-                    const customerSelect = document.getElementById("customer_id");
-                    const newOption = document.createElement("option");
-                    newOption.value = data.customer.id;
-                    newOption.textContent = data.customer.customer_name;
-                    newOption.selected = true; // Automatically select the new customer
-                    customerSelect.appendChild(newOption);
-
-                    // Close the modal
-                    const addCustomerModal = bootstrap.Modal.getInstance(document.getElementById("addCustomerModal"));
-                    addCustomerModal.hide();
-
-                    // Remove all modal backdrops
-                    document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
-
-                    // Reset the form
-                    form.reset();
+                    // Reload the page after successful addition
+                    location.reload();
                 } else {
                     alert("Failed to add customer: " + data.message);
                 }
@@ -511,7 +498,6 @@ $sales_taxes = SalesTax::all();
                 alert("An error occurred while adding the customer.");
             });
     });
-
 
     // Open the modal when the "Add New Location" link is clicked
     document.getElementById("addNewLocationLink").addEventListener("click", function() {
@@ -536,15 +522,8 @@ $sales_taxes = SalesTax::all();
                 if (data.success) {
                     alert("Location added successfully");
 
-                    // Close the modal
-                    const addLocationModal = bootstrap.Modal.getInstance(document.getElementById("addLocationModal"));
-                    addLocationModal.hide();
-
-                    // Remove all modal backdrops
-                    document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
-
-                    // Reset the form
-                    form.reset();
+                    // Reload the page after successful addition
+                    location.reload();
                 } else {
                     alert("Failed to add location: " + data.message);
                 }

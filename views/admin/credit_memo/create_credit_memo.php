@@ -16,6 +16,8 @@ $input_vats = InputVat::all();
 $output_vats = SalesTax::all();
 $sales_taxes = SalesTax::all();
 $locations = Location::all();
+$terms = Term::all();
+
 
 $newCreditNo = CreditMemo::getLastCreditNo();
 
@@ -174,7 +176,10 @@ $page = 'credit_memo'; // Set the variable corresponding to the current page
                                         <!-- CUSTOMER -->
                                         <div class="col-md-4">
                                             <div class="form-group">
-                                                <label for="customer_id">Customer</label>
+                                                <label for="customer_name" class="form-label">
+                                                    Customer
+                                                    <a href="#" id="addNewCustomerLink" class="ms-3 text-primary">| Add New</a>
+                                                </label>
                                                 <select class="form-control form-control-sm select2" id="customer_id" name="customer_id" required>
                                                     <option value="">Select Customer</option>
                                                     <?php foreach ($customers as $customer): ?>
@@ -193,16 +198,17 @@ $page = 'credit_memo'; // Set the variable corresponding to the current page
                                         </div>
 
                                         <!-- LOCATION -->
-                                        <div class="col-md-4">
-                                            <div class="form-group">
-                                                <label for="location" class="form-label">Location</label>
-                                                <select class="form-select form-select-sm" id="location" name="location" required>
-                                                    <option value="">Select Location</option>
-                                                    <?php foreach ($locations as $location): ?>
-                                                        <option value="<?= $location->id ?>"><?= $location->name ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
+                                        <div class="col-md-4 customer-details">
+                                            <label for="location" class="form-label">
+                                                Location
+                                                <a href="#" id="addNewLocationLink" class="ms-3 text-primary">| Add New</a>
+                                            </label>
+                                            <select class="form-select form-select-sm" id="location" name="location" required>
+                                                <option value="">Select Location</option>
+                                                <?php foreach ($locations as $location): ?>
+                                                    <option value="<?= $location->id ?>"><?= $location->name ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
                                         </div>
                                     </div>
                                 </div>
@@ -347,10 +353,90 @@ $page = 'credit_memo'; // Set the variable corresponding to the current page
     <div class="spinner"></div>
     <div class="message">Processing Credit Memo</div>
 </div>
-<iframe id="printFrame" style="display:none;"></iframe>
-
 
 <?php require 'views/templates/footer.php' ?>
+
+<iframe id="printFrame" style="display:none;"></iframe>
+
+<!-- Bootstrap Modal for Adding New Customer and New Location -->
+<?php include('layouts/add_customer.php'); ?>
+<?php
+require_once(__DIR__ . '/../layouts/add_location.php');
+require_once(__DIR__ . '/../layouts/add_customer.php');
+?>
+
+// modal script
+<script>
+    // Open the modal when the "Add New Customer" link is clicked
+    document.getElementById("addNewCustomerLink").addEventListener("click", function() {
+        const addCustomerModal = new bootstrap.Modal(document.getElementById("addCustomerModal"));
+        addCustomerModal.show();
+    });
+
+    // Handle the customer addition form submission
+    document.getElementById("addCustomerSubmit").addEventListener("click", function() {
+        const form = document.getElementById("addCustomerForm");
+        const formData = new FormData(form);
+
+        // Set action to direct_add
+        formData.set("action", "direct_add");
+
+        fetch("api/masterlist/direct_add_customer.php", {
+                method: "POST",
+                body: formData,
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.success) {
+                    alert("Customer added successfully");
+
+                    // Reload the page after successful addition
+                    location.reload();
+                } else {
+                    alert("Failed to add customer: " + data.message);
+                }
+            })
+            .catch((error) => {
+                console.error("Error:", error);
+                alert("An error occurred while adding the customer.");
+            });
+    });
+
+    // Open the modal when the "Add New Location" link is clicked
+    document.getElementById("addNewLocationLink").addEventListener("click", function() {
+        const addLocationModal = new bootstrap.Modal(document.getElementById("addLocationModal"));
+        addLocationModal.show();
+    });
+
+    // Handle the location addition form submission
+    document.getElementById("addLocationSubmit").addEventListener("click", function() {
+        const form = document.getElementById("addLocationForm");
+        const formData = new FormData(form);
+
+        // Set action to direct_add
+        formData.set("action", "direct_add");
+
+        fetch("api/masterlist/direct_add_location.php", {
+                method: "POST",
+                body: formData,
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.success) {
+                    alert("Location added successfully");
+
+                    // Reload the page after successful addition
+                    location.reload();
+                } else {
+                    alert("Failed to add location: " + data.message);
+                }
+            })
+            .catch((error) => {
+                console.error("Error:", error);
+                alert("An error occurred while adding the location.");
+            });
+    });
+</script>
 
 <script>
     $(document).ready(function() {
@@ -363,7 +449,7 @@ $page = 'credit_memo'; // Set the variable corresponding to the current page
         const $clearBtn = $('button[type="reset"]');
 
         // Initialize Select2 for customer and credit account
-        $('#customer_id, #credit_account, #credit_account_id, #location').select2({
+        $('#customer_id, #credit_account, #credit_account_id').select2({
             theme: 'classic',
             width: '100%'
         });

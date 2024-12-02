@@ -164,7 +164,10 @@ $newRRNo = ReceivingReport::getLastRRNo();
                                     </div>
 
                                     <div class="col-md-4 vendor-details">
-                                        <label for="location" class="form-label">Location</label>
+                                        <label for="location" class="form-label">
+                                            Location
+                                            <a href="#" id="addNewLocationLink" class="ms-3 text-primary">| Add New</a>
+                                        </label>
                                         <select class="form-select form-select-sm" id="location" name="location"
                                             required>
                                             <option value="">Select Location</option>
@@ -369,6 +372,50 @@ $newRRNo = ReceivingReport::getLastRRNo();
 
 <?php require 'views/templates/footer.php' ?>
 <iframe id="printFrame" style="display:none;"></iframe>
+
+<!-- Bootstrap Modal for Adding New Location -->
+<?php
+require_once(__DIR__ . '/../layouts/add_location.php');
+require_once(__DIR__ . '/../layouts/add_customer.php');
+?>
+
+// modal script
+<script>
+    // Open the modal when the "Add New Location" link is clicked
+    document.getElementById("addNewLocationLink").addEventListener("click", function() {
+        const addLocationModal = new bootstrap.Modal(document.getElementById("addLocationModal"));
+        addLocationModal.show();
+    });
+
+    // Handle the location addition form submission
+    document.getElementById("addLocationSubmit").addEventListener("click", function() {
+        const form = document.getElementById("addLocationForm");
+        const formData = new FormData(form);
+
+        // Set action to direct_add
+        formData.set("action", "direct_add");
+
+        fetch("api/masterlist/direct_add_location.php", {
+                method: "POST",
+                body: formData,
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.success) {
+                    alert("Location added successfully");
+
+                    // Reload the page after successful addition
+                    location.reload();
+                } else {
+                    alert("Failed to add location: " + data.message);
+                }
+            })
+            .catch((error) => {
+                console.error("Error:", error);
+                alert("An error occurred while adding the location.");
+            });
+    });
+</script>
 
 <script>
     $(document).ready(function() {
