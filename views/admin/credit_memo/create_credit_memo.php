@@ -359,14 +359,26 @@ $page = 'credit_memo'; // Set the variable corresponding to the current page
 <iframe id="printFrame" style="display:none;"></iframe>
 
 <!-- Bootstrap Modal for Adding New Customer and New Location -->
-<?php include('layouts/add_customer.php'); ?>
 <?php
 require_once(__DIR__ . '/../layouts/add_location.php');
 require_once(__DIR__ . '/../layouts/add_customer.php');
+require_once(__DIR__ . '/../layouts/add_vendor.php');
 ?>
 
 // modal script
 <script>
+    // Open the modal when the "Add New Location" link is clicked
+    document.getElementById("addNewLocationLink").addEventListener("click", function() {
+        const addLocationModal = new bootstrap.Modal(document.getElementById("addLocationModal"));
+        addLocationModal.show();
+    });
+
+    // Open the modal when the "Add New Vendor" button is clicked
+    document.getElementById("addNewVendorLink").addEventListener("click", function () {
+        const addVendorModal = new bootstrap.Modal(document.getElementById("addVendorModal"));
+        addVendorModal.show();
+    });
+    
     // Open the modal when the "Add New Customer" link is clicked
     document.getElementById("addNewCustomerLink").addEventListener("click", function() {
         const addCustomerModal = new bootstrap.Modal(document.getElementById("addCustomerModal"));
@@ -402,12 +414,6 @@ require_once(__DIR__ . '/../layouts/add_customer.php');
             });
     });
 
-    // Open the modal when the "Add New Location" link is clicked
-    document.getElementById("addNewLocationLink").addEventListener("click", function() {
-        const addLocationModal = new bootstrap.Modal(document.getElementById("addLocationModal"));
-        addLocationModal.show();
-    });
-
     // Handle the location addition form submission
     document.getElementById("addLocationSubmit").addEventListener("click", function() {
         const form = document.getElementById("addLocationForm");
@@ -434,6 +440,35 @@ require_once(__DIR__ . '/../layouts/add_customer.php');
             .catch((error) => {
                 console.error("Error:", error);
                 alert("An error occurred while adding the location.");
+            });
+    });
+
+    // Handle the vendor addition form submission
+    document.getElementById("addVendorSubmit").addEventListener("click", function () {
+        const form = document.getElementById("addVendorForm");
+        const formData = new FormData(form);
+
+        // Set action to direct_add
+        formData.set("action", "direct_add");
+
+        fetch("api/masterlist/direct_add_vendor.php", {
+                method: "POST",
+                body: formData,
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.success) {
+                    alert("Vendor added successfully");
+
+                    // Reload the page after successful addition
+                    location.reload();
+                } else {
+                    alert("Failed to add vendor: " + data.message);
+                }
+            })
+            .catch((error) => {
+                console.error("Error:", error);
+                alert("An error occurred while adding the vendor.");
             });
     });
 </script>

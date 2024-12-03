@@ -70,7 +70,10 @@ $page = 'sales_purchase-order'; // Set the variable corresponding to the current
                                         <h6 class="border-bottom pb-2">Vendor Details</h6>
                                     </div>
                                     <div class="col-md-4 vendor-details">
-                                        <label for="vendor_name" class="form-label">Vendor</label>
+                                        <label for="vendor_id" class="form-label">
+                                            Vendor
+                                            <a href="#" id="addNewVendorLink" class="ms-3 text-primary">| Add New</a>
+                                        </label>
                                         <select class="form-select form-select-sm select2" id="vendor_name"
                                             name="vendor_name" required>
                                             <option value="">Select Vendor</option>
@@ -280,10 +283,10 @@ $page = 'sales_purchase-order'; // Set the variable corresponding to the current
 <?php require 'views/templates/footer.php' ?>
 <iframe id="printFrame" style="display:none;"></iframe>
 
-<!-- Bootstrap Modal for Adding New Location -->
 <?php
 require_once(__DIR__ . '/../layouts/add_location.php');
 require_once(__DIR__ . '/../layouts/add_customer.php');
+require_once(__DIR__ . '/../layouts/add_vendor.php');
 ?>
 
 // modal script
@@ -292,6 +295,47 @@ require_once(__DIR__ . '/../layouts/add_customer.php');
     document.getElementById("addNewLocationLink").addEventListener("click", function() {
         const addLocationModal = new bootstrap.Modal(document.getElementById("addLocationModal"));
         addLocationModal.show();
+    });
+
+    // Open the modal when the "Add New Vendor" button is clicked
+    document.getElementById("addNewVendorLink").addEventListener("click", function () {
+        const addVendorModal = new bootstrap.Modal(document.getElementById("addVendorModal"));
+        addVendorModal.show();
+    });
+    
+    // Open the modal when the "Add New Customer" link is clicked
+    document.getElementById("addNewCustomerLink").addEventListener("click", function() {
+        const addCustomerModal = new bootstrap.Modal(document.getElementById("addCustomerModal"));
+        addCustomerModal.show();
+    });
+
+    // Handle the customer addition form submission
+    document.getElementById("addCustomerSubmit").addEventListener("click", function() {
+        const form = document.getElementById("addCustomerForm");
+        const formData = new FormData(form);
+
+        // Set action to direct_add
+        formData.set("action", "direct_add");
+
+        fetch("api/masterlist/direct_add_customer.php", {
+                method: "POST",
+                body: formData,
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.success) {
+                    alert("Customer added successfully");
+
+                    // Reload the page after successful addition
+                    location.reload();
+                } else {
+                    alert("Failed to add customer: " + data.message);
+                }
+            })
+            .catch((error) => {
+                console.error("Error:", error);
+                alert("An error occurred while adding the customer.");
+            });
     });
 
     // Handle the location addition form submission
@@ -320,6 +364,35 @@ require_once(__DIR__ . '/../layouts/add_customer.php');
             .catch((error) => {
                 console.error("Error:", error);
                 alert("An error occurred while adding the location.");
+            });
+    });
+
+    // Handle the vendor addition form submission
+    document.getElementById("addVendorSubmit").addEventListener("click", function () {
+        const form = document.getElementById("addVendorForm");
+        const formData = new FormData(form);
+
+        // Set action to direct_add
+        formData.set("action", "direct_add");
+
+        fetch("api/masterlist/direct_add_vendor.php", {
+                method: "POST",
+                body: formData,
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.success) {
+                    alert("Vendor added successfully");
+
+                    // Reload the page after successful addition
+                    location.reload();
+                } else {
+                    alert("Failed to add vendor: " + data.message);
+                }
+            })
+            .catch((error) => {
+                console.error("Error:", error);
+                alert("An error occurred while adding the vendor.");
             });
     });
 </script>

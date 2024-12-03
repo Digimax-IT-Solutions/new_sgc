@@ -179,8 +179,12 @@ $page = 'sales_sales_return'; // Set the variable corresponding to the current p
                                             name="business_style" readonly>
                                     </div>
 
-                                    <div class="col-md-4 customer-details">
-                                        <label for="payment_method" class="form-label">Payment Method</label>
+                                    <!-- payment_method -->
+                                    <div class="col-md-3 invoice-details">
+                                        <label for="payment_method" class="form-label">
+                                            Payment Method
+                                            <a href="#" id="addNewPaymentMethodLink" class="ms-3 text-primary">| Add New</a>
+                                        </label>
                                         <select class="form-select form-select-sm" id="payment_method"
                                             name="payment_method" required>
                                             <option value="">Select Payment Method</option>
@@ -437,19 +441,66 @@ $page = 'sales_sales_return'; // Set the variable corresponding to the current p
 
 <iframe id="printFrame" style="display:none;"></iframe>
 
-<!-- Bootstrap Modal for Adding New Customer and New Location -->
-<?php include('layouts/add_customer.php'); ?>
+<!-- Bootstrap Modal for Adding New Customer -->
 <?php
 require_once(__DIR__ . '/../layouts/add_location.php');
 require_once(__DIR__ . '/../layouts/add_customer.php');
+require_once(__DIR__ . '/../layouts/add_vendor.php');
+require_once(__DIR__ . '/../layouts/add_payment_method.php');
 ?>
 
 // modal script
 <script>
+    // Open the modal when the "Add New Location" link is clicked
+    document.getElementById("addNewLocationLink").addEventListener("click", function() {
+        const addLocationModal = new bootstrap.Modal(document.getElementById("addLocationModal"));
+        addLocationModal.show();
+    });
+
     // Open the modal when the "Add New Customer" link is clicked
     document.getElementById("addNewCustomerLink").addEventListener("click", function() {
         const addCustomerModal = new bootstrap.Modal(document.getElementById("addCustomerModal"));
         addCustomerModal.show();
+    });
+
+    // Open the modal when the "Add New Payment Method" link is clicked
+    document.getElementById("addNewPaymentMethodLink").addEventListener("click", function() {
+        const addPaymentMethodModal = new bootstrap.Modal(document.getElementById("addPaymentMethodModal"));
+        addPaymentMethodModal.show();
+    });
+
+    // Handle the payment method addition form submission
+    document.getElementById("addPaymentMethodSubmit").addEventListener("click", function(event) {
+        event.preventDefault(); // Prevent default form submission
+
+        const form = document.getElementById("addPaymentMethodForm");
+        const formData = new FormData(form);
+
+        // Set action to direct_add
+        formData.set("action", "direct_add");
+
+        fetch("api/masterlist/direct_add_payment_method.php", {
+            method: "POST",
+            body: formData,
+        })
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then((data) => {
+            if (data.success) {
+                alert("Payment Method added successfully");
+                location.reload(); // Reload the page after successful addition
+            } else {
+                alert(`Failed to add Payment Method: ${data.message || 'Unknown error'}`);
+            }
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+            alert("An error occurred while adding the Payment Method.");
+        });
     });
 
     // Handle the customer addition form submission
@@ -481,12 +532,6 @@ require_once(__DIR__ . '/../layouts/add_customer.php');
             });
     });
 
-    // Open the modal when the "Add New Location" link is clicked
-    document.getElementById("addNewLocationLink").addEventListener("click", function() {
-        const addLocationModal = new bootstrap.Modal(document.getElementById("addLocationModal"));
-        addLocationModal.show();
-    });
-
     // Handle the location addition form submission
     document.getElementById("addLocationSubmit").addEventListener("click", function() {
         const form = document.getElementById("addLocationForm");
@@ -515,8 +560,8 @@ require_once(__DIR__ . '/../layouts/add_customer.php');
                 alert("An error occurred while adding the location.");
             });
     });
-</script>
 
+</script>
 <script>
 
     document.getElementById('cash_sales').addEventListener('change', function () {

@@ -187,8 +187,10 @@ $newAPVoucherNo = Apv::getLastApvNo();
                                         <!-- SELECT VENDOR -->
                                         <div class="col-md-4 customer-details">
                                             <div class="form-group">
-                                                <label for="vendor_id">Vendor<span class="text-muted"
-                                                        id="payee_type_display"></span></label>
+                                                <label for="vendor_id" class="form-label">
+                                                    Vendor
+                                                    <a href="#" id="addNewVendorLink" class="ms-3 text-primary">| Add New</a>
+                                                </label>
                                                 <select class="form-control form-control-sm select2" id="vendor_id"
                                                     name="vendor_id" required>
                                                     <option value=""></option>
@@ -473,6 +475,7 @@ $newAPVoucherNo = Apv::getLastApvNo();
 <?php
 require_once(__DIR__ . '/../layouts/add_location.php');
 require_once(__DIR__ . '/../layouts/add_customer.php');
+require_once(__DIR__ . '/../layouts/add_vendor.php');
 ?>
 
 // modal script
@@ -482,6 +485,13 @@ require_once(__DIR__ . '/../layouts/add_customer.php');
         const addLocationModal = new bootstrap.Modal(document.getElementById("addLocationModal"));
         addLocationModal.show();
     });
+
+    // Open the modal when the "Add New Vendor" button is clicked
+    document.getElementById("addNewVendorLink").addEventListener("click", function () {
+        const addVendorModal = new bootstrap.Modal(document.getElementById("addVendorModal"));
+        addVendorModal.show();
+    });
+    
 
     // Handle the location addition form submission
     document.getElementById("addLocationSubmit").addEventListener("click", function() {
@@ -509,6 +519,35 @@ require_once(__DIR__ . '/../layouts/add_customer.php');
             .catch((error) => {
                 console.error("Error:", error);
                 alert("An error occurred while adding the location.");
+            });
+    });
+
+    // Handle the vendor addition form submission
+    document.getElementById("addVendorSubmit").addEventListener("click", function () {
+        const form = document.getElementById("addVendorForm");
+        const formData = new FormData(form);
+
+        // Set action to direct_add
+        formData.set("action", "direct_add");
+
+        fetch("api/masterlist/direct_add_vendor.php", {
+                method: "POST",
+                body: formData,
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.success) {
+                    alert("Vendor added successfully");
+
+                    // Reload the page after successful addition
+                    location.reload();
+                } else {
+                    alert("Failed to add vendor: " + data.message);
+                }
+            })
+            .catch((error) => {
+                console.error("Error:", error);
+                alert("An error occurred while adding the vendor.");
             });
     });
 </script>

@@ -157,4 +157,34 @@ class Vendor
 
         return null;
     }
+
+    public static function getLastId()
+    {
+        global $connection;
+
+        $stmt = $connection->query("SELECT MAX(id) AS last_transaction_id FROM vendors");
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $result['last_transaction_id'] ?? null;
+    }
+
+    public static function findByCodeOrName($vendor_name)
+    {
+        global $connection;
+
+        $stmt = $connection->prepare("
+                SELECT id, vendor_name 
+                FROM vendors 
+                WHERE LOWER(vendor_name) = LOWER(:vendor_name)
+                LIMIT 1
+            ");
+
+
+        $stmt->bindParam(':vendor_name', $vendor_name, PDO::PARAM_STR);
+        $stmt->execute();
+
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $result ?: null; // Returns the customer record or null if not found
+    }
 }
