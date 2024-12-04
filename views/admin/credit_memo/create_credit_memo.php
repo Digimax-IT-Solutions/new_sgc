@@ -358,11 +358,12 @@ $page = 'credit_memo'; // Set the variable corresponding to the current page
 
 <iframe id="printFrame" style="display:none;"></iframe>
 
-<!-- Bootstrap Modal for Adding New Customer and New Location -->
+<!-- Bootstrap Modal for Adding New Customer -->
 <?php
 require_once(__DIR__ . '/../layouts/add_location.php');
 require_once(__DIR__ . '/../layouts/add_customer.php');
 require_once(__DIR__ . '/../layouts/add_vendor.php');
+require_once(__DIR__ . '/../layouts/add_payment_method.php');
 ?>
 
 // modal script
@@ -373,16 +374,104 @@ require_once(__DIR__ . '/../layouts/add_vendor.php');
         addLocationModal.show();
     });
 
-    // Open the modal when the "Add New Vendor" button is clicked
-    document.getElementById("addNewVendorLink").addEventListener("click", function () {
-        const addVendorModal = new bootstrap.Modal(document.getElementById("addVendorModal"));
-        addVendorModal.show();
-    });
-    
     // Open the modal when the "Add New Customer" link is clicked
     document.getElementById("addNewCustomerLink").addEventListener("click", function() {
         const addCustomerModal = new bootstrap.Modal(document.getElementById("addCustomerModal"));
         addCustomerModal.show();
+    });
+
+    // Open the modal when the "Add New Payment Method" link is clicked
+    document.getElementById("addNewPaymentMethodLink").addEventListener("click", function() {
+        const addPaymentMethodModal = new bootstrap.Modal(document.getElementById("addPaymentMethodModal"));
+        addPaymentMethodModal.show();
+    });
+
+    // Handle the payment method addition form submission
+    document.getElementById("addPaymentMethodSubmit").addEventListener("click", function() {
+        const form = document.getElementById("addPaymentMethodForm");
+        const formData = new FormData(form);
+
+        // Set action to direct_add
+        formData.set("action", "direct_add");
+
+        fetch("api/masterlist/direct_add_payment_method.php", {
+            method: "POST",
+            body: formData,
+        })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.success) {
+                alert("Payment Method added successfully");
+
+                // Add the new payment method to the dropdown
+                const paymentMethodSelect = document.getElementById("payment_method");
+                const newOption = document.createElement("option");
+                newOption.value = data.payment_method.id;
+                newOption.textContent = data.payment_method.payment_method_name; // Use payment_method_name
+                newOption.selected = true; // Automatically select the new payment method
+                paymentMethodSelect.appendChild(newOption);
+
+                // Close the modal
+                const addPaymentMethodModal = bootstrap.Modal.getInstance(document.getElementById("addPaymentMethodModal"));
+                addPaymentMethodModal.hide();
+
+                // Remove all modal backdrops
+                document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+
+                // Reset the form
+                form.reset();
+            } else {
+                alert("Failed to add Payment Method: " + data.message);
+            }
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+            alert("An error occurred while adding the Payment Method.");
+        });
+    });
+
+    // Handle the location addition form submission
+    document.getElementById("addLocationSubmit").addEventListener("click", function() {
+        const form = document.getElementById("addLocationForm");
+        const formData = new FormData(form);
+
+        // Set action to direct_add
+        formData.set("action", "direct_add");
+
+        fetch("api/masterlist/direct_add_location.php", {
+            method: "POST",
+            body: formData,
+        })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.success) {
+                alert("Location added successfully");
+
+                // Add the new location to the dropdown
+                const locationSelect = document.getElementById("location");
+                const newOption = document.createElement("option");
+                newOption.value = data.location.id;
+                newOption.textContent = data.location.location_name; // Changed from data.location.location
+                newOption.selected = true;
+                locationSelect.appendChild(newOption);
+
+                // Close the modal
+                const addLocationModal = bootstrap.Modal.getInstance(document.getElementById("addLocationModal"));
+                addLocationModal.hide();
+
+                // Remove all modal backdrops
+                document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+
+                // Reset the form
+                form.reset();
+            } else {
+                alert("Failed to add location: " + data.message);
+            }
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+            alert("An error occurred while adding the location.");
+        });
     });
 
     // Handle the customer addition form submission
@@ -402,8 +491,23 @@ require_once(__DIR__ . '/../layouts/add_vendor.php');
                 if (data.success) {
                     alert("Customer added successfully");
 
-                    // Reload the page after successful addition
-                    location.reload();
+                    // Add the new customer to the dropdown
+                    const customerSelect = document.getElementById("customer_id");
+                    const newOption = document.createElement("option");
+                    newOption.value = data.customer.id;
+                    newOption.textContent = data.customer.customer_name;
+                    newOption.selected = true; // Automatically select the new customer
+                    customerSelect.appendChild(newOption);
+
+                    // Close the modal
+                    const addCustomerModal = bootstrap.Modal.getInstance(document.getElementById("addCustomerModal"));
+                    addCustomerModal.hide();
+
+                    // Remove all modal backdrops
+                    document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+
+                    // Reset the form
+                    form.reset();
                 } else {
                     alert("Failed to add customer: " + data.message);
                 }
@@ -411,64 +515,6 @@ require_once(__DIR__ . '/../layouts/add_vendor.php');
             .catch((error) => {
                 console.error("Error:", error);
                 alert("An error occurred while adding the customer.");
-            });
-    });
-
-    // Handle the location addition form submission
-    document.getElementById("addLocationSubmit").addEventListener("click", function() {
-        const form = document.getElementById("addLocationForm");
-        const formData = new FormData(form);
-
-        // Set action to direct_add
-        formData.set("action", "direct_add");
-
-        fetch("api/masterlist/direct_add_location.php", {
-                method: "POST",
-                body: formData,
-            })
-            .then((response) => response.json())
-            .then((data) => {
-                if (data.success) {
-                    alert("Location added successfully");
-
-                    // Reload the page after successful addition
-                    location.reload();
-                } else {
-                    alert("Failed to add location: " + data.message);
-                }
-            })
-            .catch((error) => {
-                console.error("Error:", error);
-                alert("An error occurred while adding the location.");
-            });
-    });
-
-    // Handle the vendor addition form submission
-    document.getElementById("addVendorSubmit").addEventListener("click", function () {
-        const form = document.getElementById("addVendorForm");
-        const formData = new FormData(form);
-
-        // Set action to direct_add
-        formData.set("action", "direct_add");
-
-        fetch("api/masterlist/direct_add_vendor.php", {
-                method: "POST",
-                body: formData,
-            })
-            .then((response) => response.json())
-            .then((data) => {
-                if (data.success) {
-                    alert("Vendor added successfully");
-
-                    // Reload the page after successful addition
-                    location.reload();
-                } else {
-                    alert("Failed to add vendor: " + data.message);
-                }
-            })
-            .catch((error) => {
-                console.error("Error:", error);
-                alert("An error occurred while adding the vendor.");
             });
     });
 </script>

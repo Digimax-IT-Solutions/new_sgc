@@ -474,7 +474,6 @@ $newAPVoucherNo = Apv::getLastApvNo();
 <!-- Bootstrap Modal for Adding New Location -->
 <?php
 require_once(__DIR__ . '/../layouts/add_location.php');
-require_once(__DIR__ . '/../layouts/add_customer.php');
 require_once(__DIR__ . '/../layouts/add_vendor.php');
 ?>
 
@@ -523,7 +522,7 @@ require_once(__DIR__ . '/../layouts/add_vendor.php');
     });
 
     // Handle the vendor addition form submission
-    document.getElementById("addVendorSubmit").addEventListener("click", function () {
+    document.getElementById("addVendorSubmit").addEventListener("click", function() {
         const form = document.getElementById("addVendorForm");
         const formData = new FormData(form);
 
@@ -531,24 +530,39 @@ require_once(__DIR__ . '/../layouts/add_vendor.php');
         formData.set("action", "direct_add");
 
         fetch("api/masterlist/direct_add_vendor.php", {
-                method: "POST",
-                body: formData,
-            })
-            .then((response) => response.json())
-            .then((data) => {
-                if (data.success) {
-                    alert("Vendor added successfully");
+            method: "POST",
+            body: formData,
+        })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.success) {
+                alert("Vendor added successfully");
 
-                    // Reload the page after successful addition
-                    location.reload();
-                } else {
-                    alert("Failed to add vendor: " + data.message);
-                }
-            })
-            .catch((error) => {
-                console.error("Error:", error);
-                alert("An error occurred while adding the vendor.");
-            });
+                // Add the new vendor to the dropdown
+                const vendorSelect = document.getElementById("vendor_name");
+                const newOption = document.createElement("option");
+                newOption.value = data.vendor.id;
+                newOption.textContent = data.vendor.vendor_name;
+                newOption.selected = true; // Automatically select the new vendor
+                vendorSelect.appendChild(newOption);
+
+                // Close the modal
+                const addVendorModal = bootstrap.Modal.getInstance(document.getElementById("addVendorModal"));
+                addVendorModal.hide();
+
+                // Remove all modal backdrops
+                document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+
+                // Reset the form
+                form.reset();
+            } else {
+                alert("Failed to add vendor: " + data.message);
+            }
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+            alert("An error occurred while adding the vendor.");
+        });
     });
 </script>
 

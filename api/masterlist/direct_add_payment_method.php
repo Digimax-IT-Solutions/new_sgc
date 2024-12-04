@@ -8,7 +8,7 @@ require_once __DIR__ . '/../../_init.php';
 // Add payment method
 if (post('action') === 'direct_add') {
     $paymentMethodName = post('payment_method_name');
-    $description = post('description');
+    $description = post('description') ?? ''; // Use null coalescing to handle optional description
 
     try {
         // Check if the payment method already exists
@@ -25,28 +25,30 @@ if (post('action') === 'direct_add') {
                 ],
                 "message" => "Payment method already exists."
             ]);
-        } else {
-            // Insert new payment method if it does not already exist
-            $newPaymentMethodId = PaymentMethod::add($paymentMethodName, $description);
+            exit;
+        } 
 
-            // Retrieve the newly added payment method details
-            $newPaymentMethod = PaymentMethod::find($newPaymentMethodId);
+        // Insert new payment method
+        $newPaymentMethodId = PaymentMethod::add($paymentMethodName, $description);
 
-            echo json_encode([
-                "success" => true,
-                "payment_method" => [
-                    "id" => $newPaymentMethodId,
-                    "name" => $paymentMethodName,
-                    "description" => $description
-                ],
-                "message" => "Payment method added successfully."
-            ]);
-        }
+        // Retrieve the newly added payment method details
+        $newPaymentMethod = PaymentMethod::find($newPaymentMethodId);
+
+        echo json_encode([
+            "success" => true,
+            "payment_method" => [
+                "id" => $newPaymentMethodId,
+                "payment_method_name" => $paymentMethodName, // Use payment_method_name consistently
+                "description" => $description
+            ],
+            "message" => "Payment method added successfully."
+        ]);
+        exit;
     } catch (Exception $ex) {
         echo json_encode([
             "success" => false,
             "message" => $ex->getMessage()
         ]);
+        exit;
     }
-    exit;
 }

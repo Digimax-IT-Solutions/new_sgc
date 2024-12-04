@@ -7,47 +7,77 @@ require_once __DIR__ . '/../../_init.php';
 
 // Add vendor with direct JSON response
 if (post('action') === 'direct_add') {
-    $vendor_name = post('vendor_name');
-    $vendor_code = post('vendor_code');
-    $account_number = post('account_number');
-    $vendor_address = post('vendor_address');
-    $contact_number = post('contact_number');
-    $email = post('email');
-    $terms = post('terms');
-    $tin = post('tin');
-    $tax_type = post('tax_type');
-    $tel_no = post('tel_no');
-    $fax_no = post('fax_no');
-    $notes = post('notes');
-    $item_type = post('item_type');
+    // Sanitize and validate input
+    $vendor_name = trim(post('vendor_name'));
+    $vendor_code = trim(post('vendor_code') ?? '');
+    $account_number = trim(post('account_number') ?? '');
+    $vendor_address = trim(post('vendor_address') ?? '');
+    $contact_number = trim(post('contact_number') ?? '');
+    $email = trim(post('email') ?? '');
+    $terms = trim(post('terms') ?? '');
+    $tin = trim(post('tin') ?? '');
+    $tax_type = trim(post('tax_type') ?? '');
+    $tel_no = trim(post('tel_no') ?? '');
+    $fax_no = trim(post('fax_no') ?? '');
+    $notes = trim(post('notes') ?? '');
+    $item_type = trim(post('item_type') ?? '');
 
     try {
+        // Validate vendor name
+        if (empty($vendor_name)) {
+            throw new Exception('Vendor name is required');
+        }
+
         // Check if the vendor already exists
         $existingVendor = Vendor::findByCodeOrName($vendor_name);
 
         if ($existingVendor) {
             // Vendor already exists, return their details
-            $existingVendorDetails = [
-                "id" => $existingVendor['id'],
-                "vendor_name" => $existingVendor['vendor_name']
-            ];
-
-            echo json_encode(["success" => true, "vendor" => $existingVendorDetails, "message" => "Vendor already exists."]);
-        } else {
-            // Insert new vendor if they do not already exist
-            $newVendorId = Vendor::add($vendor_name, $vendor_code, $account_number, $vendor_address, $contact_number, $email, $terms, $tin, $tax_type, $tel_no, $fax_no, $notes, $item_type);
-
-            // Retrieve and prepare the newly added vendor details
-            $id = Vendor::getLastId();
-            $newVendor = [
-                "id" => $id,
-                "vendor_name" => $vendor_name
-            ];
-
-            echo json_encode(["success" => true, "vendor" => $newVendor, "message" => "Vendor added successfully."]);
+            echo json_encode([
+                "success" => true, 
+                "vendor" => [
+                    "id" => $existingVendor['id'],
+                    "vendor_name" => $existingVendor['vendor_name']
+                ], 
+                "message" => "Vendor already exists."
+            ]);
+            exit;
         }
+
+        // Insert new vendor
+        $newVendorId = Vendor::add(
+            $vendor_name, 
+            $vendor_code, 
+            $account_number, 
+            $vendor_address, 
+            $contact_number, 
+            $email, 
+            $terms, 
+            $tin, 
+            $tax_type, 
+            $tel_no, 
+            $fax_no, 
+            $notes, 
+            $item_type
+        );
+
+        // Retrieve the newly added vendor details
+        $newVendor = Vendor::find($newVendorId);
+
+        echo json_encode([
+            "success" => true, 
+            "vendor" => [
+                "id" => $newVendorId,
+                "vendor_name" => $vendor_name
+            ], 
+            "message" => "Vendor added successfully."
+        ]);
+        exit;
     } catch (Exception $ex) {
-        echo json_encode(["success" => false, "message" => $ex->getMessage()]);
+        echo json_encode([
+            "success" => false, 
+            "message" => $ex->getMessage()
+        ]);
+        exit;
     }
-    exit;
 }

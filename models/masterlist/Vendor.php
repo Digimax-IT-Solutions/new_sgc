@@ -90,54 +90,75 @@ class Vendor
 
         return static::$cache;
     }
-
+    
     public static function add($vendor_name, $vendor_code, $account_number, $vendor_address, $contact_number, $email, $terms, $tin, $tax_type, $tel_no, $fax_no, $notes, $item_type)
     {
         global $connection;
-
-        // Check if the vendor name already exists
-        if (static::findByName($vendor_name)) {
-            throw new Exception('Vendor name already exists');
+    
+        // More robust validation
+        if (empty(trim($vendor_name))) {
+            throw new Exception('Vendor name cannot be empty.');
         }
-
-        // Prepare the SQL query
-        $stmt = $connection->prepare('INSERT INTO `vendors` (vendor_name, vendor_code, account_number, vendor_address, contact_number, email, terms, tin, tax_type, tel_no, fax_no, notes, item_type) VALUES (:vendor_name, :vendor_code, :account_number, :vendor_address, :contact_number, :email, :terms, :tin, :tax_type, :tel_no, :fax_no, :notes, :item_type)');
-
-        // Bind parameters
-        $stmt->bindParam(":vendor_name", $vendor_name);
-        $stmt->bindParam(":vendor_code", $vendor_code);
-        $stmt->bindParam(":account_number", $account_number);
-        $stmt->bindParam(":vendor_address", $vendor_address);
-        $stmt->bindParam(":contact_number", $contact_number);
-        $stmt->bindParam(":email", $email);
-        $stmt->bindParam(":terms", $terms);
-        $stmt->bindParam(":tin", $tin);
-        $stmt->bindParam(":tax_type", $tax_type);
-        $stmt->bindParam(":tel_no", $tel_no);
-        $stmt->bindParam(":fax_no", $fax_no);
-        $stmt->bindParam(":notes", $notes);
-        $stmt->bindParam(":item_type", $item_type);
-
-        // Execute the query
-        $stmt->execute();
+    
+        // Check for existing vendor using case-insensitive comparison
+        $existingVendor = self::findByName($vendor_name);
+        if ($existingVendor) {
+            throw new Exception('Vendor with this name already exists.');
+        }
+    
+        try {
+            $connection->beginTransaction(); // Start a transaction
+    
+            $stmt = $connection->prepare('
+                INSERT INTO `vendors` (
+                    vendor_name, vendor_code, account_number, vendor_address, 
+                    contact_number, email, terms, tin, tax_type, tel_no, 
+                    fax_no, notes, item_type
+                ) VALUES (
+                    :vendor_name, :vendor_code, :account_number, :vendor_address, 
+                    :contact_number, :email, :terms, :tin, :tax_type, :tel_no, 
+                    :fax_no, :notes, :item_type
+                )
+            ');
+    
+            // Use null coalescing and trimming for optional fields
+            $stmt->bindValue(":vendor_name", trim($vendor_name), PDO::PARAM_STR);
+            $stmt->bindValue(":vendor_code", trim($vendor_code) ?: null, PDO::PARAM_STR);
+            $stmt->bindValue(":account_number", trim($account_number) ?: null, PDO::PARAM_STR);
+            $stmt->bindValue(":vendor_address", trim($vendor_address) ?: null, PDO::PARAM_STR);
+            $stmt->bindValue(":contact_number", trim($contact_number) ?: null, PDO::PARAM_STR);
+            $stmt->bindValue(":email", trim($email) ?: null, PDO::PARAM_STR);
+            $stmt->bindValue(":terms", trim($terms) ?: null, PDO::PARAM_STR);
+            $stmt->bindValue(":tin", trim($tin) ?: null, PDO::PARAM_STR);
+            $stmt->bindValue(":tax_type", trim($tax_type) ?: null, PDO::PARAM_STR);
+            $stmt->bindValue(":tel_no", trim($tel_no) ?: null, PDO::PARAM_STR);
+            $stmt->bindValue(":fax_no", trim($fax_no) ?: null, PDO::PARAM_STR);
+            $stmt->bindValue(":notes", trim($notes) ?: null, PDO::PARAM_STR);
+            $stmt->bindValue(":item_type", trim($item_type) ?: null, PDO::PARAM_STR);
+    
+            $stmt->execute();
+            $lastInsertId = $connection->lastInsertId();
+    
+            $connection->commit(); // Commit the transaction
+    
+            return $lastInsertId;
+        } catch (PDOException $e) {
+            $connection->rollBack(); // Rollback in case of error
+            throw new Exception('Database error: ' . $e->getMessage());
+        }
     }
-
+    
     public static function findByName($name)
     {
         global $connection;
-
-        $stmt = $connection->prepare("SELECT * FROM `vendors` WHERE vendor_name=:name");
-        $stmt->bindParam("name", $name);
+    
+        $stmt = $connection->prepare("SELECT * FROM `vendors` WHERE LOWER(vendor_name) = LOWER(:name)");
+        $stmt->bindValue(':name', trim($name), PDO::PARAM_STR);
         $stmt->execute();
-        $stmt->setFetchMode(PDO::FETCH_ASSOC);
-
-        $result = $stmt->fetchAll();
-
-        if (!empty($result)) {
-            return new Vendor($result[0]);
-        }
-
-        return null;
+    
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+        return $result ? new Vendor($result) : null;
     }
 
     public static function find($id)

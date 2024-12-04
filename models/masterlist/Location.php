@@ -76,22 +76,30 @@ class Location
         return $connection->lastInsertId(); // Return the last inserted ID
     }
 
+    public static function getLastId()
+    {
+        global $connection;
+
+        $stmt = $connection->query("SELECT MAX(id) AS last_transaction_id FROM location");
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $result['last_transaction_id'] ?? null;
+    }
 
     public static function findByName($name)
     {
         global $connection;
-
-        $stmt = $connection->prepare('SELECT * FROM location WHERE name=:name');
+    
+        $stmt = $connection->prepare('SELECT * FROM location WHERE name = :name');
         $stmt->bindParam(':name', $name);
         $stmt->execute();
-        $stmt->setFetchMode(PDO::FETCH_ASSOC);
-
-        $result = $stmt->fetchAll();
-
-        if (count($result) >= 1) {
-            return new Location($result[0]);
+    
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+        if ($result) {
+            return new Location($result);
         }
-
+    
         return null;
     }
 

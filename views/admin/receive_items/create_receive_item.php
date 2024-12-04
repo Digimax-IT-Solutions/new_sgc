@@ -285,7 +285,6 @@ $page = 'sales_purchase-order'; // Set the variable corresponding to the current
 
 <?php
 require_once(__DIR__ . '/../layouts/add_location.php');
-require_once(__DIR__ . '/../layouts/add_customer.php');
 require_once(__DIR__ . '/../layouts/add_vendor.php');
 ?>
 
@@ -303,40 +302,6 @@ require_once(__DIR__ . '/../layouts/add_vendor.php');
         addVendorModal.show();
     });
     
-    // Open the modal when the "Add New Customer" link is clicked
-    document.getElementById("addNewCustomerLink").addEventListener("click", function() {
-        const addCustomerModal = new bootstrap.Modal(document.getElementById("addCustomerModal"));
-        addCustomerModal.show();
-    });
-
-    // Handle the customer addition form submission
-    document.getElementById("addCustomerSubmit").addEventListener("click", function() {
-        const form = document.getElementById("addCustomerForm");
-        const formData = new FormData(form);
-
-        // Set action to direct_add
-        formData.set("action", "direct_add");
-
-        fetch("api/masterlist/direct_add_customer.php", {
-                method: "POST",
-                body: formData,
-            })
-            .then((response) => response.json())
-            .then((data) => {
-                if (data.success) {
-                    alert("Customer added successfully");
-
-                    // Reload the page after successful addition
-                    location.reload();
-                } else {
-                    alert("Failed to add customer: " + data.message);
-                }
-            })
-            .catch((error) => {
-                console.error("Error:", error);
-                alert("An error occurred while adding the customer.");
-            });
-    });
 
     // Handle the location addition form submission
     document.getElementById("addLocationSubmit").addEventListener("click", function() {
@@ -368,7 +333,7 @@ require_once(__DIR__ . '/../layouts/add_vendor.php');
     });
 
     // Handle the vendor addition form submission
-    document.getElementById("addVendorSubmit").addEventListener("click", function () {
+    document.getElementById("addVendorSubmit").addEventListener("click", function() {
         const form = document.getElementById("addVendorForm");
         const formData = new FormData(form);
 
@@ -376,24 +341,39 @@ require_once(__DIR__ . '/../layouts/add_vendor.php');
         formData.set("action", "direct_add");
 
         fetch("api/masterlist/direct_add_vendor.php", {
-                method: "POST",
-                body: formData,
-            })
-            .then((response) => response.json())
-            .then((data) => {
-                if (data.success) {
-                    alert("Vendor added successfully");
+            method: "POST",
+            body: formData,
+        })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.success) {
+                alert("Vendor added successfully");
 
-                    // Reload the page after successful addition
-                    location.reload();
-                } else {
-                    alert("Failed to add vendor: " + data.message);
-                }
-            })
-            .catch((error) => {
-                console.error("Error:", error);
-                alert("An error occurred while adding the vendor.");
-            });
+                // Add the new vendor to the dropdown
+                const vendorSelect = document.getElementById("vendor_name");
+                const newOption = document.createElement("option");
+                newOption.value = data.vendor.id;
+                newOption.textContent = data.vendor.vendor_name;
+                newOption.selected = true; // Automatically select the new vendor
+                vendorSelect.appendChild(newOption);
+
+                // Close the modal
+                const addVendorModal = bootstrap.Modal.getInstance(document.getElementById("addVendorModal"));
+                addVendorModal.hide();
+
+                // Remove all modal backdrops
+                document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+
+                // Reset the form
+                form.reset();
+            } else {
+                alert("Failed to add vendor: " + data.message);
+            }
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+            alert("An error occurred while adding the vendor.");
+        });
     });
 </script>
 

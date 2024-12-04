@@ -60,52 +60,53 @@ class PaymentMethod
         return static::$cache;
     }
 
-    public static function add($payment_method_name, $description)
+    public static function add($payment_method_name, $description = '')
     {
         global $connection;
-
-        if (static::findByName($payment_method_name))
+    
+        if (static::findByName($payment_method_name)) {
             throw new Exception('Payment method already exists');
-
+        }
+    
         $stmt = $connection->prepare('INSERT INTO `payment_method`(payment_method_name, description) VALUES (:payment_method_name, :description)');
-        $stmt->bindParam("payment_method_name", $payment_method_name);
-        $stmt->bindParam("description", $description);
+        $stmt->bindParam(":payment_method_name", $payment_method_name);
+        $stmt->bindParam(":description", $description);
         $stmt->execute();
+    
+        return $connection->lastInsertId(); // Return the last inserted ID
     }
-
+    
     public static function findByName($payment_method_name)
     {
         global $connection;
-
-        $stmt = $connection->prepare("SELECT * FROM `payment_method` WHERE payment_method_name=:payment_method_name");
-        $stmt->bindParam("payment_method_name", $payment_method_name);
+    
+        $stmt = $connection->prepare("SELECT * FROM `payment_method` WHERE payment_method_name = :payment_method_name");
+        $stmt->bindParam(":payment_method_name", $payment_method_name);
         $stmt->execute();
-        $stmt->setFetchMode(PDO::FETCH_ASSOC);
-
-        $result = $stmt->fetchAll();
-
-        if (count($result) >= 1) {
-            return new PaymentMethod($result[0]);
+    
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+        if ($result) {
+            return new PaymentMethod($result);
         }
-
+    
         return null;
     }
-
+    
     public static function find($id)
     {
         global $connection;
-
-        $stmt = $connection->prepare("SELECT * FROM `payment_method` WHERE id=:id");
-        $stmt->bindParam("id", $id);
+    
+        $stmt = $connection->prepare("SELECT * FROM `payment_method` WHERE id = :id");
+        $stmt->bindParam(":id", $id);
         $stmt->execute();
-        $stmt->setFetchMode(PDO::FETCH_ASSOC);
-
-        $result = $stmt->fetchAll();
-
-        if (count($result) >= 1) {
-            return new PaymentMethod($result[0]);
+    
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+        if ($result) {
+            return new PaymentMethod($result);
         }
-
+    
         return null;
     }
 }
