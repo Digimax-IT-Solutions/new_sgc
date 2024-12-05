@@ -466,7 +466,7 @@ require_once(__DIR__ . '/../layouts/add_vendor.php');
 require_once(__DIR__ . '/../layouts/add_payment_method.php');
 ?>
 
-// modal script
+ <!-- modal script -->
 <script>
     // Open the modal when the "Add New Location" link is clicked
     document.getElementById("addNewLocationLink").addEventListener("click", function() {

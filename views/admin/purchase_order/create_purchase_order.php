@@ -422,7 +422,7 @@ require_once(__DIR__ . '/../layouts/add_location.php');
 require_once(__DIR__ . '/../layouts/add_vendor.php');
 ?>
 
-// modal script
+ <!-- modal script -->
 <script>
     // Open the modal when the "Add New Location" link is clicked
     document.getElementById("addNewLocationLink").addEventListener("click", function() {
@@ -446,24 +446,39 @@ require_once(__DIR__ . '/../layouts/add_vendor.php');
         formData.set("action", "direct_add");
 
         fetch("api/masterlist/direct_add_location.php", {
-                method: "POST",
-                body: formData,
-            })
-            .then((response) => response.json())
-            .then((data) => {
-                if (data.success) {
-                    alert("Location added successfully");
+            method: "POST",
+            body: formData,
+        })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.success) {
+                alert("Location added successfully");
 
-                    // Reload the page after successful addition
-                    location.reload();
-                } else {
-                    alert("Failed to add location: " + data.message);
-                }
-            })
-            .catch((error) => {
-                console.error("Error:", error);
-                alert("An error occurred while adding the location.");
-            });
+                // Add the new location to the dropdown
+                const locationSelect = document.getElementById("location");
+                const newOption = document.createElement("option");
+                newOption.value = data.location.id;
+                newOption.textContent = data.location.location_name; // Changed from data.location.location
+                newOption.selected = true;
+                locationSelect.appendChild(newOption);
+
+                // Close the modal
+                const addLocationModal = bootstrap.Modal.getInstance(document.getElementById("addLocationModal"));
+                addLocationModal.hide();
+
+                // Remove all modal backdrops
+                document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+
+                // Reset the form
+                form.reset();
+            } else {
+                alert("Failed to add location: " + data.message);
+            }
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+            alert("An error occurred while adding the location.");
+        });
     });
 
     // Handle the vendor addition form submission
