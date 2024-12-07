@@ -261,7 +261,10 @@ $newWriteCvNo = WriteCheck::getLastCheckNo();
                                         <!-- LOCATION -->
                                         <div class="col-md-4 customer-details">
                                             <div class="form-group">
-                                                <label for="location" class="form-label">Location</label>
+                                                <label for="location" class="form-label">
+                                                    Location
+                                                    <a href="#" id="addNewLocationLink" class="ms-3 text-primary">| Add New</a>
+                                                </label>
                                                 <select class="form-select form-select-sm" id="location" name="location" required>
                                                     <option value="">Select Location</option>
                                                     <?php foreach ($locations as $location): ?>
@@ -435,6 +438,237 @@ $newWriteCvNo = WriteCheck::getLastCheckNo();
 
 
 <iframe id="printFrame" style="display:none;"></iframe>
+
+<!-- Bootstrap Modal for Adding New Customer -->
+<?php
+require_once(__DIR__ . '/../layouts/add_location.php');
+require_once(__DIR__ . '/../layouts/add_customer.php');
+require_once(__DIR__ . '/../layouts/add_payment_method.php');
+?>
+
+ <!-- modal script -->
+<script>
+    // Open the modal when the "Add New Location" link is clicked
+    document.getElementById("addNewLocationLink").addEventListener("click", function() {
+        const addLocationModal = new bootstrap.Modal(document.getElementById("addLocationModal"));
+        addLocationModal.show();
+    });
+
+    // Open the modal when the "Add New Customer" link is clicked
+    document.getElementById("addNewCustomerLink").addEventListener("click", function() {
+        const addCustomerModal = new bootstrap.Modal(document.getElementById("addCustomerModal"));
+        addCustomerModal.show();
+    });
+
+    // Open the modal when the "Add New Payment Method" link is clicked
+    document.getElementById("addNewPaymentMethodLink").addEventListener("click", function() {
+        const addPaymentMethodModal = new bootstrap.Modal(document.getElementById("addPaymentMethodModal"));
+        addPaymentMethodModal.show();
+    });
+
+    // Handle the payment method addition form submission
+    document.getElementById("addPaymentMethodSubmit").addEventListener("click", function() {
+        const form = document.getElementById("addPaymentMethodForm");
+        const formData = new FormData(form);
+
+        // Set action to direct_add
+        formData.set("action", "direct_add");
+
+        fetch("api/masterlist/direct_add_payment_method.php", {
+            method: "POST",
+            body: formData,
+        })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.success) {
+                alert("Payment Method added successfully");
+
+                // Add the new payment method to the dropdown
+                const paymentMethodSelect = document.getElementById("payment_method");
+                const newOption = document.createElement("option");
+                newOption.value = data.payment_method.id;
+                newOption.textContent = data.payment_method.payment_method_name; // Use payment_method_name
+                newOption.selected = true; // Automatically select the new payment method
+                paymentMethodSelect.appendChild(newOption);
+
+                // Close the modal
+                const addPaymentMethodModal = bootstrap.Modal.getInstance(document.getElementById("addPaymentMethodModal"));
+                addPaymentMethodModal.hide();
+
+                // Remove all modal backdrops
+                document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+
+                // Reset the form
+                form.reset();
+            } else {
+                alert("Failed to add Payment Method: " + data.message);
+            }
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+            alert("An error occurred while adding the Payment Method.");
+        });
+    });
+
+    // Handle the location addition form submission
+    document.getElementById("addLocationSubmit").addEventListener("click", function() {
+        const form = document.getElementById("addLocationForm");
+        const formData = new FormData(form);
+
+        // Set action to direct_add
+        formData.set("action", "direct_add");
+
+        fetch("api/masterlist/direct_add_location.php", {
+            method: "POST",
+            body: formData,
+        })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.success) {
+                alert("Location added successfully");
+
+                // Add the new location to the dropdown
+                const locationSelect = document.getElementById("location");
+                const newOption = document.createElement("option");
+                newOption.value = data.location.id;
+                newOption.textContent = data.location.location_name; // Changed from data.location.location
+                newOption.selected = true;
+                locationSelect.appendChild(newOption);
+
+                // Close the modal
+                const addLocationModal = bootstrap.Modal.getInstance(document.getElementById("addLocationModal"));
+                addLocationModal.hide();
+
+                // Remove all modal backdrops
+                document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+
+                // Reset the form
+                form.reset();
+            } else {
+                alert("Failed to add location: " + data.message);
+            }
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+            alert("An error occurred while adding the location.");
+        });
+    });
+
+    // Handle the customer addition form submission
+    document.getElementById("addCustomerSubmit").addEventListener("click", function() {
+        const form = document.getElementById("addCustomerForm");
+        const formData = new FormData(form);
+
+        // Set action to direct_add
+        formData.set("action", "direct_add");
+
+        fetch("api/masterlist/direct_add_customer.php", {
+                method: "POST",
+                body: formData,
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.success) {
+                    alert("Customer added successfully");
+
+                    // Add the new customer to the dropdown
+                    const customerSelect = document.getElementById("customer_id");
+                    const newOption = document.createElement("option");
+                    newOption.value = data.customer.id;
+                    newOption.textContent = data.customer.customer_name;
+                    newOption.selected = true; // Automatically select the new customer
+                    customerSelect.appendChild(newOption);
+
+                    // Close the modal
+                    const addCustomerModal = bootstrap.Modal.getInstance(document.getElementById("addCustomerModal"));
+                    addCustomerModal.hide();
+
+                    // Remove all modal backdrops
+                    document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+
+                    // Reset the form
+                    form.reset();
+                } else {
+                    alert("Failed to add customer: " + data.message);
+                }
+            })
+            .catch((error) => {
+                console.error("Error:", error);
+                alert("An error occurred while adding the customer.");
+            });
+    });
+</script>
+
+
+<script>
+
+    document.getElementById('cash_sales').addEventListener('change', function () {
+        var labelText = this.checked ? "Cash Sales - Sales Receipt" : "Sales sales_return";
+        document.getElementById('cash_sales_text').innerHTML = '&nbsp;&nbsp;' + labelText;
+    });
+
+    document.getElementById('sales_returnForm').addEventListener('submit', function () {
+        const selectElement = document.getElementById('customer_id');
+        const selectedOption = selectElement.options[selectElement.selectedIndex];
+        const customerName = selectedOption.getAttribute('data-customer-name');
+
+        document.getElementById('customer_name_hidden').value = customerName;
+        console.log(customerName);
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        var cashSalesSwitch = document.getElementById('cash_sales');
+        var cashSalesText = document.getElementById('cash_sales_text');
+        var sales_returnAccountSelect = document.getElementById('sales_return_account_id');
+        var accounts = <?php echo json_encode($accounts); ?>;
+
+        function updateLabelAndOptions() {
+            var isCashSales = cashSalesSwitch.checked;
+
+            // Clear existing options
+            sales_returnAccountSelect.innerHTML = '';
+
+            // Determine which account type to show based on switch state
+            var selectedAccountType = isCashSales ? "Other Current Assets" : "Accounts Receivable";
+
+            // Add options based on account type condition
+            accounts.forEach(function (account) {
+                var option = document.createElement('option');
+                option.value = account.id;
+                option.setAttribute('data-account-type', account.account_type);
+                option.textContent = account.account_description;
+
+                if (isCashSales) {
+                    // Show 'Bank' and 'Undeposited Funds' when cash sales is selected
+                    if (account.account_type === "Bank" || account.account_description.toLowerCase().includes("undeposited")) {
+                        sales_returnAccountSelect.appendChild(option);
+                    }
+                } else {
+                    // Show 'Accounts Receivable' when cash sales is not selected
+                    if (account.account_type === "Accounts Receivable") {
+                        sales_returnAccountSelect.appendChild(option);
+                    }
+                }
+            });
+        }
+
+        // Initial call to set label and options based on default switch state
+        updateLabelAndOptions();
+
+        // Event listener for switch change
+        cashSalesSwitch.addEventListener('change', updateLabelAndOptions);
+
+        const taxWithheldSelect = document.getElementById('tax_withheld_percentage');
+        const taxWithheldAccountIdInput = document.getElementById('tax_withheld_account_id');
+
+        taxWithheldSelect.addEventListener('change', function () {
+            const selectedOption = this.options[this.selectedIndex];
+            const accountId = selectedOption.getAttribute('data-account-id');
+            taxWithheldAccountIdInput.value = accountId;
+            console.log(tax_withheld_account_id);
+        });
+    });
+</script>
 
 <script>
     $(document).ready(function() {

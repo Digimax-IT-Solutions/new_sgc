@@ -211,7 +211,10 @@ foreach ($other_names as $other_name) {
                                     </div>
                                     <div class="col-md-2">
                                         <div class="form-group">
-                                            <label for="location">Location</label>
+                                        <label for="location" class="form-label">
+                                            Location
+                                            <a href="#" id="addNewLocationLink" class="ms-3 text-primary">| Add New</a>
+                                        </label>
                                             <select class="form-select form-select-sm select2" id="location" name="location" required>
                                                 <option value="">Select Location</option>
                                                 <?php foreach ($locations as $location): ?>
@@ -347,6 +350,62 @@ foreach ($other_names as $other_name) {
 <?php require 'views/templates/footer.php' ?>
 
 <iframe id="printFrame" style="display:none;"></iframe>
+<!-- Bootstrap Modal for Adding New Location -->
+<?php
+require_once(__DIR__ . '/../layouts/add_location.php');
+?>
+
+ <!-- modal script -->
+<script>
+    // Open the modal when the "Add New Location" link is clicked
+    document.getElementById("addNewLocationLink").addEventListener("click", function() {
+        const addLocationModal = new bootstrap.Modal(document.getElementById("addLocationModal"));
+        addLocationModal.show();
+    });
+    // Handle the location addition form submission
+    document.getElementById("addLocationSubmit").addEventListener("click", function() {
+        const form = document.getElementById("addLocationForm");
+        const formData = new FormData(form);
+
+        // Set action to direct_add
+        formData.set("action", "direct_add");
+
+        fetch("api/masterlist/direct_add_location.php", {
+            method: "POST",
+            body: formData,
+        })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.success) {
+                alert("Location added successfully");
+
+                // Add the new location to the dropdown
+                const locationSelect = document.getElementById("location");
+                const newOption = document.createElement("option");
+                newOption.value = data.location.id;
+                newOption.textContent = data.location.location_name; // Changed from data.location.location
+                newOption.selected = true;
+                locationSelect.appendChild(newOption);
+
+                // Close the modal
+                const addLocationModal = bootstrap.Modal.getInstance(document.getElementById("addLocationModal"));
+                addLocationModal.hide();
+
+                // Remove all modal backdrops
+                document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+
+                // Reset the form
+                form.reset();
+            } else {
+                alert("Failed to add location: " + data.message);
+            }
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+            alert("An error occurred while adding the location.");
+        });
+    });
+</script>
 
 <script>
     $(document).ready(function() {
@@ -454,7 +513,7 @@ foreach ($other_names as $other_name) {
         }
 
         // Initialize Select2 for existing dropdowns
-        $('.account-dropdown, .name-dropdown, .cost-dropdown, #location').select2({
+        $('.account-dropdown, .name-dropdown, .cost-dropdown').select2({
             theme: 'classic',
             width: '100%'
         });

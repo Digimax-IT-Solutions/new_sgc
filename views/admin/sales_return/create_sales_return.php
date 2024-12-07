@@ -445,7 +445,6 @@ $page = 'sales_sales_return'; // Set the variable corresponding to the current p
 <?php
 require_once(__DIR__ . '/../layouts/add_location.php');
 require_once(__DIR__ . '/../layouts/add_customer.php');
-require_once(__DIR__ . '/../layouts/add_vendor.php');
 require_once(__DIR__ . '/../layouts/add_payment_method.php');
 ?>
 

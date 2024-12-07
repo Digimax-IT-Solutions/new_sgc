@@ -362,7 +362,6 @@ $page = 'credit_memo'; // Set the variable corresponding to the current page
 <?php
 require_once(__DIR__ . '/../layouts/add_location.php');
 require_once(__DIR__ . '/../layouts/add_customer.php');
-require_once(__DIR__ . '/../layouts/add_vendor.php');
 require_once(__DIR__ . '/../layouts/add_payment_method.php');
 ?>
 
